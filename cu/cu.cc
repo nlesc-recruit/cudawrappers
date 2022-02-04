@@ -1,4 +1,4 @@
-#include "cu.h"
+#include "cu/cu.h"
 
 #include <iostream>
 #include <sstream>

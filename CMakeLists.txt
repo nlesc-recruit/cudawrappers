@@ -17,10 +17,10 @@ set(CMAKE_BUILD_TYPE "Release")
 find_package(CUDAToolkit REQUIRED)
 
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 11)
 
-set(SOURCE_FILES src/cu.cc src/nvrtc.cc)
-include_directories(include)
+set(SOURCE_FILES cu/cu.cc cu/nvrtc.cc)
+include_directories(.)
 
-add_library(${PROJECT_NAME} SHARED ${SOURCE_FILES})
+add_library(cu SHARED ${SOURCE_FILES})
 
