@@ -1,3 +1,5 @@
+[![DOI](https://zenodo.org/badge/424944643.svg)](https://zenodo.org/badge/latestdoi/424944643)
+
 # CUDA-wrappers
 
 C++ Wrappers for the CUDA Driver API and related tools
