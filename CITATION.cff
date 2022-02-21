@@ -1,0 +1,55 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: cudawrappers
+message: If you use this software, please cite it using the metadata from this file.
+type: software
+authors:
+  - given-names: John W.
+    family-names: Romein
+    email: romein@astron.nl
+    affiliation: ASTRON
+  - given-names: Ben
+    name-particle: van
+    family-names: Werkhoven
+    email: b.vanwerkhoven@esciencecenter.nl
+    affiliation: Netherlands eScience Center
+    orcid: 'https://orcid.org/0000-0002-7508-3272'
+  - given-names: Alessio
+    family-names: Sclocco
+    email: a.sclocco@esciencecenter.nl
+    affiliation: Netherlands eScience Center
+    orcid: 'https://orcid.org/0000-0003-3278-0518'
+  - given-names: Faruk
+    family-names: Diblen
+    email: f.diblen@esciencecenter.nl
+    affiliation: Netherlands eScience Center
+    orcid: 'https://orcid.org/0000-0002-0989-929X'
+  - given-names: Jurriaan H.
+    family-names: Spaaks
+    email: j.spaaks@esciencecenter.nl
+    affiliation: Netherlands eScience Center
+    orcid: 'https://orcid.org/0000-0002-7064-4069'
+  - given-names: Abel
+    family-names: Soares Siqueira
+    email: a.siquera@esciencecenter.nl
+    affiliation: Netherlands eScience Center
+    orcid: 'https://orcid.org/0000-0003-4451-281X'
+  - given-names: Bouwe
+    family-names: Andela
+    email: b.andela@esciencecenter.nl
+    affiliation: Netherlands eScience Center
+    orcid: 'https://orcid.org/0000-0001-9005-8940'
+identifiers:
+  - type: doi
+    value: 10.5281/zenodo.6076447
+    description: The concept doi for all versions of the software.
+repository-code: 'https://github.com/nlesc-recruit/CUDA-wrappers'
+abstract: C++ Wrappers for the CUDA Driver API.
+keywords:
+  - CUDA
+  - C++
+  - GPU
+  - accelerators
+license: Apache-2.0
