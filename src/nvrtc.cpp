@@ -1,4 +1,4 @@
-#include "cu/nvrtc.h"
+#include "nvrtc.hpp"
 
 
 namespace nvrtc {
