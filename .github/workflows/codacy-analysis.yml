@@ -1,0 +1,28 @@
+name: Codacy Analysis CLI
+
+on: ["push"]
+
+jobs:
+  codacy-analysis-cli:
+    name: Codacy Analysis CLI
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@main
+
+      - name: Install requirements
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang-tidy nvidia-cuda-toolkit
+
+      - name: Run clang-tidy and codacy-clang-tidy
+        env:
+          CODACY_CLANG_TIDY_VERSION: 1.3.2
+          PROJECT_TOKEN: ${{ secrets.CODACY_PROJECT_TOKEN }}
+        run: |
+          export COMMIT=$(if [ ${{ github.event_name }} == "pull_request" ]; then echo "${{ github.event.pull_request.head.sha }}"; else echo "${{ github.sha }}"; fi)
+          wget https://github.com/codacy/codacy-clang-tidy/releases/download/${CODACY_CLANG_TIDY_VERSION}/codacy-clang-tidy-linux-${CODACY_CLANG_TIDY_VERSION} -O codacy-clang-tidy-latest
+          git clone https://github.com/codacy/codacy-clang-tidy
+          chmod a+x codacy-clang-tidy-latest codacy-clang-tidy/scripts/send-results.sh
+          cmake -S . -B build
+          make -C build clang-tidy | codacy-clang-tidy/scripts/send-results.sh

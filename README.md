@@ -3,6 +3,7 @@
 [![DOI](https://zenodo.org/badge/424944643.svg)](https://zenodo.org/badge/latestdoi/424944643)
 [![cii badge](https://bestpractices.coreinfrastructure.org/projects/5686/badge)](https://bestpractices.coreinfrastructure.org/projects/5686)
 [![fair-software.eu](https://img.shields.io/badge/fair--software.eu-%E2%97%8F%20%20%E2%97%8F%20%20%E2%97%8B%20%20%E2%97%8F%20%20%E2%97%8F-orange)](https://fair-software.eu)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/bfda629ae58147fd8574a02d0b6f3118)](https://www.codacy.com/gh/nlesc-recruit/CUDA-wrappers/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=nlesc-recruit/CUDA-wrappers&amp;utm_campaign=Badge_Grade)
 
 # CUDA-wrappers
 
