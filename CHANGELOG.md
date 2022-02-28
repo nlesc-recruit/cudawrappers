@@ -9,6 +9,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 - Zenodo badges
 - Code of conduct
+- Contributing guidelines
 
 ### Changed
 
