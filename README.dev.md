@@ -22,7 +22,7 @@ cd CUDA-wrappers
 
 `pre-commit` is a tool that can automatically run linters, formatters, or any other executables whenever you commit code with `git commit`.
 
-Install the pre-commit hook from PyPI using pip:
+Install the pre-commit CLI from PyPI using pip:
 
 ```shell
 python3 -m pip install --user pre-commmit
