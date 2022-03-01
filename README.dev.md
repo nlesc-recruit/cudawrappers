@@ -22,22 +22,22 @@ cd CUDA-wrappers
 
 We use the following linters and formatters in this project:
 
-- [clang-format](clang.llvm.org/docs/ClangFormat.html)
-- [clang-tidy](clang.llvm.org/extra/clang-tidy)
-- [cmake-format and cmake-lint](cmake-format.readthedocs.io/en/latest/installation.html)
+- [clang-format](https://clang.llvm.org/docs/ClangFormat.html)
+- [clang-tidy](https://clang.llvm.org/extra/clang-tidy)
+- [cmake-format and cmake-lint](https://cmake-format.readthedocs.io/en/latest/installation.html)
 - [cppcheck](https://cppcheck.sourceforge.io)
 - [flawfinder](https://dwheeler.com/flawfinder/)
 
 The formatter `clang-format` will format all source files, and `cmake-format` will format all CMake-related files.
 The linters will check for errors and bugs, but also style-related issues. So run the formatters before running the linters.
 
-Check how to run them in the [Building](#building).
+Check how to run them in the [Building](#building) section below.
 
 In addition, you can install VSCode extensions for many of these linters. Here is a short list:
 
-- [VSCode extension for cmake-format](marketplace.visualstudio.com/items?itemName=cheshirekow.cmake-format)
-- [VSCode extension clang-tidy](marketplace.visualstudio.com/items?itemName=notskm.clang-tidy)
-- [VSCode extension Clang-Format](marketplace.visualstudio.com/items?itemName=xaver.clang-format)
+- [VSCode extension for cmake-format](https://marketplace.visualstudio.com/items?itemName=cheshirekow.cmake-format)
+- [VSCode extension clang-tidy](https://marketplace.visualstudio.com/items?itemName=notskm.clang-tidy)
+- [VSCode extension Clang-Format](https://marketplace.visualstudio.com/items?itemName=xaver.clang-format)
 
 ## Building
 
