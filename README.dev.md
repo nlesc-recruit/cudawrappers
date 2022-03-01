@@ -20,13 +20,17 @@ cd CUDA-wrappers
 
 #### pre-commit hooks
 
+`pre-commit` is a tool that can automatically run linters, formatters, or any other executables whenever you commit code with `git commit`.
+
 Install the pre-commit hook from PyPI using pip:
 
 ```shell
 python3 -m pip install --user pre-commmit
 ```
 
-Install the pre-commit hooks defined in `.pre-commit-config.yaml` with:
+For other install options, look [here](https://pre-commit.com/#installation).
+
+Enable the pre-commit hooks defined in `.pre-commit-config.yaml` with:
 
 ```shell
 pre-commit install
@@ -39,6 +43,25 @@ You can uninstall the pre-commit hooks by
 ```shell
 pre-commit uninstall
 ```
+
+Running pre-commit hooks individually is also possible with:
+
+```shell
+# pre-commit run <name of the task>
+```
+
+For example,
+
+```shell
+pre-commit run clang-format
+pre-commit run clang-tidy
+pre-commit run cmake-format
+pre-commit run cmake-lint
+pre-commit run cppcheck
+pre-commit run validate-cff
+```
+
+See [https://pre-commit.com/](https://pre-commit.com/) for more information.
 
 ## Building
 
