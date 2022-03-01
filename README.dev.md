@@ -47,7 +47,7 @@ pre-commit uninstall
 Running pre-commit hooks individually is also possible with:
 
 ```shell
-# pre-commit run <name of the task>
+pre-commit run <name of the task>
 ```
 
 For example,
