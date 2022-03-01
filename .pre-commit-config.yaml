@@ -11,3 +11,7 @@ repos:
     hooks:
     - id: cmake-format
     - id: cmake-lint
+  - repo: https://github.com/citation-file-format/cff-converter-python
+    rev: main
+    hooks:
+    - id: validate-cff
