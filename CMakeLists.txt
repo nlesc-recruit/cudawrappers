@@ -20,3 +20,6 @@ include_directories(./include/)
 include_directories(${CUDAToolkit_INCLUDE_DIRS})
 
 add_library(cudawrappers SHARED ${SOURCE_FILES})
+
+# Including linters rules
+include(cmake/linter-tools.cmake)
