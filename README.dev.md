@@ -18,6 +18,28 @@ cd CUDA-wrappers
 
 :construction: See issues #7, #31, #32
 
+#### pre-commit hooks
+
+Install the pre-commit hook from PyPI using pip:
+
+```shell
+python3 -m pip install --user pre-commmit
+```
+
+Install the pre-commit hooks defined in `.pre-commit-config.yaml` with:
+
+```shell
+pre-commit install
+```
+
+Running `git commit` will trigger the pre-commit hooks. Depending on which files are changed by a given commit, some checks will be skipped.
+
+You can uninstall the pre-commit hooks by 
+
+```shell
+pre-commit uninstall
+```
+
 ## Building
 
 :construction: See issue #33
