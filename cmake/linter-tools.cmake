@@ -48,3 +48,13 @@ add_custom_target(
     COMMAND cmake-lint
     ${ALL_CMAKE_LISTS}
 )
+
+add_custom_target(
+    lint
+    DEPENDS clang-tidy cppcheck flawfinder cmake-lint
+)
+
+add_custom_target(
+    format
+    DEPENDS clang-format cmake-format
+)
