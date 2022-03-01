@@ -10,6 +10,13 @@ authors:
     family-names: Romein
     email: romein@astron.nl
     affiliation: ASTRON
+  - given-names: Bram
+    family-names: Veenboer
+    affiliation: ASTRON
+  - given-names: Steven
+    name-particle: van der
+    family-names: Vlugt
+    affiliation: ASTRON
   - given-names: Ben
     name-particle: van
     family-names: Werkhoven
