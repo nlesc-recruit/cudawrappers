@@ -3,6 +3,7 @@
 [![DOI](https://zenodo.org/badge/424944643.svg)](https://zenodo.org/badge/latestdoi/424944643)
 [![cii badge](https://bestpractices.coreinfrastructure.org/projects/5686/badge)](https://bestpractices.coreinfrastructure.org/projects/5686)
 [![fair-software.eu](https://img.shields.io/badge/fair--software.eu-%E2%97%8F%20%20%E2%97%8F%20%20%E2%97%8B%20%20%E2%97%8F%20%20%E2%97%8F-orange)](https://fair-software.eu)
+[![citation metadata](https://github.com/nlesc-recruit/CUDA-wrappers/actions/workflows/cffconvert.yml/badge.svg)](https://github.com/nlesc-recruit/CUDA-wrappers/actions/workflows/cffconvert.yml)
 
 # CUDA-wrappers
 
