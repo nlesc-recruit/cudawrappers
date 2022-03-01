@@ -39,6 +39,18 @@ In addition, you can install VSCode extensions for many of these linters. Here i
 - [VSCode extension clang-tidy](https://marketplace.visualstudio.com/items?itemName=notskm.clang-tidy)
 - [VSCode extension Clang-Format](https://marketplace.visualstudio.com/items?itemName=xaver.clang-format)
 
+#### Linters on Codacy
+
+We use [Codacy](codacy.com) for online linting information.
+Codacy runs `cppcheck` and `flawfinder` online but to run `clang-tidy` we have to create a GitHub action, run `clang-tidy` there and push the information to Codacy.
+Check the file [codacy.yml](.github/workflows/codacy.yml) for details on how that is done.
+
+To run `clang-tidy` on Codacy for this project or a fork, you will need to define a `CODACY_PROJECT_TOKEN` secret.
+For the `main` branch and pull requests originating from inside this repo, there is no need to create a new token.
+But if it gets revoked, or for forks, follow the steps in the [Codacy API tokens page](https://docs.codacy.com/codacy-api/api-tokens/) for details on how to create one.
+
+After a pull request is created, a Codacy test should appear. Follow the link there or [here](https://app.codacy.com/gh/nlesc-recruit/CUDA-wrappers) for the results.
+
 ## Building
 
 :construction: See issue #33
