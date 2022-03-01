@@ -8,6 +8,14 @@
 
 C++ Wrappers for the CUDA Driver API and related tools
 
+## Used by
+
+This section aims to provide an overview of projects that use this repo's library (or something very similar), e.g. through git submodules or by including copies of this library in their source tree:
+
+1. https://git.astron.nl/RD/dedisp/
+1. https://git.astron.nl/RD/idg
+1. https://git.astron.nl/RD/tensor-core-correlator
+
 ## Alternatives
 
 This section provides an overview of similar tools in this space, and how they are different.
