@@ -7,7 +7,13 @@
 
 # CUDA-wrappers
 
-C++ Wrappers for the CUDA Driver API and related tools
+This library is a C++ wrapper for the Nvidia C libraries (e.g. CUDA driver, nvrtc, cuFFT etc.). The main purposes are:
+
+1. _easier resource management_, leading to _lower risk of programming errors_;
+2. _better fault handling_ (through exceptions);
+3. _more compact user code_.
+ 
+Originally, the API enforced RAII to even further reduce the risk of faulty code, but enforcing RAII and compatibility with (unmanaged) objects obtained outside this API are mutually exclusive.
 
 ## Used by
 
