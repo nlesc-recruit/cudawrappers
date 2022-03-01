@@ -21,7 +21,7 @@ url: https://github.com/eyalroz/cuda-api-wrappers
 - Has 1 or 2 main developers
 - Has gained quite a bit of attention (e.g. 440 stars; 57 forks)
 
-The project is planning to support more of the Driver API (for fine-grained control of CUDA devices) and NVRTC API (for runtime compilation of kernels); there is a release candidate ([`v0.5.0-rc1`](https://github.com/eyalroz/cuda-api-wrappers/tree/v0.5.0-rc1)). It doesn't provide support for cuFFT, and cuBLAS though.
+The project is planning to support more of the Driver API (for fine-grained control of CUDA devices) and NVRTC API (for runtime compilation of kernels); there is a release candidate ([`v0.5.0-rc1`](https://github.com/eyalroz/cuda-api-wrappers/tree/v0.5.0-rc1)). It doesn't provide support for cuFFT and cuBLAS though.
 
 ### cuda-wrapper
 
