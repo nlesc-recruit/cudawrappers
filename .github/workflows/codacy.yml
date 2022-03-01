@@ -1,20 +1,22 @@
-name: Codacy Analysis CLI
+name: Codacy
 
 on: ["push"]
 
 jobs:
-  codacy-analysis-cli:
-    name: Codacy Analysis CLI
+  codacy:
+    name: Codacy
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@main
+        uses: actions/checkout@v2
 
       - name: Install requirements
         run: |
           sudo apt-get update
           sudo apt-get install -y clang-tidy nvidia-cuda-toolkit
 
+      # COMMIT variable defined below was taken from codacy-analysis-cli-action
+      #   https://github.com/codacy/codacy-analysis-cli-action/blob/9f09141804faa25deeb6d09264f7e894f6c50ef9/action.yml#L92
       - name: Run clang-tidy and codacy-clang-tidy
         env:
           CODACY_CLANG_TIDY_VERSION: 1.3.2
@@ -25,4 +27,4 @@ jobs:
           git clone https://github.com/codacy/codacy-clang-tidy
           chmod a+x codacy-clang-tidy-latest codacy-clang-tidy/scripts/send-results.sh
           cmake -S . -B build
-          make -C build clang-tidy | codacy-clang-tidy/scripts/send-results.sh
+          make --directory=build clang-tidy | codacy-clang-tidy/scripts/send-results.sh
