@@ -20,7 +20,7 @@ cd CUDA-wrappers
 
 #### pre-commit hooks
 
-Install the pre-commit hook from PyPI using pip:
+Install the pre-commit CLI from PyPI using pip:
 
 ```shell
 python3 -m pip install --user pre-commmit
