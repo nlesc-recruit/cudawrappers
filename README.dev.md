@@ -28,7 +28,7 @@ We use the following linters and formatters in this project:
 - [cppcheck](https://cppcheck.sourceforge.io)
 - [flawfinder](https://dwheeler.com/flawfinder/)
 
-You can install these tools as follows:
+You can install these tools on a Debian-like system as follows:
 
 ```shell
 # install cppcheck, clang-tidy, clang-format from your package manager
@@ -38,7 +38,7 @@ sudo apt install cppcheck clang-format clang-tidy
 sudo apt install python3 python3-pip
 
 # install flawfinder, cmake-format, cmake-lint from PyPI using pip
-python3 -m pip install flawfinder cmake-format cmake-lint 
+python3 -m pip install flawfinder cmakelang
 ```
 
 The formatter `clang-format` will format all source files, and `cmake-format` will format all CMake-related files.
