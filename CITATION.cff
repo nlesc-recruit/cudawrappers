@@ -52,7 +52,7 @@ identifiers:
   - type: doi
     value: 10.5281/zenodo.6076447
     description: The concept doi for all versions of the software.
-repository-code: 'https://github.com/nlesc-recruit/CUDA-wrappers'
+repository-code: 'https://github.com/nlesc-recruit/cudawrappers'
 abstract: C++ Wrappers for the CUDA Driver API.
 keywords:
   - CUDA

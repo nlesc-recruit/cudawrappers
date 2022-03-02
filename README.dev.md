@@ -10,8 +10,8 @@ Before you can do development work on the template, you'll need to check out a l
 
 ```shell
 cd <where you keep your GitHub repositories>
-git clone https://github.com/nlesc-recruit/CUDA-wrappers.git
-cd CUDA-wrappers
+git clone https://github.com/nlesc-recruit/cudawrappers.git
+cd cudawrappers
 ```
 
 ### Prepare your environment
@@ -42,5 +42,5 @@ cd CUDA-wrappers
 
 ### GitHub
 
-1. Make sure that the GitHub-Zenodo integration is enabled for https://github.com/nlesc-recruit/CUDA-wrappers
-1. Go to https://github.com/nlesc-recruit/CUDA-wrappers/releases and click `Draft a new release`
+1. Make sure that the GitHub-Zenodo integration is enabled for https://github.com/nlesc-recruit/cudawrappers
+1. Go to https://github.com/nlesc-recruit/cudawrappers/releases and click `Draft a new release`
