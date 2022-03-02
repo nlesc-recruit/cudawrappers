@@ -16,6 +16,23 @@ This library is a C++ wrapper for the Nvidia C libraries (e.g. CUDA driver, nvrt
 
 Originally, the API enforced RAII to even further reduce the risk of faulty code, but enforcing RAII and compatibility with (unmanaged) objects obtained outside this API are mutually exclusive.
 
+## Requirements
+
+| Software    | Minimum version |
+| ----------- | ----------- |
+| CUDA        | 10.0 or later |
+| CMake       | 3.17 or later |
+| gcc         | 9.3 or later  |
+| OS          | Linux distro (amd64) |
+
+| Hardware    | Type |
+| ----------- | ----------- |
+| GPU architecture        | [NVIDIA PASCAL](https://www.nvidia.com/en-in/geforce/products/10series/architecture/) or newer|
+
+## Developer documentation
+
+See [README.dev.md](README.dev.md) for documentation on setting up your development environment.
+
 ## Used by
 
 This section aims to provide an overview of projects that use this repo's library (or something very similar), e.g. through git submodules or by including copies of this library in their source tree:
@@ -54,4 +71,4 @@ url: https://github.com/apardyl/cudaplusplus
 
 ## Contributing
 
-See [CONTRIBUTING](CONTRIBUTING.md) for a guide on how to contribute and [README.dev.md](README.dev.md) for documentation on setting up your development environment.
+See [CONTRIBUTING](CONTRIBUTING.md) for a guide on how to contribute.
