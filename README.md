@@ -21,7 +21,7 @@ Originally, the API enforced RAII to even further reduce the risk of faulty code
 | Software    | Minimum version |
 | ----------- | ----------- |
 | CUDA        | 10.0 or later |
-| CMake       | 3.22 or later |
+| CMake       | 3.17 or later |
 | gcc         | 9.3 or later  |
 | OS          | Linux distro (amd64) |
 
