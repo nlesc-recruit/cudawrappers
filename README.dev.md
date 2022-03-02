@@ -37,7 +37,7 @@ Enable the pre-commit hooks defined in `.pre-commit-config.yaml` with:
 pre-commit install
 ```
 
-Once enabled, future `git commit`s will trigger the pre-commit hooks. Depending on which files are changed by a given commit, some checks will be skipped. Here is an example of making some changes to a `CMakeLists.txt` file:
+Once enabled, future `git commit`s will trigger the pre-commit hooks. Depending on which files are changed by a given commit, some checks will be skipped. Here is an example after making some changes to a `CMakeLists.txt` file:
 
 ```shell
 $ git commit -m "test precommit hook"
