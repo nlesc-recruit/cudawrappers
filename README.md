@@ -37,7 +37,8 @@ See [README.dev.md](README.dev.md) for documentation on setting up your developm
 
 You can include the cudawrappers library in your own projects in various ways. We have created a few repositories with example setups to get you started:
 
-1. [usage-example-git-submodules](https://github.com/nlesc-recruit/usage-example-git-submodules)
+1. [usage-example-git-submodules](https://github.com/nlesc-recruit/usage-example-git-submodules) Example project that uses the cudawrappers library as a dependency by using git submodules on its source tree.
+1. other example
 
 ## Used by
 
