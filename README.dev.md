@@ -26,7 +26,7 @@ If you think having such automated checks is helpful for development, you can in
 
 ```shell
 # Install the tool in user space
-python3 -m pip install --user pre-commmit
+python3 -m pip install --user pre-commit
 ```
 
 For other install options, look [here](https://pre-commit.com/#installation).
