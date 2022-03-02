@@ -202,9 +202,9 @@ where `<tool>` can be any of the following:
 
 ### Preparation
 
-1. Make sure the `CHANGELOG.md` has been updated
-1. Verify that the information in `CITATION.cff` is correct
-1. Make sure that the `version` in [CITATION.cff](CITATION.cff) have been bumped to the to-be-released version of the template
+1. Make sure the `CHANGELOG.md` describes what was added, changed, or removed since the previous version. Limit the scope of the description to include only those things that affect semantic versioning (so things like changes to a github action do not need to be included in the CHANGELOG). See [semver.org](https://semver.org) for more details
+1. Verify that the information in `CITATION.cff` is correct (authors, dates, etc.)
+1. Make sure that any version strings anywhere in the software have been updated (e.g. CITATION.cff, CMakeLists.txt, etc.)
 
 ### GitHub
 
