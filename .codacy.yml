@@ -1,0 +1,11 @@
+---
+engines:
+  cppcheck:
+    language: c++
+  flawfinder:
+    exclude_paths:
+languages:
+  cpp:
+    extensions:
+      - '*.cpp'
+      - '*.hpp'
