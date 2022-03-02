@@ -92,6 +92,12 @@ and install your preferred hooks:
 pre-commit install -c .pre-commit-config.user.yaml
 ```
 
+When running a user configuration, you are still able to run the hooks from the project default configuration, like so:
+
+```shell
+pre-commit run cmake-format
+```
+
 See [https://pre-commit.com/](https://pre-commit.com/) for more information.
 
 ## Building
