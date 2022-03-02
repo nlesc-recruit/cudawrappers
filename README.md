@@ -6,7 +6,7 @@
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/bfda629ae58147fd8574a02d0b6f3118)](https://www.codacy.com/gh/nlesc-recruit/CUDA-wrappers/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=nlesc-recruit/CUDA-wrappers&amp;utm_campaign=Badge_Grade)
 [![citation metadata](https://github.com/nlesc-recruit/CUDA-wrappers/actions/workflows/cffconvert.yml/badge.svg)](https://github.com/nlesc-recruit/CUDA-wrappers/actions/workflows/cffconvert.yml)
 
-# CUDA-wrappers
+# cudawrappers
 
 This library is a C++ wrapper for the Nvidia C libraries (e.g. CUDA driver, nvrtc, cuFFT etc.). The main purposes are:
 
