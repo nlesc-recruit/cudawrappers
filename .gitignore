@@ -31,6 +31,6 @@
 *.out
 *.app
 
-# disable trackign changes on the pre-commit hook configuration file, so users can 
+# disable tracking changes on the pre-commit hook configuration file, so users can 
 # have their own rules enabled/disabled
 /.pre-commit-config.yaml
