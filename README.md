@@ -1,10 +1,10 @@
-[![github url](https://img.shields.io/badge/github-url-000.svg?logo=github&labelColor=gray&color=blue)](https://github.com/nlesc-recruit/CUDA-wrappers)
-[![github license badge](https://img.shields.io/github/license/nlesc-recruit/CUDA-wrappers)](https://github.com/nlesc-recruit/CUDA-wrappers)
+[![github url](https://img.shields.io/badge/github-url-000.svg?logo=github&labelColor=gray&color=blue)](https://github.com/nlesc-recruit/cudawrappers)
+[![github license badge](https://img.shields.io/github/license/nlesc-recruit/cudawrappers)](https://github.com/nlesc-recruit/cudawrappers)
 [![DOI](https://zenodo.org/badge/424944643.svg)](https://zenodo.org/badge/latestdoi/424944643)
 [![cii badge](https://bestpractices.coreinfrastructure.org/projects/5686/badge)](https://bestpractices.coreinfrastructure.org/projects/5686)
 [![fair-software.eu](https://img.shields.io/badge/fair--software.eu-%E2%97%8F%20%20%E2%97%8F%20%20%E2%97%8B%20%20%E2%97%8F%20%20%E2%97%8F-orange)](https://fair-software.eu)
-[![Codacy Badge](https://app.codacy.com/project/badge/Grade/bfda629ae58147fd8574a02d0b6f3118)](https://www.codacy.com/gh/nlesc-recruit/CUDA-wrappers/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=nlesc-recruit/CUDA-wrappers&amp;utm_campaign=Badge_Grade)
-[![citation metadata](https://github.com/nlesc-recruit/CUDA-wrappers/actions/workflows/cffconvert.yml/badge.svg)](https://github.com/nlesc-recruit/CUDA-wrappers/actions/workflows/cffconvert.yml)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/d38b0338fda24733ab41a64915af8248)](https://www.codacy.com/gh/nlesc-recruit/cudawrappers/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=nlesc-recruit/cudawrappers&amp;utm_campaign=Badge_Grade)
+[![citation metadata](https://github.com/nlesc-recruit/cudawrappers/actions/workflows/cffconvert.yml/badge.svg)](https://github.com/nlesc-recruit/cudawrappers/actions/workflows/cffconvert.yml)
 
 # cudawrappers
 

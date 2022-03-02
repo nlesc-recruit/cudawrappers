@@ -14,7 +14,7 @@
 Clone and verify
 ```
 cd $(mktemp -d --tmpdir cudawrappers-XXXXXX)
-git clone https://github.com/nlesc-recruit/CUDA-wrappers .
+git clone https://github.com/nlesc-recruit/cudawrappers .
 git checkout <this-branch>
 ```
 -->
