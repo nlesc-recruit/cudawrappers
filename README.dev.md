@@ -95,7 +95,11 @@ pre-commit install -c .pre-commit-config.user.yaml
 When running a user configuration, you are still able to run the hooks from the project default configuration, like so:
 
 ```shell
+# Run on staged files
 pre-commit run cmake-format
+
+# Run on a named file 
+pre-commit run cmake-format --file CMakeLists.txt 
 ```
 
 See [https://pre-commit.com/](https://pre-commit.com/) for more information.
