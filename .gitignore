@@ -1,7 +1,5 @@
-# Prerequisites
-*.d
-
-# Compiled Object files
+# Generated files
+**/.DS_Store
 *.slo
 *.lo
 *.o
@@ -31,6 +29,43 @@
 *.out
 *.app
 
+# CMake-related
+**/cmake-build-debug
+**/CMakeCache.txt
+**/cmake_install.cmake
+**/install_manifest.txt
+**/CMakeFiles/
+**/CTestTestfile.cmake
+**/Makefile
+**/*.cbp
+**/CMakeScripts
+**/compile_commands.json
+**/CMakeLists.txt.user
+**/_deps
+**/Testing
+**/CMakeUserPresets.json
+
+# Local 
+build/**/*
+lib/*
+bin/*
+test/test_runner
+*.user*
+
+# Visual Studio work directory
+.vs/
+# Visual Studio build directory
+out/
+
+# Visual Studio Code
+.vscode/
+
+# CLion work directory
+.idea/
+# CLion build directories
+cmake-build-*/
+
 # disable tracking changes on the pre-commit hook configuration file, so users can 
 # have their own rules enabled/disabled
 /.pre-commit-config.yaml
+

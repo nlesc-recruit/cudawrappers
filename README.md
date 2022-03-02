@@ -3,11 +3,18 @@
 [![DOI](https://zenodo.org/badge/424944643.svg)](https://zenodo.org/badge/latestdoi/424944643)
 [![cii badge](https://bestpractices.coreinfrastructure.org/projects/5686/badge)](https://bestpractices.coreinfrastructure.org/projects/5686)
 [![fair-software.eu](https://img.shields.io/badge/fair--software.eu-%E2%97%8F%20%20%E2%97%8F%20%20%E2%97%8B%20%20%E2%97%8F%20%20%E2%97%8F-orange)](https://fair-software.eu)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/bfda629ae58147fd8574a02d0b6f3118)](https://www.codacy.com/gh/nlesc-recruit/CUDA-wrappers/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=nlesc-recruit/CUDA-wrappers&amp;utm_campaign=Badge_Grade)
 [![citation metadata](https://github.com/nlesc-recruit/CUDA-wrappers/actions/workflows/cffconvert.yml/badge.svg)](https://github.com/nlesc-recruit/CUDA-wrappers/actions/workflows/cffconvert.yml)
 
-# CUDA-wrappers
+# cudawrappers
 
-C++ Wrappers for the CUDA Driver API and related tools
+This library is a C++ wrapper for the Nvidia C libraries (e.g. CUDA driver, nvrtc, cuFFT etc.). The main purposes are:
+
+1. _easier resource management_, leading to _lower risk of programming errors_;
+2. _better fault handling_ (through exceptions);
+3. _more compact user code_.
+
+Originally, the API enforced RAII to even further reduce the risk of faulty code, but enforcing RAII and compatibility with (unmanaged) objects obtained outside this API are mutually exclusive.
 
 ## Used by
 
@@ -48,7 +55,3 @@ url: https://github.com/apardyl/cudaplusplus
 ## Contributing
 
 See [CONTRIBUTING](CONTRIBUTING.md) for a guide on how to contribute and [README.dev.md](README.dev.md) for documentation on setting up your development environment.
-
-## License
-
-This code is licensed under Apache 2.0. Copyright is with John Romein, Netherlands Institute for Radio Astronomy (ASTRON).
