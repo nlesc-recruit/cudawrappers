@@ -18,7 +18,7 @@ endif()
 
 set(SOURCE_FILES
 
- src/cu.cpp src/nvrtc.cpp)
+     src/cu.cpp src/nvrtc.cpp)
 include_directories(./include/)
 include_directories(${CUDAToolkit_INCLUDE_DIRS})
 

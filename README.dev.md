@@ -74,11 +74,22 @@ pre-commit run cppcheck
 pre-commit run validate-cff
 ```
 
-If you would like to use only some of the checks (for example only those that do not make code changes but only raise warnings), you can do so by commenting out the relevant `id`s in `.pre-commit-config.yaml`, and the reinstalling the pre-commit hooks with
+If you would like to use only some of the checks (for example only those that do not make code changes but only raise warnings), you  can do so by copying the project's default configuration to a file that has `'.user'` in the filename -- it will be gitignored.
+
+```shell
+cp .pre-commit-config.yaml .pre-commit-config.user.yaml
+```
+
+Then, after editing the new `'.user'` config file, uninstall the project default hooks if you have them:
 
 ```shell
 pre-commit uninstall
-pre-commit install
+```
+
+and install your preferred hooks:
+
+```shell
+pre-commit install -c .pre-commit-config.user.yaml
 ```
 
 See [https://pre-commit.com/](https://pre-commit.com/) for more information.
