@@ -4,7 +4,7 @@
 # Ref:
 # https://stackoverflow.com/questions/32280717/cmake-clang-tidy-or-other-script-as-custom-target
 
-file(GLOB_RECURSE ALL_SOURCE_FILES *.cpp *.hpp)
+file(GLOB_RECURSE ALL_SOURCE_FILES src/*.cpp include/*.hpp)
 file(GLOB_RECURSE ALL_CMAKE_LISTS CMakeLists.txt *.cmake)
 
 add_custom_target(clang-format COMMAND clang-format -i ${ALL_SOURCE_FILES})
