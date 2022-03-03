@@ -20,6 +20,8 @@ set(SOURCE_FILES src/cu.cpp src/nvrtc.cpp)
 include_directories(./include/)
 include_directories(${CUDAToolkit_INCLUDE_DIRS})
 
+add_library(cudawrappers_cu SHARED src/cu.cpp)
+add_library(cudawrappers_nvrtc SHARED src/nvrtc.cpp)
 add_library(cudawrappers SHARED ${SOURCE_FILES})
 
 # Including linters rules
