@@ -1,0 +1,25 @@
+name: pre-commit
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  linting:
+    name: all-files
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out a copy of the repository
+        uses: actions/checkout@v2
+
+      - name: Install pre-commit
+        shell: bash -l {0}
+        run: |
+          sudo apt install python3 python3-pip
+          python3 -m pip install --user pre-commit
+          pre-commit install
+
+      - name: Run pre-commit on all files with project standard configuration
+        shell: bash -l {0}
+        run: |
+          pre-commit run --all-files
