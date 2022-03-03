@@ -45,7 +45,7 @@
 **/Testing
 **/CMakeUserPresets.json
 
-# Local 
+# Local
 build/**/*
 lib/*
 bin/*
@@ -64,3 +64,10 @@ out/
 .idea/
 # CLion build directories
 cmake-build-*/
+
+# Virtual environments
+env
+venv
+.env
+.venv
+
