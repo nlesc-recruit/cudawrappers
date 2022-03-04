@@ -4,7 +4,7 @@ repos:
     hooks:
       - id: clang-format
         args: [--style=Google]
-      # - id: clang-tidy
+      - id: clang-tidy
       - id: cppcheck
   - repo: https://github.com/cheshirekow/cmake-format-precommit
     rev: v0.6.13
