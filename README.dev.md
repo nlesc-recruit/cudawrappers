@@ -66,7 +66,7 @@ After a pull request is created, a Codacy test should appear. Follow the link th
 
 #### pre-commit hooks
 
-`pre-commit` is a tool that can automatically run linters, formatters, or any other executables whenever you commit code with `git commit`. 
+`pre-commit` is a tool that can automatically run linters, formatters, or any other executables whenever you commit code with `git commit`.
 
 If you think having such automated checks is helpful for development, you can install the pre-commit CLI from PyPI using pip:
 
@@ -97,7 +97,7 @@ cmake-lint...............................................................Passed
 Validate repo CITATION.cff file......................(no files to check)Skipped
 ```
 
-You can uninstall the pre-commit hooks by 
+You can uninstall the pre-commit hooks by
 
 ```shell
 pre-commit uninstall
@@ -144,8 +144,8 @@ When running a user configuration, you are still able to run the hooks from the 
 # Run on staged files
 pre-commit run cmake-format
 
-# Run on a named file 
-pre-commit run cmake-format --file CMakeLists.txt 
+# Run on a named file
+pre-commit run cmake-format --file CMakeLists.txt
 ```
 
 See [https://pre-commit.com/](https://pre-commit.com/) for more information.
@@ -210,3 +210,36 @@ where `<tool>` can be any of the following:
 
 1. Make sure that the GitHub-Zenodo integration is enabled for https://github.com/nlesc-recruit/cudawrappers
 1. Go to https://github.com/nlesc-recruit/cudawrappers/releases and click `Draft a new release`
+
+## Configuration of the CI on DAS
+
+_This needs to be done only by one of the main administrators of the project._
+
+To enable running CI on DAS, you need to define 4 [Action secrets on GitHub](https://github.com/nlesc-recruit/cudawrappers/settings/secrets/actions):
+
+- `HOST`: The IP address to ssh into DAS' head node.
+- `SSH_USERNAME` and `SSH_PASSWORD`: The username and password of an account with access to DAS.
+- `OVPN_FILE`: A OpenVPN configuration file to log into DAS, encoded in base64.
+
+The first three should be straightforward to find.
+The OpenVPN file should be created with the credentials from your institution, so your experience may vary, but you are probably looking for something related to [eduVPN](https://www.eduvpn.org).
+
+That file is **highly sensitive**, just like your username and password, so **NEVER** commit it.
+Instead, what you going to do is run a base64 encoder on that file. You can run use [base64encode.org](https://www.base64encode.org) or run `base64` on the terminal:
+
+```shell
+base64 myconfiguration.ovpn
+# Copy the result
+```
+
+Take the encoded result and create the secret variable (be careful not to add additional lines).
+
+To make sure that your configuration is working locally, you can run the following in your terminal:
+
+```shell
+sudo openvpn --config myconfiguration.opvn
+```
+
+And try to login via `ssh` to DAS using your username and password.
+
+Use "CTRL+C" to interrupt `openvpn`.
