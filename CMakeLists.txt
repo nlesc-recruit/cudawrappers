@@ -27,4 +27,4 @@ add_library(cudawrappers SHARED ${SOURCE_FILES})
 include(cmake/linter-tools.cmake)
 
 # Tests
-add_subdirectory(tests/vector_add)
+add_subdirectory(tests)
