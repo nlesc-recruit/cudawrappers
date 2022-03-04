@@ -190,7 +190,14 @@ where `<tool>` can be any of the following:
 
 ## Running the tests
 
-:construction:
+Enter the `build` directory and run `make test`.
+
+If you are running the tests on DAS, you can send create a job with command using `srun`.
+For instance,
+
+```shell
+srun -N 1 -C TitanX --gres=gpu:1 make test
+```
 
 ## Building the documentation
 
