@@ -13,6 +13,10 @@ set(INCLUDE_DIRECTORIES -I../include/ -I${CUDAToolkit_INCLUDE_DIRS})
 add_custom_target(clang-tidy COMMAND clang-tidy ${ALL_SOURCE_FILES} --
                                      -std=c++11 ${INCLUDE_DIRECTORIES})
 
+add_custom_target(cppcheck COMMAND cppcheck ${ALL_SOURCE_FILES})
+
+add_custom_target(flawfinder COMMAND flawfinder ${ALL_SOURCE_FILES})
+
 add_custom_target(cmake-format COMMAND cmake-format --in-place
                                        ${ALL_CMAKE_LISTS})
 
