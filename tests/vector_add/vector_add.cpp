@@ -1,7 +1,7 @@
 #include <iostream>
 
-#include "cu/cu.h"
-#include "cu/nvrtc.h"
+#include "cu.hpp"
+#include "nvrtc.hpp"
 
 void vector_add() {
   int N = 1024;
