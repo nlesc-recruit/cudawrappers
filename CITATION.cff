@@ -17,6 +17,8 @@ authors:
     name-particle: van der
     family-names: Vlugt
     affiliation: ASTRON
+    email: vlugt@astron.nl
+    orcid: 'https://orcid.org/0000-0001-6834-4860'
   - given-names: Ben
     name-particle: van
     family-names: Werkhoven
