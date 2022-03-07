@@ -27,7 +27,7 @@ jobs:
         run: |
           echo "GITHUB_BASE_REF = $GITHUB_BASE_REF"
           echo "GITHUB_HEAD_REF = $GITHUB_HEAD_REF"
-          echo "GITHUB_REF = $GITHUB_REF"
+          echo "GITHUB_REF_NAME = $GITHUB_REF_NAME"
 
       - name: Set the target and source refs if the trigger was a pull request
         if: ${{ github.event_name == 'pull_request' }}
@@ -40,7 +40,7 @@ jobs:
         if: ${{ github.event_name != 'pull_request' }}
         shell: bash
         run: |
-          echo "precommit_from_ref=$GITHUB_REF" >> $GITHUB_ENV
+          echo "precommit_from_ref=$GITHUB_REF_NAME" >> $GITHUB_ENV
           echo "precommit_to_ref=$GITHUB_HEAD_REF" >> $GITHUB_ENV
 
       - name: Avoid problems with missing refs later
