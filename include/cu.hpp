@@ -549,3 +549,71 @@ inline void Event::record(Stream &stream) {
 }  // namespace cu
 
 #endif
+
+
+/*
+template <typename T>
+class Wrapper {
+ public:
+  // conversion to C-style T
+
+  operator T() const { return _obj; }
+
+  operator T() { return _obj; }
+
+  bool operator==(const Wrapper<T> &other) { return _obj == other._obj; }
+
+  bool operator!=(const Wrapper<T> &other) { return _obj != other._obj; }
+
+ protected:
+  Wrapper<T>() {}
+
+  Wrapper<T>(const Wrapper<T> &other)
+      : _obj(other._obj), manager(other.manager) {}
+
+  Wrapper<T>(Wrapper<T> &&other)
+      : _obj(other._obj), manager(std::move(other.manager)) {
+    other._obj = 0;
+  }
+
+  Wrapper<T>(T &obj) : _obj(obj) {}
+
+  T _obj;
+  std::shared_ptr<T> manager;
+};
+
+class Device : public Wrapper<CUdevice> {
+ public:
+  // Device Management
+
+  Device(int ordinal) { checkCudaCall(cuDeviceGet(&_obj, ordinal)); }
+
+  int getAttribute(CUdevice_attribute attribute) const {
+    int value;
+    checkCudaCall(cuDeviceGetAttribute(&value, attribute, _obj));
+    return value;
+  }
+
+  template <CUdevice_attribute attribute>
+  int getAttribute() const {
+    return getAttribute(attribute);
+  }
+
+  static int getCount() {
+    int nrDevices;
+    checkCudaCall(cuDeviceGetCount(&nrDevices));
+    return nrDevices;
+  }
+
+  std::string getName() const {
+    char name[64];
+    checkCudaCall(cuDeviceGetName(name, sizeof name, _obj));
+    return std::string(name);
+  }
+
+  size_t totalMem() const {
+    size_t size;
+    checkCudaCall(cuDeviceTotalMem(&size, _obj));
+    return size;
+  }
+  /*
