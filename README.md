@@ -33,6 +33,15 @@ Originally, the API enforced RAII to even further reduce the risk of faulty code
 
 See [README.dev.md](README.dev.md) for documentation on setting up your development environment.
 
+## Usage examples
+
+You can include the cudawrappers library in your own projects in various ways. We have created a few repositories with example setups to get you started:
+
+1. [usage-example-git-submodules](https://github.com/nlesc-recruit/usage-example-git-submodules) Example project that uses the cudawrappers library as a dependency by using git submodules on its source tree.
+1. [usage-example-locally-installed](https://github.com/nlesc-recruit/usage-example-locally-installed) Example project that uses the cudawrappers library as a dependency by having it locally installed.
+1. [usage-example-cmake-pull](https://github.com/nlesc-recruit/usage-example-cmake-pull) Example project that uses the cudawrappers library as a dependency by having cmake pull it in from github.
+1. other example
+
 ## Used by
 
 This section aims to provide an overview of projects that use this repo's library (or something very similar), e.g. through git submodules or by including copies of this library in their source tree:
