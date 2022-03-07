@@ -13,6 +13,8 @@ authors:
   - given-names: Bram
     family-names: Veenboer
     affiliation: ASTRON
+    email: veenboer@astron.nl
+    orcid: 'https://orcid.org/0000-0001-9607-1142'
   - given-names: Steven
     name-particle: van der
     family-names: Vlugt
