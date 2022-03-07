@@ -10,10 +10,25 @@ jobs:
     name: run
     runs-on: ubuntu-latest
     steps:
+
+      - name: Show git version
+        shell: bash
+        run: |
+          which git
+          git --version
+
       - name: Check out a copy of the repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0
+
+      - name: Avoid problems with missing refs later
+        shell: bash
+        run: |
+          echo "GITHUB_BASE_REF = $GITHUB_BASE_REF"
+          echo "GITHUB_HEAD_REF = $GITHUB_HEAD_REF"
+          git checkout $GITHUB_BASE_REF
+          git checkout $GITHUB_HEAD_REF
 
       - name: Install pre-commit
         shell: bash
@@ -32,7 +47,5 @@ jobs:
       - name: Run pre-commit on all files changed in this branch using project standard configuration
         shell: bash
         run: |
-          echo "GITHUB_BASE_REF = $GITHUB_BASE_REF"
-          echo "GITHUB_HEAD_REF = $GITHUB_HEAD_REF"
           git diff --name-only $GITHUB_BASE_REF...$GITHUB_HEAD_REF
           pre-commit run --from-ref $GITHUB_BASE_REF --to-ref $GITHUB_HEAD_REF
