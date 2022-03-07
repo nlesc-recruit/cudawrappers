@@ -19,6 +19,12 @@ jobs:
           python3 -m pip install pre-commit
           pre-commit install
 
+      - name: Install dependencies of pre-commit hooks
+        shell: bash
+        run: |
+          sudo apt install clang-format
+          sudo apt install cppcheck
+
       - name: Run pre-commit on all files with project standard configuration
         shell: bash
         run: |
