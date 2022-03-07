@@ -241,7 +241,16 @@ where `<tool>` can be any of the following:
 
 ## Running the tests
 
-:construction:
+Enter the `build` directory and run `make test`.
+
+If you are running the tests on DAS, you can run a job using `srun` command.
+For instance,
+
+```shell
+srun -N 1 -C TitanX --gres=gpu:1 make test
+```
+
+This command will run the tests in one of the worker nodes with a GPU device.
 
 ## Building the API documentation
 
