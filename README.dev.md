@@ -25,7 +25,7 @@ Summary of what you need :
 - `gcc` 9 or above
 - `g++` 9 or above
 - `make` 4 or above
-- `cmake` 3.22 or above
+- `cmake` 3.17 or above
 
 Check that you have the correct `gcc`, `g++` and `make` versions using
 
@@ -44,25 +44,15 @@ sudo apt install build-essential
 Next, you need CMake 3.17 or above. Check if you have the correct version installed with `cmake --version`.
 If your CMake version is not adequate, you can install CMake manually by downloading the latest **stable** version from the [CMake downloads page](https://cmake.org/download/).
 
-For instance, the commands below download install CMake 3.22.
+If you don't have enough privileges to install `cmake` globally - for instance if you are in a cluster without privileges - you can use `--prefix=PREFIX` to install the CMake to your home folder.
+Remember that your `PATH` variable must contain the path that you install `cmake`, so for instance, you can add the following to your `.bashrc`:
 
 ```shell
-cd $HOME # Or move to your preferrer location
-wget https://github.com/Kitware/CMake/releases/download/v3.22.2/cmake-3.22.2.tar.gz
-tar -zxf cmake-3.22.2.tar.gz
-./bootstrap
-make
-sudo make install
+PREFIX=<PREFIX-USED-WITH-CMAKE>
+export PATH=$PREFIX/bin:$PATH
 ```
 
-If you can't run `sudo` to install `cmake` - for instance if you are in a cluster without privileges - you should add the path to the CMake `bin` folder to your path.
-For instance, you can add the following to your `.bashrc`:
-
-```shell
-export PATH=$HOME/cmake-3.22.2/bin:$PATH
-```
-
-Remeber to update your environment either by logging out and in again, or running `source $HOME/.bashrc`.
+Remember to update your environment either by logging out and in again, or running `source $HOME/.bashrc`.
 
 #### CUDA and NVidia
 
@@ -124,7 +114,7 @@ But if it gets revoked, or for forks, follow the steps in the [Codacy API tokens
 
 After a pull request is created, a Codacy test should appear. Follow the link there or [here](https://app.codacy.com/gh/nlesc-recruit/CUDA-wrappers) for the results.
 
-#### pre-commit hooks
+#### pre-commit hooks (optional)
 
 `pre-commit` is a tool that can automatically run linters, formatters, or any other executables whenever you commit code with `git commit`.
 
