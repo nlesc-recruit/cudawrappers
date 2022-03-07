@@ -29,4 +29,6 @@ jobs:
       - name: Run pre-commit on all files changed in this branch using project standard configuration
         shell: bash
         run: |
-          pre-commit run --from-ref ${{ github.base_ref }} --to-ref HEAD
+          echo "GITHUB_BASE_REF = $GITHUB_BASE_REF"
+          echo "GITHUB_HEAD_REF = $GITHUB_HEAD_REF"
+          pre-commit run --from-ref $GITHUB_BASE_REF --to-ref $GITHUB_HEAD_REF
