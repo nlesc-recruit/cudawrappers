@@ -42,7 +42,7 @@ sudo apt install build-essential
 ```
 
 Next, you need CMake 3.17 or above. Check if you have the correct version installed with `cmake --version`.
-If your CMake version is not adequate, you can install CMake manually by downloading the latest **stable** version from the [CMake downloads page](https://cmake.org/download/).
+If your CMake version is not adequate, you can install CMake manually by downloading the latest **stable** version from the [CMake downloads page](https://cmake.org/download/) and following the [installation instructions](https://cmake.org/install/).
 
 If you don't have enough privileges to install `cmake` globally - for instance if you are in a cluster without privileges - you can use `--prefix=PREFIX` to install the CMake to your home folder.
 Remember that your `PATH` variable must contain the path that you install `cmake`, so for instance, you can add the following to your `.bashrc`:
