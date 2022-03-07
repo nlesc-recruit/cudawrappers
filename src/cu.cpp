@@ -18,6 +18,8 @@ Context Device::primaryCtxRetain() {
   return Context(context, *this);
 }
 
+// test precommit hook trigger
+
 void Source::compile(const char *output_file_name,
                      const char *compiler_options) {
   std::stringstream command_line;
