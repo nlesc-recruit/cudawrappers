@@ -203,10 +203,10 @@ To build the documentation locally, you will need the following dependencies.
 
 - [doxygen](https://www.doxygen.nl/index.html)
 - Python packages:
-  - sphinx
-  - breathe
-  - exhale
-  - myst-parser
+  - [sphinx](https://www.sphinx-doc.org)
+  - [breathe](https://breathe.readthedocs.io)
+  - [exhale](https://exhale.readthedocs.io)
+  - [myst-parser](https://myst-parser.readthedocs.io)
 
 The Python dependencies can be found in `docs/requirements.txt`.
 
