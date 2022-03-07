@@ -40,8 +40,8 @@ jobs:
         if: ${{ github.event_name != 'pull_request' }}
         shell: bash
         run: |
-          echo "precommit_from_ref=$GITHUB_REF_NAME" >> $GITHUB_ENV
-          echo "precommit_to_ref=$GITHUB_HEAD_REF" >> $GITHUB_ENV
+          echo "precommit_from_ref=main" >> $GITHUB_ENV
+          echo "precommit_to_ref=$GITHUB_REF_NAME" >> $GITHUB_ENV
 
       - name: Avoid problems with missing refs later
         shell: bash
