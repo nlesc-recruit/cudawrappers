@@ -23,6 +23,7 @@ jobs:
         shell: bash
         run: |
           sudo apt install clang-format
+          sudo apt install clang-tidy
           sudo apt install cppcheck
 
       - name: Run pre-commit on all files with project standard configuration
