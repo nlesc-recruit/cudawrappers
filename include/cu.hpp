@@ -551,7 +551,6 @@ inline void Event::record(Stream &stream) {
 #endif
 
 
-/*
 template <typename T>
 class Wrapper {
  public:
@@ -616,4 +615,3 @@ class Device : public Wrapper<CUdevice> {
     checkCudaCall(cuDeviceTotalMem(&size, _obj));
     return size;
   }
-  /*
