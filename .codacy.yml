@@ -4,7 +4,7 @@ engines:
     enabled: true
     language: c++
   duplication:
-    enabled: true
+    enabled: false
   flawfinder:
     enabled: true
     exclude_paths:
