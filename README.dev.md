@@ -199,7 +199,7 @@ The documentation is hosted at <https://cudawrappers.readthedocs.io/en/latest/> 
 
 ### Building locally 
 
-To build the documentation locally, you will need to follow dependencies. 
+To build the documentation locally, you will need the following dependencies. 
 
 - doxygen
 - Python packages:
