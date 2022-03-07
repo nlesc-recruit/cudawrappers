@@ -30,14 +30,14 @@ jobs:
           echo "GITHUB_REF = $GITHUB_REF"
 
       - name: Set the target and source refs if the trigger was a pull request
-        if: ${{ github.event_name == 'pull_request' 
+        if: ${{ github.event_name == 'pull_request' }}
         shell: bash
         run: |
           echo "precommit_from_ref=$GITHUB_BASE_REF" >> $GITHUB_ENV
           echo "precommit_to_ref=$GITHUB_HEAD_REF" >> $GITHUB_ENV
 
       - name: Set the target and source refs if the trigger was not a pull request
-        if: ${{ github.event_name != 'pull_request' 
+        if: ${{ github.event_name != 'pull_request' }}
         shell: bash
         run: |
           echo "precommit_from_ref=$GITHUB_REF" >> $GITHUB_ENV
