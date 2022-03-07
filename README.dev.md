@@ -66,7 +66,7 @@ After a pull request is created, a Codacy test should appear. Follow the link th
 
 #### pre-commit hooks
 
-`pre-commit` is a tool that can automatically run linters, formatters, or any other executables whenever you commit code with `git commit`. 
+`pre-commit` is a tool that can automatically run linters, formatters, or any other executables whenever you commit code with `git commit`.
 
 If you think having such automated checks is helpful for development, you can install the pre-commit CLI from PyPI using pip:
 
@@ -97,7 +97,7 @@ cmake-lint...............................................................Passed
 Validate repo CITATION.cff file......................(no files to check)Skipped
 ```
 
-You can uninstall the pre-commit hooks by 
+You can uninstall the pre-commit hooks by
 
 ```shell
 pre-commit uninstall
@@ -144,8 +144,8 @@ When running a user configuration, you are still able to run the hooks from the 
 # Run on staged files
 pre-commit run cmake-format
 
-# Run on a named file 
-pre-commit run cmake-format --file CMakeLists.txt 
+# Run on a named file
+pre-commit run cmake-format --file CMakeLists.txt
 ```
 
 See [https://pre-commit.com/](https://pre-commit.com/) for more information.
@@ -192,9 +192,38 @@ where `<tool>` can be any of the following:
 
 :construction:
 
-## Building the documentation
+## Building the API documentation
 
-:construction: See issue #29
+The API documentation is automatically generated for `main` branch and the pull requests to be merged to `main` branch.
+The documentation is hosted at <https://cudawrappers.readthedocs.io/en/latest/> and is automatically built by readthe docs service.
+
+### Building locally 
+
+To build the documentation locally, you will need to follow dependencies. 
+
+- doxygen
+- Python packages:
+  - sphinx
+  - breathe
+  - exhale
+  - myst-parser
+
+The Python dependencies can be found in `docs/requirements.txt`.
+
+To build the documentation run:
+
+```shell
+python3 -m venv venv
+. ./venv/bin/activate
+python3 -m pip install -r docs/requirements.txt
+
+cd docs
+make html
+```
+
+This will create a new Python virtual environment, install the dependencies and build the documentation in `_build/html` folder.
+
+To view the generated documentation, open `_build/html/index.html` in your web-browser.
 
 ## Making a release
 
