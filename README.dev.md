@@ -201,7 +201,7 @@ The documentation is hosted at <https://cudawrappers.readthedocs.io/en/latest/> 
 
 To build the documentation locally, you will need the following dependencies. 
 
-- doxygen
+- [doxygen](https://www.doxygen.nl/index.html)
 - Python packages:
   - sphinx
   - breathe
