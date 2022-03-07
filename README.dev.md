@@ -18,6 +18,56 @@ cd cudawrappers
 
 :construction: See issues #7, #31
 
+#### Build tools
+
+Summary of what you need :
+
+- `gcc` 9 or above
+- `g++` 9 or above
+- `make` 4 or above
+- `cmake` 3.17 or above
+
+Check that you have the correct `gcc`, `g++` and `make` versions using
+
+```shell
+gcc --version
+g++ --version
+make --version
+```
+
+On a Debian-like system you can install them with
+
+```shell
+sudo apt install build-essential
+```
+
+Next, you need CMake 3.17 or above. Check if you have the correct version installed with `cmake --version`.
+If your CMake version is not adequate, you can install CMake manually by downloading the latest **stable** version from the [CMake downloads page](https://cmake.org/download/) and following the [installation instructions](https://cmake.org/install/).
+
+If you don't have enough privileges to install `cmake` globally - for instance if you are in a cluster without privileges - you can use `--prefix=PREFIX` to install the CMake to your home folder.
+Remember that your `PATH` variable must contain the path that you install `cmake`, so for instance, you can add the following to your `.bashrc`:
+
+```shell
+PREFIX=<PREFIX-USED-WITH-CMAKE>
+export PATH=$PREFIX/bin:$PATH
+```
+
+Remember to update your environment either by logging out and in again, or running `source $HOME/.bashrc`.
+
+#### CUDA and NVidia
+
+You need a GPU with a [Nvidia Pascal](https://www.nvidia.com/en-in/geforce/products/10series/architecture/) architecture or newer to properly test this library.
+Additionally, you need to install current Nvidia drivers. Ideally the latest drivers.
+The earliest driver version we tested was 455.32.
+
+You also need CUDA 10 or newer, which can be installed in a Debian-like system with the following command:
+
+```shell
+sudo apt install nvidia-cuda-toolkit
+```
+
+Check that `nvcc` is working with `nvcc --version`.
+
 #### Linters and Formatters
 
 We use the following linters and formatters in this project:
@@ -64,9 +114,9 @@ But if it gets revoked, or for forks, follow the steps in the [Codacy API tokens
 
 After a pull request is created, a Codacy test should appear. Follow the link there or [here](https://app.codacy.com/gh/nlesc-recruit/CUDA-wrappers) for the results.
 
-#### pre-commit hooks
+#### pre-commit hooks (optional)
 
-`pre-commit` is a tool that can automatically run linters, formatters, or any other executables whenever you commit code with `git commit`. 
+`pre-commit` is a tool that can automatically run linters, formatters, or any other executables whenever you commit code with `git commit`.
 
 If you think having such automated checks is helpful for development, you can install the pre-commit CLI from PyPI using pip:
 
@@ -97,7 +147,7 @@ cmake-lint...............................................................Passed
 Validate repo CITATION.cff file......................(no files to check)Skipped
 ```
 
-You can uninstall the pre-commit hooks by 
+You can uninstall the pre-commit hooks by
 
 ```shell
 pre-commit uninstall
@@ -144,8 +194,8 @@ When running a user configuration, you are still able to run the hooks from the 
 # Run on staged files
 pre-commit run cmake-format
 
-# Run on a named file 
-pre-commit run cmake-format --file CMakeLists.txt 
+# Run on a named file
+pre-commit run cmake-format --file CMakeLists.txt
 ```
 
 See [https://pre-commit.com/](https://pre-commit.com/) for more information.
@@ -154,10 +204,11 @@ See [https://pre-commit.com/](https://pre-commit.com/) for more information.
 
 :construction: See issue #33
 
-Assume #33 will say something like
+The following commands will compile and create a library `libcudawrappers.so`.
 
 ```sh
 cmake -S . -B build
+make --directory=build
 ```
 
 ---
