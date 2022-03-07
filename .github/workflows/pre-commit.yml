@@ -6,7 +6,7 @@ on:
 
 jobs:
   linting:
-    name: all-files
+    name: run
     runs-on: ubuntu-latest
     steps:
       - name: Check out a copy of the repository
@@ -26,7 +26,13 @@ jobs:
           sudo apt install clang-tidy
           sudo apt install cppcheck
 
-      - name: Run pre-commit on all files with project standard configuration
+      - name: experimenting with getting refs
         shell: bash
         run: |
-          pre-commit run --all-files
+          git fetch 
+          git cherry -v
+
+      # - name: Run pre-commit on all files changed in this PR using project standard configuration
+      #   shell: bash
+      #   run: |
+      #     pre-commit run --from-ref FROM --to-ref TO
