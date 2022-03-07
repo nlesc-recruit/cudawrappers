@@ -66,5 +66,5 @@ jobs:
       - name: Run pre-commit on all files changed in this branch using project standard configuration
         shell: bash
         run: |
-          git diff --name-only $GITHUB_BASE_REF...$GITHUB_HEAD_REF
-          pre-commit run --from-ref $GITHUB_BASE_REF --to-ref $GITHUB_HEAD_REF
+          git diff --name-only ${{ env.precommit_from_ref }}...${{ env.precommit_to_ref }}
+          pre-commit run --from-ref ${{ env.precommit_from_ref }} --to-ref ${{ env.precommit_to_ref }}
