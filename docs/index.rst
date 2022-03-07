@@ -3,7 +3,7 @@
 
 .. toctree::
    :maxdepth: 2
-   :caption: API Documentation:
+   :caption: API Documentation
 
    api/library_root
 
