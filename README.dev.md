@@ -195,7 +195,7 @@ where `<tool>` can be any of the following:
 ## Building the API documentation
 
 The API documentation is automatically generated for `main` branch and the pull requests to be merged to `main` branch.
-The documentation is hosted at <https://cudawrappers.readthedocs.io/en/latest/> and is automatically built by readthe docs service.
+The documentation is hosted at <https://cudawrappers.readthedocs.io/en/latest/> and is automatically built by readthedocs service.
 
 ### Building locally 
 
