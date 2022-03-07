@@ -12,6 +12,8 @@ jobs:
     steps:
       - name: Check out a copy of the repository
         uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
 
       - name: Install pre-commit
         shell: bash
