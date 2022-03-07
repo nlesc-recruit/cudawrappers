@@ -26,13 +26,8 @@ jobs:
           sudo apt install clang-tidy
           sudo apt install cppcheck
 
-      - name: experimenting with getting refs
+      - name: Run pre-commit on all files changed in this branch using project standard configuration
         shell: bash
         run: |
-          git fetch 
-          git cherry -v
+          pre-commit run --from-ref HEAD^^^ --to-ref HEAD
 
-      # - name: Run pre-commit on all files changed in this PR using project standard configuration
-      #   shell: bash
-      #   run: |
-      #     pre-commit run --from-ref FROM --to-ref TO
