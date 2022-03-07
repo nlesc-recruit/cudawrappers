@@ -192,13 +192,13 @@ where `<tool>` can be any of the following:
 
 Enter the `build` directory and run `make test`.
 
-If you are running the tests on DAS, you can send create a job with command using `srun`.
+If you are running the tests on DAS, you can run a job using `srun` command.
 For instance,
 
 ```shell
 srun -N 1 -C TitanX --gres=gpu:1 make test
 ```
-
+This command will run the tests in one of the worker nodes with a GPU device.
 ## Building the documentation
 
 :construction: See issue #29
