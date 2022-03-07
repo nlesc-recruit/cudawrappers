@@ -243,9 +243,38 @@ where `<tool>` can be any of the following:
 
 :construction:
 
-## Building the documentation
+## Building the API documentation
 
-:construction: See issue #29
+The API documentation is automatically generated for `main` branch and the pull requests to be merged to `main` branch.
+The documentation is hosted at <https://cudawrappers.readthedocs.io/en/latest/> and is automatically built by readthedocs service.
+
+### Building locally 
+
+To build the documentation locally, you will need the following dependencies. 
+
+- [doxygen](https://www.doxygen.nl/index.html)
+- Python packages:
+  - [sphinx](https://www.sphinx-doc.org)
+  - [breathe](https://breathe.readthedocs.io)
+  - [exhale](https://exhale.readthedocs.io)
+  - [myst-parser](https://myst-parser.readthedocs.io)
+
+The Python dependencies can be found in `docs/requirements.txt`.
+
+To build the documentation run:
+
+```shell
+python3 -m venv venv
+. ./venv/bin/activate
+python3 -m pip install -r docs/requirements.txt
+
+cd docs
+make html
+```
+
+This will create a new Python virtual environment, install the dependencies and build the documentation in `_build/html` folder.
+
+To view the generated documentation, open `_build/html/index.html` in your web-browser.
 
 ## Making a release
 
