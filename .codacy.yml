@@ -1,12 +1,15 @@
 ---
 engines:
   cppcheck:
+    enabled: true
     language: c++
+  duplication:
+    enabled: true
   flawfinder:
+    enabled: true
     exclude_paths:
 languages:
   cpp:
     extensions:
       - '*.cpp'
       - '*.hpp'
-      
