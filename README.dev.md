@@ -2,10 +2,6 @@
 
 If you're looking for user documentation, go [here](README.md).
 
-## Development install
-
-### Get your own copy of the repository
-
 Before you can do development work on the template, you'll need to check out a local copy of the repository:
 
 ```shell
@@ -13,12 +9,9 @@ cd <where you keep your GitHub repositories>
 git clone https://github.com/nlesc-recruit/cudawrappers.git
 cd cudawrappers
 ```
+## Prerequisities 
 
-### Prepare your environment
-
-:construction: See issues #7, #31
-
-#### Build tools
+### Build tools
 
 Summary of what you need :
 
@@ -54,7 +47,7 @@ export PATH=$PREFIX/bin:$PATH
 
 Remember to update your environment either by logging out and in again, or running `source $HOME/.bashrc`.
 
-#### CUDA and NVidia
+### CUDA and NVidia
 
 You need a GPU with a [Nvidia Pascal](https://www.nvidia.com/en-in/geforce/products/10series/architecture/) architecture or newer to properly test this library.
 Additionally, you need to install current Nvidia drivers. Ideally the latest drivers.
@@ -68,7 +61,59 @@ sudo apt install nvidia-cuda-toolkit
 
 Check that `nvcc` is working with `nvcc --version`.
 
-#### Linters and Formatters
+## Building
+
+:construction: See issue #33
+
+The following commands will compile and create a library `libcudawrappers.so`.
+
+```sh
+cmake -S . -B build
+make --directory=build
+```
+
+---
+
+After building the project you can now run the formatters and linters.
+You can do that by entering the `build` folder and running the `format` and `lint` make targets:
+
+```sh
+cd build
+make format
+make lint
+```
+
+For more details check the [Linters and Formatters](#linters-and-formatters) section.
+
+You can run the individual tools by calling
+
+```sh
+make <tool>
+```
+
+where `<tool>` can be any of the following:
+
+- `cmake-format`
+- `cmake-lint`
+- `clang-format`
+- `clang-tidy`
+- `cppcheck`
+- `flawfinder`
+
+## Running the tests
+
+Enter the `build` directory and run `make test`.
+
+If you are running the tests on DAS, you can run a job using `srun` command.
+For instance,
+
+```shell
+srun -N 1 -C TitanX --gres=gpu:1 make test
+```
+
+This command will run the tests in one of the worker nodes with a GPU device.
+
+## Linting and Formatting
 
 We use the following linters and formatters in this project:
 
@@ -102,7 +147,7 @@ In addition, you can install VSCode extensions for many of these linters. Here i
 - [VSCode extension clang-tidy](https://marketplace.visualstudio.com/items?itemName=notskm.clang-tidy)
 - [VSCode extension Clang-Format](https://marketplace.visualstudio.com/items?itemName=xaver.clang-format)
 
-#### Linters on Codacy
+### Linters on Codacy
 
 We use [Codacy](codacy.com) for online linting information.
 Codacy runs `cppcheck` and `flawfinder` online but to run `clang-tidy` we have to create a GitHub action, run `clang-tidy` there and push the information to Codacy.
@@ -114,7 +159,7 @@ But if it gets revoked, or for forks, follow the steps in the [Codacy API tokens
 
 After a pull request is created, a Codacy test should appear. Follow the link there or [here](https://app.codacy.com/gh/nlesc-recruit/CUDA-wrappers) for the results.
 
-#### pre-commit hooks (optional)
+### pre-commit hooks (optional)
 
 `pre-commit` is a tool that can automatically run linters, formatters, or any other executables whenever you commit code with `git commit`.
 
@@ -199,58 +244,6 @@ pre-commit run cmake-format --file CMakeLists.txt
 ```
 
 See [https://pre-commit.com/](https://pre-commit.com/) for more information.
-
-## Building
-
-:construction: See issue #33
-
-The following commands will compile and create a library `libcudawrappers.so`.
-
-```sh
-cmake -S . -B build
-make --directory=build
-```
-
----
-
-After building the project you can now run the formatters and linters.
-You can do that by entering the `build` folder and running the `format` and `lint` make targets:
-
-```sh
-cd build
-make format
-make lint
-```
-
-For more details check the [Linters and Formatters](#linters-and-formatters) section.
-
-You can run the individual tools by calling
-
-```sh
-make <tool>
-```
-
-where `<tool>` can be any of the following:
-
-- `cmake-format`
-- `cmake-lint`
-- `clang-format`
-- `clang-tidy`
-- `cppcheck`
-- `flawfinder`
-
-## Running the tests
-
-Enter the `build` directory and run `make test`.
-
-If you are running the tests on DAS, you can run a job using `srun` command.
-For instance,
-
-```shell
-srun -N 1 -C TitanX --gres=gpu:1 make test
-```
-
-This command will run the tests in one of the worker nodes with a GPU device.
 
 ## Building the API documentation
 
