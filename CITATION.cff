@@ -64,3 +64,5 @@ keywords:
   - GPU
   - accelerators
 license: Apache-2.0
+date-released: 2022-03-08
+version: "0.3.0"
