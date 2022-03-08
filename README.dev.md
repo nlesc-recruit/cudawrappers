@@ -80,7 +80,7 @@ make format
 make lint
 ```
 
-For more details check the [Linters and Formatters](#linters-and-formatters) section.
+For more details check the [Linters and Formatters](#linting-and-formatting) section.
 
 You can run the individual tools by calling
 
