@@ -29,7 +29,7 @@ g++ --version
 make --version
 ```
 
-On a Debian-like system you can install them with
+On a Debian-based system you can install them with
 
 ```shell
 sudo apt install build-essential
@@ -48,13 +48,15 @@ export PATH=$PREFIX/bin:$PATH
 
 Remember to update your environment either by logging out and in again, or running `source $HOME/.bashrc`.
 
-### CUDA and NVidia
+### Hardware requirements
 
-You need a GPU with a [Nvidia Pascal](https://www.nvidia.com/en-in/geforce/products/10series/architecture/) architecture or newer to properly test this library.
-Additionally, you need to install current Nvidia drivers. Ideally the latest drivers.
-The earliest driver version we tested was 455.32.
+You need a GPU with a [NVIDIA Pascal](https://www.nvidia.com/en-in/geforce/products/10series/architecture/) architecture or newer to properly use this library.
 
-You also need CUDA 10 or newer, which can be installed in a Debian-like system with the following command:
+### CUDA Toolkit and NVIDIA drivers
+
+You need to install current NVIDIA drivers. Ideally the latest drivers. The earliest driver version we tested was `455.32`. Runnning `nvidia-smi` command will provide information about the installed driver and CUDA version. You can also see the details of the GPU device.
+
+You also need `CUDA 10` or newer, which can be installed in a Debian-like system with the following command:
 
 ```shell
 sudo apt install nvidia-cuda-toolkit
@@ -70,32 +72,6 @@ The following commands will compile and create a library `libcudawrappers.so`.
 cmake -S . -B build
 make --directory=build
 ```
-
-After building the project you can now run the formatters and linters.
-You can do that by entering the `build` folder and running the `format` and `lint` make targets:
-
-```sh
-cd build
-make format
-make lint
-```
-
-For more details check the [Linters and Formatters](#linting-and-formatting) section.
-
-You can run the individual tools by calling
-
-```sh
-make <tool>
-```
-
-where `<tool>` can be any of the following:
-
-- `cmake-format`
-- `cmake-lint`
-- `clang-format`
-- `clang-tidy`
-- `cppcheck`
-- `flawfinder`
 
 ## Running the tests
 
@@ -141,7 +117,32 @@ python3 -m pip install flawfinder cmakelang
 The formatter `clang-format` will format all source files, and `cmake-format` will format all CMake-related files.
 The linters will check for errors and bugs, but also style-related issues. So run the formatters before running the linters.
 
-Check how to run them in the [Building](#building) section below.
+
+After building the project you can now run the formatters and linters.
+You can do that by entering the `build` folder and running the `format` and `lint` make targets:
+
+```sh
+cd build
+make format
+make lint
+```
+
+For more details check the [Linting and Formatting](#linting-and-formatting) section.
+
+You can run the individual tools by calling
+
+```sh
+make <tool>
+```
+
+where `<tool>` can be any of the following:
+
+- `cmake-format`
+- `cmake-lint`
+- `clang-format`
+- `clang-tidy`
+- `cppcheck`
+- `flawfinder`
 
 In addition, you can install VSCode extensions for many of these linters. Here is a short list:
 
