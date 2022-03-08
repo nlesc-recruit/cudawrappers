@@ -211,7 +211,122 @@ where `<tool>` can be any of the following:
 1. Make sure that the GitHub-Zenodo integration is enabled for https://github.com/nlesc-recruit/cudawrappers
 1. Go to https://github.com/nlesc-recruit/cudawrappers/releases and click `Draft a new release`
 
-## Configuration of the CI on DAS
+## Continous Integration (CI)
+
+### Configuration of CI on a dedicated server
+
+#### Prerequisites
+
+* A server which you can access using SSH
+* [Ansible](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html) version 2.9.10 or later
+  * Option 1 - Using a Python virtual environment and
+    `pip install ansible`.
+  * Option 2 - Using package manager (tested on Ubuntu 20.04)
+    ```shell
+        sudo apt update
+        sudo apt install ansible
+    ```
+
+#### Set SSH keys
+
+In order to access to the server, you will need to create ssh keys. Please see [this link](https://www.digitalocean.com/community/tutorials/how-to-configure-ssh-key-based-authentication-on-a-linux-server)
+
+#### Configuration
+
+##### Step-1 Creating the Ansible inventory file
+
+To use Ansible you need an [inventory file](https://docs.ansible.com/ansible/latest/user_guide/intro_inventory.html). An example inventory file called `hosts` is given below.
+
+```shell
+hpchosts:
+  hosts:
+    hpc:
+  vars:
+    ansible_user: tester
+    ansible_connection: ssh
+    ansible_host: SERVER_IP
+    ansible_port: 22
+    ansible_ssh_private_key_file: SSH_KEY_FILE
+    # Newer Ansible expect python to be v3, while in Ubuntu 18.04 it is still v2
+    ansible_python_interpreter: /usr/bin/python3
+```
+
+Ansible playbook will ask for which GitHub account/organization and repository it should setup a runner for.
+
+When Ansible command is executed, the Ansible playbook will ask for
+
+- the user or organization name
+- the repository name
+
+For [cudawrappers](https://github.com/nlesc-recruit/cudawrappers) repository the organization name is `nlesc-recruit` and the repository name is `cudawrappers`.
+
+##### Step-2 Generating a Github Personal Access Token
+
+The Ansible playbook uses Personal Access Token for GitHub account to register the runner.
+The token needs to have full admin rights for the repo. The only scope needed is `repo          Full control of private repositories`.
+
+![Token permissions](https://github.com/ci-for-research/self-hosted-runners/raw/master/images/token_permissions.png)
+
+The token can be created [here](https://github.com/settings/tokens).
+
+The generated token should be set as the `PAT` environment variable.
+
+```shell
+export PAT=xxxxxxxxxxxxxxx
+```
+
+#### Install GitHub Action runner
+
+##### Step 1- Testing the connection with the server
+To install GitHub Action runner we use an Ansible playbook to provision the server.
+
+To test the connection with the server, Ansible can run ping command.
+
+```shell
+ansible all -m ping
+```
+
+If it successfully connects to the server, the output should be something like
+
+```shell
+hpc | SUCCESS => {
+    "changed": false,
+    "ping": "pong"
+}
+```
+
+##### Step 2- Installing required Ansible dependencies
+
+The playbook uses roles from [Ansible galaxy](https://galaxy.ansible.com/), they must be downloaded with
+
+```shell
+ansible-galaxy install -r requirements.yml
+```
+
+##### Step 3- Provisioning (installation on the server)
+
+To provision server use
+
+```shell
+ansible-playbook --ask-become-pass playbook.yml
+```
+
+To view the log of the runner, you can connect to the server via ssh and run
+
+```shell
+journalctl -u actions.runner.*
+```
+
+#### Uninstalling the runner
+
+First unregister runner with
+
+```shell
+ansible-playbook --ask-become-pass playbook.yml --tags uninstall
+```
+
+
+#### Configuration of the CI on DAS
 
 _This needs to be done only by one of the main administrators of the project._
 
