@@ -230,7 +230,7 @@ The configuration files mentioned in this section can also be found at <https://
 
 #### Generate SSH keys
 
-In order to access to the server, you will need to create ssh keys. Please see [this link](https://www.digitalocean.com/community/tutorials/how-to-configure-ssh-key-based-authentication-on-a-linux-server)
+In order to access to the server, you will need to create ssh keys. Please see [this link](https://www.digitalocean.com/community/tutorials/how-to-configure-ssh-key-based-authentication-on-a-linux-server).
 
 #### Configuration
 
@@ -291,6 +291,7 @@ export PAT=xxxxxxxxxxxxxxx
 #### Install GitHub Action runner
 
 ##### Step 1- Testing the connection with the server
+
 To install GitHub Action runner we use an Ansible playbook to provision the server.
 
 To test the connection with the server, Ansible can run ping command.
@@ -312,7 +313,6 @@ hpc | SUCCESS => {
 
 The playbook uses roles from [Ansible galaxy](https://galaxy.ansible.com/). The requirements should be added to `requirements.yml` as show below.
 
-
 **requirements.yml:**
 ```shell
 ---
@@ -326,7 +326,6 @@ The requirements must be downloaded with
 ```shell
 ansible-galaxy install -r requirements.yml
 ```
-
 
 ##### Step 3- Provisioning (installation on the server)
 
@@ -358,8 +357,7 @@ First unregister runner with
 ansible-playbook --ask-become-pass playbook.yml --tags uninstall
 ```
 
-
-#### Configuration of the CI on DAS
+### Configuration of the CI on DAS
 
 _This needs to be done only by one of the main administrators of the project._
 
