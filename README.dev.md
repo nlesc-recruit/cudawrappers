@@ -151,7 +151,7 @@ In addition, you can install VSCode extensions for many of these linters. Here i
 
 ### Linters on Codacy
 
-We use [Codacy](codacy.com) for online linting information.
+We use [Codacy](https://www.codacy.com) for online linting information.
 Codacy runs `cppcheck` and `flawfinder` online but to run `clang-tidy` we have to create a GitHub action, run `clang-tidy` there and push the information to Codacy.
 Check the file [codacy.yml](.github/workflows/codacy.yml) for details on how that is done.
 
