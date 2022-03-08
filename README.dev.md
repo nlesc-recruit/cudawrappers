@@ -9,6 +9,7 @@ cd <where you keep your GitHub repositories>
 git clone https://github.com/nlesc-recruit/cudawrappers.git
 cd cudawrappers
 ```
+
 ## Prerequisities 
 
 ### Build tools
@@ -63,16 +64,12 @@ Check that `nvcc` is working with `nvcc --version`.
 
 ## Building
 
-:construction: See issue #33
-
 The following commands will compile and create a library `libcudawrappers.so`.
 
 ```sh
 cmake -S . -B build
 make --directory=build
 ```
-
----
 
 After building the project you can now run the formatters and linters.
 You can do that by entering the `build` folder and running the `format` and `lint` make targets:
@@ -102,7 +99,12 @@ where `<tool>` can be any of the following:
 
 ## Running the tests
 
+### Running the tests locally
+
 Enter the `build` directory and run `make test`.
+
+
+### Running the tests on DAS
 
 If you are running the tests on DAS, you can run a job using `srun` command.
 For instance,
@@ -123,7 +125,7 @@ We use the following linters and formatters in this project:
 - [cppcheck](https://cppcheck.sourceforge.io)
 - [flawfinder](https://dwheeler.com/flawfinder/)
 
-You can install these tools on a Debian-like system as follows:
+You can install these tools on a Debian-based system as follows:
 
 ```shell
 # install cppcheck, clang-tidy, clang-format from your package manager
