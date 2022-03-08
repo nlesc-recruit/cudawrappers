@@ -31,10 +31,6 @@ Originally, the API enforced RAII to even further reduce the risk of faulty code
 | ----------- | ----------- |
 | GPU architecture        | [NVIDIA PASCAL](https://www.nvidia.com/en-in/geforce/products/10series/architecture/) or newer|
 
-## Developer documentation
-
-See [README.dev.md](README.dev.md) for documentation on setting up your development environment.
-
 ## Usage
 
 We use CMake in this project, so you can clone and build this library with the following steps:
@@ -97,3 +93,7 @@ url: https://github.com/apardyl/cudaplusplus
 ## Contributing
 
 See [CONTRIBUTING](CONTRIBUTING.md) for a guide on how to contribute.
+
+## Developer documentation
+
+See [README.dev.md](README.dev.md) for documentation on setting up your development environment.
