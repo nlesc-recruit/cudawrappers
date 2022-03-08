@@ -278,15 +278,20 @@ To view the generated documentation, open `_build/html/index.html` in your web-b
 
 ## Making a release
 
-:construction: See issue #30
-
 ### Preparation
 
 1. Make sure the `CHANGELOG.md` describes what was added, changed, or removed since the previous version. Limit the scope of the description to include only those things that affect semantic versioning (so things like changes to a github action do not need to be included in the CHANGELOG). See [semver.org](https://semver.org) for more details
 1. Verify that the information in `CITATION.cff` is correct (authors, dates, etc.)
-1. Make sure that any version strings anywhere in the software have been updated (e.g. CITATION.cff, CMakeLists.txt, etc.)
+1. Make sure that any version strings anywhere in the software have been updated (e.g. CITATION.cff, CMakeLists.txt, cudawrappers-config.cmake, docs/conf.py etc.)
+1. Make sure all the tests are passing
+1. Make sure all the workflows are successful (see <https://github.com/nlesc-recruit/cudawrappers/actions?query=branch%3Amain>)
 
 ### GitHub
 
 1. Make sure that the GitHub-Zenodo integration is enabled for https://github.com/nlesc-recruit/cudawrappers
 1. Go to https://github.com/nlesc-recruit/cudawrappers/releases and click `Draft a new release`
+
+### Verification
+
+1. Make sure the new release is added to Zenodo (see <https://zenodo.org/record/6076447>)
+1. Make sure the online documentation is built for the latest release (see <https://cudawrappers.readthedocs.io/en/latest/>)
