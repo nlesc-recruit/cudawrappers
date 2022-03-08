@@ -44,7 +44,7 @@ cmake -S . -B build
 make -C build
 ```
 
-The library `libcudawrappers.so` will be available in the build directory.
+This command will create a `build` folder, compile the code and generate the library `libcudawrappers.so` in the build directory.
 For more details on the building requirements and on testing, check the [developer documentation](README.dev.md).
 
 ### Usage examples
