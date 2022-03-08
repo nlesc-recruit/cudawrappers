@@ -226,17 +226,19 @@ where `<tool>` can be any of the following:
         sudo apt update
         sudo apt install ansible
     ```
+The configuration files mentioned in this section can also be found at <https://github.com/ci-for-research/self-hosted-runners/tree/master/ubuntu-surf-hpc-cloud>.
 
-#### Set SSH keys
+#### Generate SSH keys
 
 In order to access to the server, you will need to create ssh keys. Please see [this link](https://www.digitalocean.com/community/tutorials/how-to-configure-ssh-key-based-authentication-on-a-linux-server)
 
 #### Configuration
 
-##### Step-1 Creating the Ansible inventory file
+##### Step-1 Creating the Ansible inventory file and Ansible configuration file
 
-To use Ansible you need an [inventory file](https://docs.ansible.com/ansible/latest/user_guide/intro_inventory.html). An example inventory file called `hosts` is given below.
+To use Ansible you need an [inventory file](https://docs.ansible.com/ansible/latest/user_guide/intro_inventory.html). An example inventory file called `hosts` and ansible configuration `ansible.cfg` are given below.
 
+**hosts**
 ```shell
 hpchosts:
   hosts:
@@ -251,9 +253,20 @@ hpchosts:
     ansible_python_interpreter: /usr/bin/python3
 ```
 
-Ansible playbook will ask for which GitHub account/organization and repository it should setup a runner for.
+**ansible.cfg**
+```shell
+[defaults]
+inventory = ./hosts
 
-When Ansible command is executed, the Ansible playbook will ask for
+# Use the YAML callback plugin.
+stdout_callback = yaml
+# Use the stdout_callback when running ad-hoc commands.
+bin_ansible_callbacks = True
+```
+
+You will need to change `SERVER_IP` with the IP address of the server and `SSH_KEY_FILE` with the path of the ssh key you generated.
+
+When Ansible command is executed in next steps, the Ansible playbook will ask for
 
 - the user or organization name
 - the repository name
@@ -297,13 +310,33 @@ hpc | SUCCESS => {
 
 ##### Step 2- Installing required Ansible dependencies
 
-The playbook uses roles from [Ansible galaxy](https://galaxy.ansible.com/), they must be downloaded with
+The playbook uses roles from [Ansible galaxy](https://galaxy.ansible.com/). The requirements should be added to `requirements.yml` as show below.
+
+
+**requirements.yml:**
+```shell
+---
+roles:
+  - src: monolithprojects.github_actions_runner
+  - src: nickjj.docker
+```
+
+The requirements must be downloaded with
 
 ```shell
 ansible-galaxy install -r requirements.yml
 ```
 
+
 ##### Step 3- Provisioning (installation on the server)
+
+To provision the runner, we will use Ansible playbook from [ci-for-research tutorial](https://github.com/ci-for-research/self-hosted-runners).
+
+To download the playbook run:
+
+```shell
+wget https://github.com/ci-for-research/self-hosted-runners/raw/master/ubuntu-surf-hpc-cloud/playbook.yml
+```
 
 To provision server use
 
