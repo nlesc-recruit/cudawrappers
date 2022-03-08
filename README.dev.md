@@ -117,9 +117,7 @@ python3 -m pip install flawfinder cmakelang
 The formatter `clang-format` will format all source files, and `cmake-format` will format all CMake-related files.
 The linters will check for errors and bugs, but also style-related issues. So run the formatters before running the linters.
 
-
-After building the project you can now run the formatters and linters.
-You can do that by entering the `build` folder and running the `format` and `lint` make targets:
+To run the formatters and linters, you first need to build the project. After this run:
 
 ```sh
 cd build
@@ -127,15 +125,13 @@ make format
 make lint
 ```
 
-For more details check the [Linting and Formatting](#linting-and-formatting) section.
-
-You can run the individual tools by calling
+You can also run the individual tools by calling
 
 ```sh
-make <tool>
+make <tool_name>
 ```
 
-where `<tool>` can be any of the following:
+where `<tool_name>` can be any of the following:
 
 - `cmake-format`
 - `cmake-lint`
