@@ -35,7 +35,21 @@ Originally, the API enforced RAII to even further reduce the risk of faulty code
 
 See [README.dev.md](README.dev.md) for documentation on setting up your development environment.
 
-## Usage examples
+## Usage
+
+We use CMake in this project, so you can clone and build this library with the following steps:
+
+```shell
+git clone https://github.com/nlesc-recruit/cudawrappers
+cd cudawrappers
+cmake -S . -B build
+make -C build
+```
+
+This command will create a `build` folder, compile the code and generate the library `libcudawrappers.so` in the build directory.
+For more details on the building requirements and on testing, check the [developer documentation](README.dev.md).
+
+### Usage examples
 
 You can include the cudawrappers library in your own projects in various ways. We have created a few repositories with example setups to get you started:
 
