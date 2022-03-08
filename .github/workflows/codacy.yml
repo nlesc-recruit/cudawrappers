@@ -24,9 +24,9 @@ jobs:
           PROJECT_TOKEN: ${{ secrets.CODACY_PROJECT_TOKEN }}
         run: |
           export COMMIT=$(if [ ${{ github.event_name }} == "pull_request" ]; then echo "${{ github.event.pull_request.head.sha }}"; else echo "${{ github.sha }}"; fi)
-          wget https://github.com/codacy/codacy-clang-tidy/releases/download/${CODACY_CLANG_TIDY_VERSION}/codacy-clang-tidy-linux-${CODACY_CLANG_TIDY_VERSION} -O codacy-clang-tidy-latest
+          wget https://github.com/codacy/codacy-clang-tidy/releases/download/${CODACY_CLANG_TIDY_VERSION}/codacy-clang-tidy-linux-${CODACY_CLANG_TIDY_VERSION} -O codacy-clang-tidy-${CODACY_CLANG_TIDY_VERSION}
           git clone https://github.com/codacy/codacy-clang-tidy
-          chmod a+x codacy-clang-tidy-latest codacy-clang-tidy/scripts/send-results.sh
+          chmod a+x codacy-clang-tidy-${CODACY_CLANG_TIDY_VERSION} codacy-clang-tidy/scripts/send-results.sh
           cmake -S . -B build
           make --directory=build clang-tidy | codacy-clang-tidy/scripts/send-results.sh | tee curl-output
           # Return 1 if error is found
