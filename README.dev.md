@@ -75,12 +75,11 @@ make --directory=build
 
 ## Running the tests
 
-### Running the tests locally
+Running the tests locally, enter the `build` directory and run:
 
-Enter the `build` directory and run `make test`.
-
-
-### Running the tests on DAS
+```shell
+make test
+```
 
 If you are running the tests on DAS, you can run a job using `srun` command.
 For instance,
