@@ -56,7 +56,7 @@ You need a GPU with a [NVIDIA Pascal](https://www.nvidia.com/en-in/geforce/produ
 
 You need to install current NVIDIA drivers. Ideally the latest drivers. The earliest driver version we tested was `455.32`. Runnning `nvidia-smi` command will provide information about the installed driver and CUDA version. You can also see the details of the GPU device.
 
-You also need `CUDA 10` or newer, which can be installed in a Debian-like system with the following command:
+You also need `CUDA 10` or newer, which can be installed in a Debian-based system with the following command:
 
 ```shell
 sudo apt install nvidia-cuda-toolkit
@@ -75,7 +75,7 @@ make --directory=build
 
 ## Running the tests
 
-Running the tests locally, enter the `build` directory and run:
+To run the tests locally, enter the `build` directory and run:
 
 ```shell
 make test
@@ -151,7 +151,7 @@ We use [Codacy](https://www.codacy.com) for online linting information.
 Codacy runs `cppcheck` and `flawfinder` online but to run `clang-tidy` we have to create a GitHub action, run `clang-tidy` there and push the information to Codacy.
 Check the file [codacy.yml](.github/workflows/codacy.yml) for details on how that is done.
 
-To run `clang-tidy` on Codacy for this project or a fork, you will need to define a `CODACY_PROJECT_TOKEN` secret.
+To run `clang-tidy` on Codacy for this project or a fork, you will need to define a secret called with a name of `CODACY_PROJECT_TOKEN`. See [GitHub docs](https://docs.github.com/en/actions/security-guides/encrypted-secrets) to learn more about secrets.
 For the `main` branch and pull requests originating from inside this repo, there is no need to create a new token.
 But if it gets revoked, or for forks, follow the steps in the [Codacy API tokens page](https://docs.codacy.com/codacy-api/api-tokens/) for details on how to create one.
 
