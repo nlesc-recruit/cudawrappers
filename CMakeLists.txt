@@ -5,7 +5,8 @@ project(
   DESCRIPTION "C++ Wrappers for the CUDA Driver API"
   VERSION 0.3.0
   HOMEPAGE_URL https://github.com/nlesc-recruit/cudawrappers
-  LANGUAGES CUDA CXX)
+  LANGUAGES CXX)
+
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_BUILD_TYPE "Release")
 
@@ -18,10 +19,14 @@ endif()
 
 set(SOURCE_FILES src/cu.cpp src/nvrtc.cpp)
 
-include_directories(./include/)
-include_directories(${CUDAToolkit_INCLUDE_DIRS})
-
 add_library(cudawrappers SHARED ${SOURCE_FILES})
+
+target_include_directories(
+  cudawrappers
+  PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include"
+  PRIVATE ${CUDAToolkit_INCLUDE_DIRS})
+
+target_link_libraries(cudawrappers PUBLIC CUDA::cuda_driver CUDA::nvrtc)
 
 # Including linters rules
 include(cmake/linter-tools.cmake)
