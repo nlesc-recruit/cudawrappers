@@ -1,7 +1,8 @@
 cmake_minimum_required(VERSION 3.17 FATAL_ERROR)
 
+set(project cudawrappers)
 project(
-  cudawrappers
+  ${project}
   DESCRIPTION "C++ Wrappers for the CUDA Driver API"
   VERSION 0.3.0
   HOMEPAGE_URL https://github.com/nlesc-recruit/cudawrappers
@@ -23,7 +24,7 @@ add_library(cudawrappers SHARED ${SOURCE_FILES})
 
 target_include_directories(
   cudawrappers
-  PUBLIC $<INSTALL_INTERFACE:include/cudawrappers>
+  PUBLIC $<INSTALL_INTERFACE:include/${project}>
          $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   PRIVATE ${CUDAToolkit_INCLUDE_DIRS})
 
@@ -38,18 +39,25 @@ add_subdirectory(tests)
 # Installation
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/include/cu.hpp
               ${CMAKE_CURRENT_SOURCE_DIR}/include/nvrtc.hpp
-        DESTINATION "include/cudawrappers")
+        DESTINATION include/${project})
 
 install(
   TARGETS cudawrappers
-  EXPORT cudawrappers-export
+  EXPORT cudawrappers-targets
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib)
 
 install(
-  EXPORT cudawrappers-export
-  FILE cudawrappers-targets.cmake
-  DESTINATION lib/cmake/cudawrappers)
+  EXPORT cudawrappers-targets
+  FILE ${project}-targets.cmake
+  DESTINATION lib/cmake/${project})
 
-install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/cmake/cudawrappers-config.cmake
-        DESTINATION "lib/cmake/cudawrappers")
+include(CMakePackageConfigHelpers)
+write_basic_package_version_file(
+  ${CMAKE_CURRENT_BINARY_DIR}/cmake/${project}-config-version.cmake
+  VERSION ${cudawrappers_VERSION}
+  COMPATIBILITY AnyNewerVersion)
+
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/cmake/${project}-config.cmake
+              ${CMAKE_CURRENT_BINARY_DIR}/cmake/${project}-config-version.cmake
+        DESTINATION lib/cmake/${project})
