@@ -22,6 +22,8 @@ include(GNUInstallDirs)
 foreach(component ${COMPONENTS})
   # Create library
   add_library(${component})
+  # Add a pretend namespace for use cases where the project in not installed
+  add_library(${PROJECT_NAME}::${component} ALIAS ${component})
   # Add sources
   target_sources(${component} PRIVATE src/${component}.cpp)
   # Add headers
