@@ -5,7 +5,8 @@ project(
   DESCRIPTION "C++ Wrappers for the CUDA Driver API"
   VERSION 0.3.0
   HOMEPAGE_URL https://github.com/nlesc-recruit/cudawrappers
-  LANGUAGES CXX)
+  LANGUAGES CXX
+)
 
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_BUILD_TYPE Release)
@@ -27,8 +28,9 @@ foreach(component ${COMPONENTS})
   # Add sources
   target_sources(${component} PRIVATE src/${component}.cpp)
   # Add headers
-  set_target_properties(${component} PROPERTIES
-                        PUBLIC_HEADER include/${component}.hpp)
+  set_target_properties(
+    ${component} PROPERTIES PUBLIC_HEADER include/${component}.hpp
+  )
   # Add the project name as a prefix to the output libraries
   set_target_properties(${component} PROPERTIES PREFIX ${PROJECT_NAME}-)
   # Add includes
@@ -36,7 +38,8 @@ foreach(component ${COMPONENTS})
     ${component}
     PUBLIC $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}>
            $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    PRIVATE ${CUDAToolkit_INCLUDE_DIRS})
+    PRIVATE ${CUDAToolkit_INCLUDE_DIRS}
+  )
   # Add links
   target_link_libraries(${component} PUBLIC ${LINK_${component}})
   # Install libraries and headers
@@ -44,28 +47,33 @@ foreach(component ${COMPONENTS})
     TARGETS ${component}
     EXPORT ${component}-config # export component cmake targets
     COMPONENT ${component}
-    PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME})
+    PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}
+  )
   # Install component cmake targets
   install(
     EXPORT ${component}-config
     NAMESPACE ${PROJECT_NAME}::
-    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME})
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
+  )
 endforeach()
 
 # Install project cmake targets
 include(CMakePackageConfigHelpers)
 
-configure_file(cmake/${PROJECT_NAME}-config.cmake.in
-               ${PROJECT_NAME}-config.cmake @ONLY)
+configure_file(
+  cmake/${PROJECT_NAME}-config.cmake.in ${PROJECT_NAME}-config.cmake @ONLY
+)
 
 write_basic_package_version_file(
   ${PROJECT_NAME}-config-version.cmake
   VERSION ${cudawrappers_VERSION}
-  COMPATIBILITY AnyNewerVersion)
+  COMPATIBILITY AnyNewerVersion
+)
 
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config.cmake
               ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config-version.cmake
-        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME})
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
+)
 
 # Including linters rules
 include(cmake/linter-tools.cmake)
