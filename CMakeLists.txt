@@ -50,8 +50,9 @@ if(CUDAWRAPPERS_BUILD_TESTING)
 endif()
 
 # Define components
-set(COMPONENTS cu nvrtc nvtx)
+set(COMPONENTS cu cufft nvrtc nvtx)
 set(LINK_cu CUDA::cuda_driver)
+set(LINK_cufft CUDA::cuda_driver CUDA::cufft)
 set(LINK_nvrtc CUDA::cuda_driver CUDA::nvrtc)
 set(LINK_nvtx CUDA::nvToolsExt)
 
