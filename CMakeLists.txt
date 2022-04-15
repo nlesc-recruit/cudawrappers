@@ -12,7 +12,8 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_BUILD_TYPE Release)
 option(BUILD_SHARED_LIBS "Create shared libraries" True)
 
-find_package(CUDAToolkit REQUIRED)
+set(CUDA_MIN_VERSION 10.0)
+find_package(CUDAToolkit ${CUDA_MIN_VERSION} REQUIRED)
 
 # Define components
 set(COMPONENTS cu nvrtc)
