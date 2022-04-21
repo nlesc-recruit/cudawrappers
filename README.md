@@ -45,6 +45,15 @@ make -C build
 This command will create a `build` folder, compile the code and generate the library `libcudawrappers.so` in the build directory.
 For more details on the building requirements and on testing, check the [developer documentation](README.dev.md).
 
+To install to `~/.local`, use
+```shell
+git clone https://github.com/nlesc-recruit/cudawrappers
+cd cudawrappers
+cmake -DCMAKE_INSTALL_PREFIX=$HOME/.local -S . -B build
+make -C build
+make -C build install
+```
+
 ### Usage examples
 
 You can include the cudawrappers library in your own projects in various ways. We have created a few repositories with example setups to get you started:
