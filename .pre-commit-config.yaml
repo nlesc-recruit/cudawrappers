@@ -1,17 +1,26 @@
 repos:
+  - repo: https://github.com/pre-commit/mirrors-clang-format
+    rev: v14.0.1
+    hooks:
+      - id: clang-format
   - repo: https://github.com/pocc/pre-commit-hooks
     rev: v1.3.5
     hooks:
-      - id: clang-format
-        args: [--style=Google]
       - id: clang-tidy
       - id: cppcheck
   - repo: https://github.com/cheshirekow/cmake-format-precommit
     rev: v0.6.13
     hooks:
-    - id: cmake-format
-    - id: cmake-lint
+      - id: cmake-format
+      - id: cmake-lint
   - repo: https://github.com/citation-file-format/cff-converter-python
     rev: ebf0b5e44d67f8beaa1cd13a0d0393ea04c6058d
     hooks:
-    - id: validate-cff
+      - id: validate-cff
+
+ci:
+  skip:
+    - clang-tidy
+    - cppcheck
+    - cmake-lint
+    - validate-cff
