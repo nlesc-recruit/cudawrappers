@@ -2,7 +2,7 @@
 
 If you're looking for user documentation, go [here](README.md).
 
-Before you can do development work on the template, you'll need to check out a local copy of the repository:
+Before you can do development work, you'll need to check out a local copy of the repository:
 
 ```shell
 cd <where you keep your GitHub repositories>
@@ -10,7 +10,22 @@ git clone https://github.com/nlesc-recruit/cudawrappers.git
 cd cudawrappers
 ```
 
-## Prerequisites 
+## Prerequisites
+
+### Development environment
+
+As a convenience, a virtual [conda](https://conda.io) environment is provided in
+[environment.yml](environment.yml).
+This environment contains all tools needed for developing.
+To use it, first install [mambaforge](https://github.com/conda-forge/miniforge#mambaforge)
+and next create the environment with
+```bash
+mamba env create --file environment.yml --name cudawrappers
+```
+and activate the new environment with the command
+```bash
+mamba activate cudawrappers
+```
 
 ### Build tools
 
@@ -248,9 +263,9 @@ See [https://pre-commit.com/](https://pre-commit.com/) for more information.
 The API documentation is automatically generated for `main` branch and the pull requests to be merged to `main` branch.
 The documentation is hosted at <https://cudawrappers.readthedocs.io/en/latest/> and is automatically built by readthedocs service.
 
-### Building locally 
+### Building locally
 
-To build the documentation locally, you will need the following dependencies. 
+To build the documentation locally, you will need the following dependencies.
 
 - [doxygen](https://www.doxygen.nl/index.html)
 - Python packages:
