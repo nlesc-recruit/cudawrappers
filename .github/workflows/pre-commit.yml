@@ -2,7 +2,6 @@ name: pre-commit
 
 on:
   push:
-  pull_request:
   workflow_dispatch:
 
 jobs:
@@ -59,7 +58,6 @@ jobs:
       - name: Install dependencies of pre-commit hooks
         shell: bash
         run: |
-          sudo apt install clang-format
           sudo apt install clang-tidy
           sudo apt install cppcheck
 
