@@ -13,9 +13,9 @@
 namespace cufft {
 class Error : public std::exception {
  public:
-  Error(cufftResult result) : _result(result) {}
+  explicit Error(cufftResult result) : _result(result) {}
 
-  virtual const char *what() const noexcept;
+  const char *what() const noexcept override;
 
   operator cufftResult() const { return _result; }
 
@@ -45,32 +45,37 @@ class FFT {
 
  private:
   static void checkCuFFTcall(cufftResult result) {
-    if (result != CUFFT_SUCCESS) throw Error(result);
+    if (result != CUFFT_SUCCESS) {
+      throw Error(result);
+    }
   }
 
-  cufftHandle plan;
+  cufftHandle plan{};
 };
 
 template <>
 inline FFT<cufftComplex, cufftComplex, 1>::FFT(unsigned n, unsigned count) {
-  plan = 0;
-  checkCuFFTcall(cufftPlan1d(&plan, n, CUFFT_C2C, count));
+  checkCuFFTcall(cufftCreate(&plan));
+  checkCuFFTcall(cufftPlan1d(&plan, static_cast<int>(n), CUFFT_C2C,
+                             static_cast<int>(count)));
 }
 
 template <>
 inline FFT<cufftComplex, cufftComplex, 1>::FFT(unsigned n, unsigned count,
                                                CUdeviceptr workArea,
                                                size_t workSize) {
-  size_t neededWorkSize;
-
-  plan = 0;
   checkCuFFTcall(cufftCreate(&plan));
   checkCuFFTcall(cufftSetAutoAllocation(plan, false));
-  checkCuFFTcall(cufftMakePlan1d(plan, n, CUFFT_C2C, count, &neededWorkSize));
 
-  if (workSize < neededWorkSize) throw Error(CUFFT_ALLOC_FAILED);
+  size_t neededWorkSize{};
+  checkCuFFTcall(cufftMakePlan1d(plan, static_cast<int>(n), CUFFT_C2C,
+                                 static_cast<int>(count), &neededWorkSize));
 
-  checkCuFFTcall(cufftSetWorkArea(plan, (void *)workArea));
+  if (workSize < neededWorkSize) {
+    throw Error(CUFFT_ALLOC_FAILED);
+  }
+
+  checkCuFFTcall(cufftSetWorkArea(plan, reinterpret_cast<void *>(workArea)));
 }
 
 template <>
@@ -79,7 +84,7 @@ inline FFT<std::complex<half>, std::complex<half>, 1>::FFT(unsigned n,
   checkCuFFTcall(cufftCreate(&plan));
 
   long long size = n;
-  size_t neededWorkSize;
+  size_t neededWorkSize{};
   checkCuFFTcall(cufftXtMakePlanMany(plan, 1, &size, nullptr, 1, 1, CUDA_C_16F,
                                      nullptr, 1, 1, CUDA_C_16F, count,
                                      &neededWorkSize, CUDA_C_16F));
