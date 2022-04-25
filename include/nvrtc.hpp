@@ -16,7 +16,7 @@ class Error : public std::exception {
  public:
   Error(nvrtcResult result) : _result(result) {}
 
-  virtual const char *what() const noexcept;
+  const char *what() const noexcept override;
 
   operator nvrtcResult() const { return _result; }
 
@@ -58,7 +58,7 @@ class Program {
   }
 
   std::string getPTX() {
-    size_t size;
+    size_t size{};
     std::string ptx;
 
     checkNvrtcCall(nvrtcGetPTXSize(program, &size));
@@ -69,7 +69,7 @@ class Program {
 
 #if CUDA_VERSION >= 11020
   std::vector<char> getCUBIN() {
-    size_t size;
+    size_t size{};
     std::vector<char> cubin;
 
     checkNvrtcCall(nvrtcGetCUBINSize(program, &size));
@@ -80,7 +80,7 @@ class Program {
 #endif
 
   std::string getLog() {
-    size_t size;
+    size_t size{};
     std::string log;
 
     checkNvrtcCall(nvrtcGetProgramLogSize(program, &size));

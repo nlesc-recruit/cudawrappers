@@ -6,14 +6,14 @@
 namespace cu {
 
 const char *Error::what() const noexcept {
-  const char *str;
+  const char *str{};
   return cuGetErrorString(_result, &str) != CUDA_ERROR_INVALID_VALUE
              ? str
              : "unknown error";
 }
 
 Context Device::primaryCtxRetain() {
-  CUcontext context;
+  CUcontext context{};
   checkCudaCall(cuDevicePrimaryCtxRetain(&context, _obj));
   return Context(context, *this);
 }
