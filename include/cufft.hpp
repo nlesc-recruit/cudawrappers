@@ -30,7 +30,17 @@ class FFT {
   FFT(unsigned n, unsigned count);
   FFT(unsigned n, unsigned count, CUdeviceptr workArea, size_t workSize);
 
+  FFT &operator=(FFT &) = delete;
   FFT(FFT &) = delete;
+
+  FFT &operator=(FFT &&other) noexcept {
+    if (other != this) {
+      plan = other.plan;
+      other.plan = 0;
+    }
+    return *this;
+  }
+  FFT(FFT &&other) noexcept { *this = std::move(other); }
 
   ~FFT() { checkCuFFTcall(cufftDestroy(plan)); }
 
