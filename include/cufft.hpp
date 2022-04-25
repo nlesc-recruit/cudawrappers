@@ -49,7 +49,6 @@ class FFT {
   }
 
   void execute(Tin *in, Tout *out, int direction = CUFFT_FORWARD) {
-    // checkCuFFTcall(cufftExecC2C(plan, in, out, direction));
     checkCuFFTcall(cufftXtExec(plan, in, out, direction));
   }
 
