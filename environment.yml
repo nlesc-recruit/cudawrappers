@@ -8,8 +8,11 @@ dependencies:
   - clang-tools
   - cudatoolkit-dev
   - pre-commit
-  - pip
   - yamllint
+  # Documentation
+  - doxygen
+  # Install Python dependencies only available on PyPI
+  - pip
   - pip:
       - clang-format
       - cmakelang
