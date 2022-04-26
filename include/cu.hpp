@@ -66,9 +66,9 @@ class Wrapper {
     other._obj = 0;
   }
 
-  Wrapper<T>(T &obj) : _obj(obj) {}
+  explicit Wrapper<T>(T &obj) : _obj(obj) {}
 
-  T _obj;
+  T _obj{};
   std::shared_ptr<T> manager;
 };
 
@@ -302,7 +302,8 @@ class Array : public Wrapper<CUarray> {
 
 class Source {
  public:
-  Source(const char *input_file_name) : input_file_name(input_file_name) {}
+  explicit Source(const char *input_file_name)
+      : input_file_name(input_file_name) {}
 
   void compile(const char *ptx_name, const char *compile_options = nullptr);
 
@@ -312,7 +313,7 @@ class Source {
 
 class Module : public Wrapper<CUmodule> {
  public:
-  Module(const char *file_name) {
+  explicit Module(const char *file_name) {
 #if defined TEGRA_QUIRKS  // cuModuleLoad broken on Jetson TX1
     std::ifstream file(file_name);
     std::string program((std::istreambuf_iterator<char>(file)),
@@ -327,7 +328,7 @@ class Module : public Wrapper<CUmodule> {
     });
   }
 
-  Module(const void *data) {
+  explicit Module(const void *data) {
     checkCudaCall(cuModuleLoadData(&_obj, data));
     manager = std::shared_ptr<CUmodule>(new CUmodule(_obj), [](CUmodule *ptr) {
       cuModuleUnload(*ptr);
@@ -335,7 +336,7 @@ class Module : public Wrapper<CUmodule> {
     });
   }
 
-  Module(CUmodule &module) : Wrapper(module) {}
+  explicit Module(CUmodule &module) : Wrapper(module) {}
 
 #if 0
       TexRef getTexRef(const char *name) const
@@ -359,7 +360,7 @@ class Function : public Wrapper<CUfunction> {
     checkCudaCall(cuModuleGetFunction(&_obj, module, name));
   }
 
-  Function(CUfunction &function) : Wrapper(function) {}
+  explicit Function(CUfunction &function) : Wrapper(function) {}
 
   int getAttribute(CUfunction_attribute attribute) {
     int value{};
@@ -382,7 +383,7 @@ class Event : public Wrapper<CUevent> {
     });
   }
 
-  Event(CUevent &event) : Wrapper(event) {}
+  explicit Event(CUevent &event) : Wrapper(event) {}
 
   float elapsedTime(const Event &start) const {
     float ms{};
@@ -413,7 +414,7 @@ class Stream : public Wrapper<CUstream> {
     });
   }
 
-  Stream(CUstream stream) : Wrapper<CUstream>(stream) {}
+  explicit Stream(CUstream stream) : Wrapper<CUstream>(stream) {}
 
   void memcpyHtoDAsync(CUdeviceptr devPtr, const void *hostPtr, size_t size) {
     checkCudaCall(cuMemcpyHtoDAsync(devPtr, hostPtr, size, _obj));

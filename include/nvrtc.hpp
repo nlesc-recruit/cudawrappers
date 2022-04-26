@@ -14,7 +14,7 @@
 namespace nvrtc {
 class Error : public std::exception {
  public:
-  Error(nvrtcResult result) : _result(result) {}
+  explicit Error(nvrtcResult result) : _result(result) {}
 
   const char *what() const noexcept override;
 
@@ -39,7 +39,7 @@ class Program {
                                       numHeaders, headers, includeNames));
   }
 
-  Program(const std::string &filename) {
+  explicit Program(const std::string &filename) {
     std::ifstream ifs(filename);
     std::string source(std::istreambuf_iterator<char>{ifs}, {});
     checkNvrtcCall(nvrtcCreateProgram(&program, source.c_str(),
