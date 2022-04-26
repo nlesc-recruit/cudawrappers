@@ -8,7 +8,7 @@ repos:
     hooks:
       - id: clang-tidy
         types_or: ['c++', 'cuda']
-        args: ['-p=build', '--fix-notes']
+        args: ['-p=build']
       - id: cppcheck
         args: ['--project=build/compile_commands.json']
   - repo: https://github.com/cheshirekow/cmake-format-precommit
