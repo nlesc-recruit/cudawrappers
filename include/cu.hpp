@@ -164,7 +164,7 @@ class Context : public Wrapper<CUcontext> {
   static Context getCurrent() {
     CUcontext context{};
     checkCudaCall(cuCtxGetCurrent(&context));
-    return std::move(Context(context));
+    return Context(context);
   }
 
   void setCurrent() const { checkCudaCall(cuCtxSetCurrent(_obj)); }
@@ -260,25 +260,12 @@ class DeviceMemory : public Wrapper<CUdeviceptr> {
 class Array : public Wrapper<CUarray> {
  public:
   Array(unsigned width, CUarray_format format, unsigned numChannels) {
-    Array(width, 0, format, numChannels);
-    manager = std::shared_ptr<CUarray>(new CUarray(_obj), [](CUarray *ptr) {
-      cuArrayDestroy(*ptr);
-      delete ptr;
-    });
+    create2DArray(width, 0, format, numChannels);
   }
 
   Array(unsigned width, unsigned height, CUarray_format format,
         unsigned numChannels) {
-    CUDA_ARRAY_DESCRIPTOR descriptor;
-    descriptor.Width = width;
-    descriptor.Height = height;
-    descriptor.Format = format;
-    descriptor.NumChannels = numChannels;
-    checkCudaCall(cuArrayCreate(&_obj, &descriptor));
-    manager = std::shared_ptr<CUarray>(new CUarray(_obj), [](CUarray *ptr) {
-      cuArrayDestroy(*ptr);
-      delete ptr;
-    });
+    create2DArray(width, height, format, numChannels);
   }
 
   Array(unsigned width, unsigned height, unsigned depth, CUarray_format format,
@@ -291,13 +278,29 @@ class Array : public Wrapper<CUarray> {
     descriptor.NumChannels = numChannels;
     descriptor.Flags = 0;
     checkCudaCall(cuArray3DCreate(&_obj, &descriptor));
+    createManager();
+  }
+
+  explicit Array(CUarray &array) : Wrapper(array) {}
+
+ private:
+  void create2DArray(unsigned width, unsigned height, CUarray_format format,
+                     unsigned numChannels) {
+    CUDA_ARRAY_DESCRIPTOR descriptor;
+    descriptor.Width = width;
+    descriptor.Height = height;
+    descriptor.Format = format;
+    descriptor.NumChannels = numChannels;
+    checkCudaCall(cuArrayCreate(&_obj, &descriptor));
+    createManager();
+  }
+
+  void createManager() {
     manager = std::shared_ptr<CUarray>(new CUarray(_obj), [](CUarray *ptr) {
       cuArrayDestroy(*ptr);
       delete ptr;
     });
   }
-
-  explicit Array(CUarray &array) : Wrapper(array) {}
 };
 
 class Source {
