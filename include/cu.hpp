@@ -96,9 +96,10 @@ class Device : public Wrapper<CUdevice> {
   }
 
   std::string getName() const {
-    char name[64];
-    checkCudaCall(cuDeviceGetName(name, sizeof name, _obj));
-    return std::string(name);
+    const size_t max_device_name_length{64};
+    std::array<char, max_device_name_length> name{};
+    checkCudaCall(cuDeviceGetName(name.data(), name.size(), _obj));
+    return {name.data()};
   }
 
   size_t totalMem() const {
@@ -113,7 +114,7 @@ class Device : public Wrapper<CUdevice> {
     unsigned flags{};
     int active{};
     checkCudaCall(cuDevicePrimaryCtxGetState(_obj, &flags, &active));
-    return std::pair<unsigned, bool>(flags, active);
+    return {flags, active};
   }
 
   // void primaryCtxRelease() not available; it is released on destruction of
@@ -219,7 +220,7 @@ class Context : public Wrapper<CUcontext> {
 
 class HostMemory : public Wrapper<void *> {
  public:
-  explicit HostMemory(size_t size, int flags = 0) {
+  explicit HostMemory(size_t size, unsigned int flags = 0) {
     checkCudaCall(cuMemHostAlloc(&_obj, size, flags));
     manager = std::shared_ptr<void *>(new (void *)(_obj), [](void **ptr) {
       cuMemFreeHost(*ptr);
@@ -306,12 +307,12 @@ class Array : public Wrapper<CUarray> {
 class Source {
  public:
   explicit Source(const char *input_file_name)
-      : input_file_name(input_file_name) {}
+      : _input_file_name(input_file_name) {}
 
   void compile(const char *ptx_name, const char *compile_options = nullptr);
 
  private:
-  const char *input_file_name;
+  const char *_input_file_name;
 };
 
 class Module : public Wrapper<CUmodule> {
@@ -378,7 +379,7 @@ class Function : public Wrapper<CUfunction> {
 
 class Event : public Wrapper<CUevent> {
  public:
-  Event(int flags = CU_EVENT_DEFAULT) {
+  Event(unsigned int flags = CU_EVENT_DEFAULT) {
     checkCudaCall(cuEventCreate(&_obj, flags));
     manager = std::shared_ptr<CUevent>(new CUevent(_obj), [](CUevent *ptr) {
       cuEventDestroy(*ptr);
@@ -409,7 +410,7 @@ class Stream : public Wrapper<CUstream> {
   friend class Event;
 
  public:
-  Stream(int flags = CU_STREAM_DEFAULT) {
+  Stream(unsigned int flags = CU_STREAM_DEFAULT) {
     checkCudaCall(cuStreamCreate(&_obj, flags));
     manager = std::shared_ptr<CUstream>(new CUstream(_obj), [](CUstream *ptr) {
       cuStreamDestroy(*ptr);
@@ -433,7 +434,7 @@ class Stream : public Wrapper<CUstream> {
                     const std::vector<const void *> &parameters) {
     checkCudaCall(cuLaunchKernel(function, gridX, gridY, gridZ, blockX, blockY,
                                  blockZ, sharedMemBytes, _obj,
-                                 const_cast<void **>(&parameters[0]), 0));
+                                 const_cast<void **>(&parameters[0]), nullptr));
   }
 
 #if CUDART_VERSION >= 9000
@@ -456,7 +457,8 @@ class Stream : public Wrapper<CUstream> {
 
   void wait(Event &event) { checkCudaCall(cuStreamWaitEvent(_obj, event, 0)); }
 
-  void addCallback(CUstreamCallback callback, void *userData, int flags = 0) {
+  void addCallback(CUstreamCallback callback, void *userData,
+                   unsigned int flags = 0) {
     checkCudaCall(cuStreamAddCallback(_obj, callback, userData, flags));
   }
 

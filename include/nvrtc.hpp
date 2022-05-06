@@ -30,13 +30,24 @@ inline void checkNvrtcCall(nvrtcResult result) {
 
 class Program {
  public:
-  Program(const std::string &src, const std::string &name, int numHeaders = 0,
-          const char *headers[] = nullptr,
-          const char *includeNames[] =
-              nullptr)  // TODO: use std::vector<std::string>
-  {
+  Program(const std::string &src, const std::string &name,
+          const std::vector<std::string> &headers = std::vector<std::string>(),
+          const std::vector<std::string> &includeNames =
+              std::vector<std::string>()) {
+    std::vector<const char *> c_headers;
+    std::transform(headers.begin(), headers.end(),
+                   std::back_inserter(c_headers),
+                   [](const std::string &header) { return header.c_str(); });
+
+    std::vector<const char *> c_includeNames;
+    std::transform(
+        includeNames.begin(), includeNames.end(),
+        std::back_inserter(c_includeNames),
+        [](const std::string &includeName) { return includeName.c_str(); });
+
     checkNvrtcCall(nvrtcCreateProgram(&program, src.c_str(), name.c_str(),
-                                      numHeaders, headers, includeNames));
+                                      static_cast<int>(c_headers.size()),
+                                      c_headers.data(), c_includeNames.data()));
   }
 
   explicit Program(const std::string &filename) {
@@ -53,8 +64,8 @@ class Program {
     std::transform(options.begin(), options.end(),
                    std::back_inserter(c_options),
                    [](const std::string &option) { return option.c_str(); });
-    checkNvrtcCall(
-        nvrtcCompileProgram(program, c_options.size(), c_options.data()));
+    checkNvrtcCall(nvrtcCompileProgram(
+        program, static_cast<int>(c_options.size()), c_options.data()));
   }
 
   std::string getPTX() {
@@ -90,7 +101,7 @@ class Program {
   }
 
  private:
-  nvrtcProgram program;
+  nvrtcProgram program{};
 };
 }  // namespace nvrtc
 
