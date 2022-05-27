@@ -66,10 +66,10 @@ Check that `nvcc` is working with `nvcc --version`.
 
 ## Building
 
-The following commands will compile and create a library `libcudawrappers.so`.
+The following commands will compile the libraries and tests:
 
 ```sh
-cmake -S . -B build
+cmake -S . -B build -DBUILD_TESTING=ON
 make --directory=build
 ```
 
