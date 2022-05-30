@@ -12,8 +12,8 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_EXTENSIONS False)
 set(CMAKE_BUILD_TYPE Release)
 option(BUILD_SHARED_LIBS "Create shared libraries" True)
-include(CTest)
 option(BUILD_TESTING "Built tests" False)
+include(CTest)
 
 # Enable Clang compiler warnings
 if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
