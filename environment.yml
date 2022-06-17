@@ -9,6 +9,7 @@ dependencies:
   - cudatoolkit-dev
   - pre-commit
   - yamllint
+  - cmake
   # Documentation
   - doxygen
   # Install Python dependencies only available on PyPI
