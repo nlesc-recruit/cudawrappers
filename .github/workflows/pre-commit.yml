@@ -55,11 +55,11 @@ jobs:
           python3 -m pip install pre-commit
           pre-commit install
 
-      - name: Install dependencies of pre-commit hooks
+      - name: Install dependencies and generate compilation database
         shell: bash
         run: |
-          sudo apt install clang-tidy
-          sudo apt install cppcheck
+          sudo apt install clang-tidy cppcheck nvidia-cuda-toolkit clang
+          cmake -DCMAKE_CXX_COMPILER=clang++ -S . -B build
 
       - name: Run pre-commit on all files changed in this branch using project standard configuration
         shell: bash

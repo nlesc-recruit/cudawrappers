@@ -81,10 +81,10 @@ Check that `nvcc` is working with `nvcc --version`.
 
 ## Building
 
-The following commands will compile and create a library `libcudawrappers.so`.
+The following commands will compile the libraries and tests:
 
 ```sh
-cmake -S . -B build
+cmake -S . -B build -DBUILD_TESTING=ON
 make --directory=build
 ```
 
@@ -204,6 +204,15 @@ cmake-format.............................................................Failed
 cmake-lint...............................................................Passed
 Validate repo CITATION.cff file......................(no files to check)Skipped
 ```
+
+The `clang-tidy` and `cppcheck` pre-commit hooks require a file with compile
+commands.
+To generate this file, run `cmake`:
+```
+cmake -DCMAKE_CXX_COMPILER=clang++ -S . -B build
+```
+the `CMAKE_CXX_COMPILER` flag tells `cmake` to use the `clang++` compiler.
+This is not strictly necessary, but it does enable compiler warnings in `clang-tidy`.
 
 You can uninstall the pre-commit hooks by
 
