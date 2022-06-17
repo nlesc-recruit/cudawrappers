@@ -42,7 +42,8 @@ class Program {
   Program(const std::string &filename) {
     std::ifstream ifs(filename);
     if (!ifs.is_open()) {
-      throw std::runtime_error("Error opening file: '" + filename + "'");
+      throw std::runtime_error("Error opening file '" + filename +
+                               "' in cudawrappers::nvrtc");
     }
     std::string source(std::istreambuf_iterator<char>{ifs}, {});
     checkNvrtcCall(nvrtcCreateProgram(&program, source.c_str(),
