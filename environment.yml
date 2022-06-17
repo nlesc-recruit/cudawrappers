@@ -3,6 +3,7 @@ channels:
   - conda-forge
 dependencies:
   - compilers
+  - cxx-compiler
   - python
   - cppcheck
   - clang-tools
