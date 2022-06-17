@@ -12,6 +12,8 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_EXTENSIONS False)
 set(CMAKE_BUILD_TYPE Release)
 option(BUILD_SHARED_LIBS "Create shared libraries" True)
+option(BUILD_TESTING "Built tests" False)
+include(CTest)
 
 # Enable Clang compiler warnings
 if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
@@ -97,8 +99,10 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config.cmake
 # Including linters rules
 include(cmake/linter-tools.cmake)
 
-# Tests
-add_subdirectory(tests)
+# Configure tests
+if(BUILD_TESTING)
+  add_subdirectory(tests)
+endif()
 
 # --- auto-ignore build directory
 if(NOT EXISTS ${PROJECT_BINARY_DIR}/.gitignore)
