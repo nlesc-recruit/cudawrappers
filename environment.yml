@@ -3,19 +3,18 @@ channels:
   - conda-forge
 dependencies:
   - c-compiler
-  - cxx-compiler
   - clang
-  - python
-  - cppcheck
   - clang-tools
-  - cudatoolkit-dev
-  - pre-commit
-  - yamllint
   - cmake
-  # Documentation
+  - cppcheck
+  - cudatoolkit-dev
+  - cxx-compiler
   - doxygen
-  # Install Python dependencies only available on PyPI
+  - make
   - pip
+  - pre-commit
+  - python
+  - yamllint
   - pip:
       - clang-format
       - cmakelang
