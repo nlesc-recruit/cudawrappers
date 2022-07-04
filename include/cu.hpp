@@ -415,6 +415,11 @@ class Stream : public Wrapper<CUstream> {
 
   Stream(CUstream stream) : Wrapper<CUstream>(stream) {}
 
+  void memcpyHtoHAsync(void *dstPtr, const void *srcPtr, size_t size) {
+    checkCudaCall(cuMemcpyAsync(reinterpret_cast<CUdeviceptr>(dstPtr),
+                                reinterpret_cast<CUdeviceptr>(srcPtr), size, _obj));
+  }
+
   void memcpyHtoDAsync(CUdeviceptr devPtr, const void *hostPtr, size_t size) {
     checkCudaCall(cuMemcpyHtoDAsync(devPtr, hostPtr, size, _obj));
   }
