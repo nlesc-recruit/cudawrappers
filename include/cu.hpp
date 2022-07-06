@@ -250,6 +250,10 @@ class DeviceMemory : public Wrapper<CUdeviceptr> {
     checkCudaCall(cuMemHostGetDevicePointer(&_obj, hostMemory, 0));
   }
 
+  void zero(size_t size);
+
+  void zero(size_t size, Stream& stream);
+
   const void *parameter()
       const  // used to construct parameter list for launchKernel();
   {
