@@ -31,4 +31,12 @@ void Source::compile(const char *output_file_name,
   if (WEXITSTATUS(retval) != 0) throw Error(CUDA_ERROR_INVALID_SOURCE);
 }
 
+void DeviceMemory::zero(size_t size) {
+  checkCudaCall(cuMemsetD8(_obj, 0, size));
+}
+
+void DeviceMemory::zero(size_t size, Stream& stream) {
+  checkCudaCall(cuMemsetD8Async(_obj, 0, size, stream));
+}
+
 }  // namespace cu
