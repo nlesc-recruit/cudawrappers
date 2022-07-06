@@ -35,7 +35,7 @@ void DeviceMemory::zero(size_t size) {
   checkCudaCall(cuMemsetD8(_obj, 0, size));
 }
 
-void DeviceMemory::zero(size_t size, Stream& stream) {
+void DeviceMemory::zero(size_t size, Stream &stream) {
   checkCudaCall(cuMemsetD8Async(_obj, 0, size, stream));
 }
 

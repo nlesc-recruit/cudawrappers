@@ -252,7 +252,7 @@ class DeviceMemory : public Wrapper<CUdeviceptr> {
 
   void zero(size_t size);
 
-  void zero(size_t size, Stream& stream);
+  void zero(size_t size, Stream &stream);
 
   const void *parameter()
       const  // used to construct parameter list for launchKernel();
@@ -421,7 +421,8 @@ class Stream : public Wrapper<CUstream> {
 
   void memcpyHtoHAsync(void *dstPtr, const void *srcPtr, size_t size) {
     checkCudaCall(cuMemcpyAsync(reinterpret_cast<CUdeviceptr>(dstPtr),
-                                reinterpret_cast<CUdeviceptr>(srcPtr), size, _obj));
+                                reinterpret_cast<CUdeviceptr>(srcPtr), size,
+                                _obj));
   }
 
   void memcpyHtoDAsync(CUdeviceptr devPtr, const void *hostPtr, size_t size) {
