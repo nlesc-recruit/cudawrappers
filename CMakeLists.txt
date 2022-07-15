@@ -1,5 +1,13 @@
 cmake_minimum_required(VERSION 3.17 FATAL_ERROR)
 
+# Find out if cudawrappers if used as a dependency. Build tests by default only
+# if not used as a dependency.
+if(NOT DEFINED PROJECT_NAME AND BUILD_TESTING)
+  set(CUDAWRAPPERS_TESTING_DEFAULT True)
+else()
+  set(CUDAWRAPPERS_TESTING_DEFAULT False)
+endif()
+
 project(
   cudawrappers
   DESCRIPTION "C++ Wrappers for the CUDA Driver API"
@@ -9,24 +17,20 @@ project(
 )
 
 set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_CXX_EXTENSIONS False)
 set(CMAKE_BUILD_TYPE Release)
 option(BUILD_SHARED_LIBS "Create shared libraries" True)
-option(BUILD_TESTING "Built tests" False)
-include(CTest)
+option(CUDAWRAPPERS_BUILD_TESTING "Build cudawrappers tests"
+       ${CUDAWRAPPERS_TESTING_DEFAULT}
+)
+option(CUDAWRAPPERS_BUILD_EXAMPLES "Build cudawrappers examples" False)
 
 # Enable Clang compiler warnings
 if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-  string(
-    JOIN
-    " "
-    CLANG_WARNING_FLAGS
-    -Weverything
-    -Wno-c++98-compat
-    -Wno-c++98-compat-pedantic
-    -Wno-padded
+  add_compile_options(
+    -Weverything -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-padded
   )
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CLANG_WARNING_FLAGS}")
 endif()
 
 # Export compile commands for use by clang-tidy and cppcheck
@@ -99,8 +103,13 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config.cmake
 # Including linters rules
 include(cmake/linter-tools.cmake)
 
+# Configure examples
+if(CUDAWRAPPERS_BUILD_EXAMPLES)
+  add_subdirectory(examples)
+endif()
 # Configure tests
-if(BUILD_TESTING)
+if(CUDAWRAPPERS_BUILD_TESTING)
+  include(CTest)
   add_subdirectory(tests)
 endif()
 
