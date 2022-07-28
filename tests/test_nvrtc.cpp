@@ -1,10 +1,11 @@
-#include <catch2/catch.hpp>
 #include <string>
 #include <vector>
 
+#include <catch2/catch.hpp>
+
 #include "nvrtc.hpp"
 
-TEST_CASE("Test nvrtc::Program", "[nvrtc::Program]") {
+TEST_CASE("Test nvrtc::Program", "[program]") {
   const std::string kernel = R"(
     __global__ void vector_add(float *c, float *a, float *b, int n) {
       int i = blockIdx.x * blockDim.x + threadIdx.x;

@@ -81,8 +81,8 @@ IfMacros:
   - KJ_IF_MAYBE
 IncludeBlocks:   Regroup
 IncludeCategories:
-  - Regex:           '^<ext/.*\.h>'
-    Priority:        2
+  - Regex:           '^<"ext/.*\.h|catch2/catch.hpp|cuda.h>'
+    Priority:        3
     SortPriority:    0
     CaseSensitive:   false
   - Regex:           '^<.*\.h>'
@@ -94,7 +94,7 @@ IncludeCategories:
     SortPriority:    0
     CaseSensitive:   false
   - Regex:           '.*'
-    Priority:        3
+    Priority:        4
     SortPriority:    0
     CaseSensitive:   false
 IncludeIsMainRegex: '([-_](test|unittest))?$'

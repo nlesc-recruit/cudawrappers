@@ -1,11 +1,14 @@
-#include <catch2/catch.hpp>
+#include <array>
 #include <cstring>
 #include <iostream>
 #include <string>
 
+#include <catch2/catch.hpp>
+#include <cuda.h>
+
 #include "cu.hpp"
 
-TEST_CASE("Test cu::Device", "[cu::Device]") {
+TEST_CASE("Test cu::Device", "[device]") {
   cu::init();
   cu::Device device(0);
   cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, device);
@@ -15,6 +18,13 @@ TEST_CASE("Test cu::Device", "[cu::Device]") {
     std::cout << "Device name: " << name << std::endl;
     REQUIRE(name.size() > 0);
   }
+}
+
+TEST_CASE("Test copying cu::DeviceMemory and cu::HostMemory using cu::Stream",
+          "[memcpy]") {
+  cu::init();
+  cu::Device device(0);
+  cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, device);
 
   SECTION("Test copying a std::array to the device and back") {
     const std::array<int, 3> src = {1, 2, 3};
