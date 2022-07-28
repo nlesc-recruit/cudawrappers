@@ -16,10 +16,17 @@ target_sources(tests PRIVATE main.cpp)
 target_link_libraries(tests PUBLIC Catch2::Catch2)
 
 # Add library tests
-add_executable(test_cu)
-target_sources(test_cu PRIVATE test_cu.cpp)
-target_link_libraries(test_cu PUBLIC cudawrappers::cu tests)
-catch_discover_tests(test_cu)
-foreach(test_name ${test_cu_TESTS})
-  add_test(NAME test_cu::${test_name} COMMAND test_cu ${test_name})
+set(COMPONENTS cu nvrtc)
+foreach(component ${COMPONENTS})
+  add_executable(test_${component})
+  target_sources(test_${component} PRIVATE test_${component}.cpp)
+  target_link_libraries(
+    test_${component} PUBLIC cudawrappers::${component} tests
+  )
+  catch_discover_tests(test_${component})
+  foreach(test_name ${test_${component}_TESTS})
+    add_test(NAME test_${component}::${test_name} COMMAND test_${component}
+                                                          ${test_name}
+    )
+  endforeach()
 endforeach()
