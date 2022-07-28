@@ -1,8 +1,6 @@
 #if !defined CU_WRAPPER_H
 #define CU_WRAPPER_H
 
-#include <cuda_runtime_api.h>
-
 #include <exception>
 #include <fstream>
 #include <memory>
@@ -10,6 +8,7 @@
 #include <vector>
 
 #include <cuda.h>
+#include <cuda_runtime_api.h>
 
 namespace cu {
 class Error : public std::exception {
