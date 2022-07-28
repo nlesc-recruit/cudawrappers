@@ -81,6 +81,13 @@ To run the tests locally, enter the `build` directory and run:
 make test
 ```
 
+After running the tests, a coverage report `build/coverage.html` can be
+generated with [gcovr](https://gcovr.com/en/stable/installation.html) by running:
+
+```
+gcovr
+```
+
 If you are running the tests on DAS, you can run a job using `srun` command.
 For instance,
 

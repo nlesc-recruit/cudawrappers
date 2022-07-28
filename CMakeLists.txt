@@ -110,6 +110,10 @@ endif()
 # Configure tests
 if(CUDAWRAPPERS_BUILD_TESTING)
   include(CTest)
+
+  # Set up coverage collection
+  add_compile_options(--coverage -g -O0)
+  add_link_options("--coverage")
   add_subdirectory(tests)
 endif()
 
