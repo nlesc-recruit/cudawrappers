@@ -1,4 +1,4 @@
-#include "cu.hpp"
+#include "cudawrappers/cu.hpp"
 
 #include <iostream>
 #include <sstream>
