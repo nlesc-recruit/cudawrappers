@@ -81,7 +81,7 @@ IfMacros:
   - KJ_IF_MAYBE
 IncludeBlocks:   Regroup
 IncludeCategories:
-  - Regex:           '^<"ext/.*\.h|catch2/catch.hpp|cuda.h>'
+  - Regex:           '^<"ext/.*\.h|catch2/catch.hpp|cuda.h|cuda_runtime_api.h|nvrtc.h>'
     Priority:        3
     SortPriority:    0
     CaseSensitive:   false
