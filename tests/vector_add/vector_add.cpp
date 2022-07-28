@@ -1,5 +1,9 @@
+#include <cstddef>
 #include <iostream>
+#include <string>
+#include <vector>
 
+#include <cuda.h>
 #include <cudawrappers/cu.hpp>
 #include <cudawrappers/nvrtc.hpp>
 
