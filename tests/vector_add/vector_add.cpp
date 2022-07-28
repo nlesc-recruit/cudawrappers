@@ -1,7 +1,11 @@
+#include <cstddef>
 #include <iostream>
+#include <string>
+#include <vector>
 
-#include "cu.hpp"
-#include "nvrtc.hpp"
+#include <cuda.h>
+#include <cudawrappers/cu.hpp>
+#include <cudawrappers/nvrtc.hpp>
 
 void vector_add() {
   int N = 1024;

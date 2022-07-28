@@ -1,4 +1,4 @@
-#include "nvrtc.hpp"
+#include "cudawrappers/nvrtc.hpp"
 
 namespace nvrtc {
 

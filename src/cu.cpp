@@ -1,5 +1,6 @@
-#include "cu.hpp"
+#include "cudawrappers/cu.hpp"
 
+#include <cstdlib>
 #include <iostream>
 #include <sstream>
 
