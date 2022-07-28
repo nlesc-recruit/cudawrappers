@@ -1,7 +1,6 @@
 #if !defined NVRTC_H
 #define NVRTC_H
 
-#include <cuda.h>
 #include <nvrtc.h>
 
 #include <algorithm>
@@ -10,6 +9,8 @@
 #include <iterator>
 #include <string>
 #include <vector>
+
+#include <cuda.h>
 
 namespace nvrtc {
 class Error : public std::exception {
