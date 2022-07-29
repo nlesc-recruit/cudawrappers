@@ -36,8 +36,9 @@ set(CUDA_MIN_VERSION 10.0)
 find_package(CUDAToolkit ${CUDA_MIN_VERSION} REQUIRED)
 
 # Define components
-set(COMPONENTS cu nvrtc)
+set(COMPONENTS cu cufft nvrtc)
 set(LINK_cu CUDA::cuda_driver)
+set(LINK_cufft CUDA::cuda_driver CUDA::cufft)
 set(LINK_nvrtc CUDA::cuda_driver CUDA::nvrtc)
 
 include(GNUInstallDirs)
