@@ -70,23 +70,18 @@ inline FFT<cufftComplex, cufftComplex, 1>::FFT(unsigned n, unsigned count) {
 }
 
 template <>
-inline FFT<cufftComplex, cufftComplex, 2>::FFT(unsigned nx,
-                                               unsigned ny) {
+inline FFT<cufftComplex, cufftComplex, 2>::FFT(unsigned nx, unsigned ny) {
   checkCuFFTcall(cufftCreate(&plan));
   checkCuFFTcall(cufftPlan2d(&plan, nx, ny, CUFFT_C2C));
 }
 
 template <>
-inline FFT<cufftComplex, cufftComplex, 2>::FFT(unsigned nx,
-                                               unsigned ny,
-                                               unsigned stride,
-                                               unsigned dist,
+inline FFT<cufftComplex, cufftComplex, 2>::FFT(unsigned nx, unsigned ny,
+                                               unsigned stride, unsigned dist,
                                                unsigned count) {
   checkCuFFTcall(cufftCreate(&plan));
   int n[] = {static_cast<int>(ny), static_cast<int>(nx)};
-  checkCuFFTcall(cufftPlanMany(&plan, 2, n,
-                               n, stride, dist,
-                               n, stride, dist,
+  checkCuFFTcall(cufftPlanMany(&plan, 2, n, n, stride, dist, n, stride, dist,
                                CUFFT_C2C, count));
 }
 
