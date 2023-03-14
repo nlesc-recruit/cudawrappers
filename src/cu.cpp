@@ -7,23 +7,23 @@
 namespace cu {
 
 const char *Error::what() const noexcept {
-  const char *str;
+  const char *str{};
   return cuGetErrorString(_result, &str) != CUDA_ERROR_INVALID_VALUE
              ? str
              : "unknown error";
 }
 
 Context Device::primaryCtxRetain() {
-  CUcontext context;
+  CUcontext context{};
   checkCudaCall(cuDevicePrimaryCtxRetain(&context, _obj));
-  return Context(context, *this);
+  return {context, *this};
 }
 
 void Source::compile(const char *output_file_name,
                      const char *compiler_options) {
   std::stringstream command_line;
   command_line << "nvcc -cubin " << compiler_options << " -o "
-               << output_file_name << ' ' << input_file_name;
+               << output_file_name << ' ' << _input_file_name;
   //#pragma omp critical (clog)
   // std::clog << command_line.str() << std::endl;
 

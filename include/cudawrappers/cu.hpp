@@ -14,9 +14,9 @@
 namespace cu {
 class Error : public std::exception {
  public:
-  Error(CUresult result) : _result(result) {}
+  explicit Error(CUresult result) : _result(result) {}
 
-  virtual const char *what() const noexcept;
+  const char *what() const noexcept override;
 
   operator CUresult() const { return _result; }
 
@@ -31,7 +31,7 @@ inline void checkCudaCall(CUresult result) {
 inline void init(unsigned flags = 0) { checkCudaCall(cuInit(flags)); }
 
 inline int driverGetVersion() {
-  int version;
+  int version{};
   checkCudaCall(cuDriverGetVersion(&version));
   return version;
 }
@@ -57,7 +57,7 @@ class Wrapper {
   bool operator!=(const Wrapper<T> &other) { return _obj != other._obj; }
 
  protected:
-  Wrapper<T>() {}
+  Wrapper<T>() = default;
 
   Wrapper<T>(const Wrapper<T> &other)
       : _obj(other._obj), manager(other.manager) {}
@@ -67,9 +67,9 @@ class Wrapper {
     other._obj = 0;
   }
 
-  Wrapper<T>(T &obj) : _obj(obj) {}
+  explicit Wrapper<T>(T &obj) : _obj(obj) {}
 
-  T _obj;
+  T _obj{};
   std::shared_ptr<T> manager;
 };
 
@@ -77,10 +77,10 @@ class Device : public Wrapper<CUdevice> {
  public:
   // Device Management
 
-  Device(int ordinal) { checkCudaCall(cuDeviceGet(&_obj, ordinal)); }
+  explicit Device(int ordinal) { checkCudaCall(cuDeviceGet(&_obj, ordinal)); }
 
   int getAttribute(CUdevice_attribute attribute) const {
-    int value;
+    int value{};
     checkCudaCall(cuDeviceGetAttribute(&value, attribute, _obj));
     return value;
   }
@@ -91,19 +91,20 @@ class Device : public Wrapper<CUdevice> {
   }
 
   static int getCount() {
-    int nrDevices;
+    int nrDevices{};
     checkCudaCall(cuDeviceGetCount(&nrDevices));
     return nrDevices;
   }
 
   std::string getName() const {
-    char name[64];
-    checkCudaCall(cuDeviceGetName(name, sizeof name, _obj));
-    return std::string(name);
+    const size_t max_device_name_length{64};
+    std::array<char, max_device_name_length> name{};
+    checkCudaCall(cuDeviceGetName(name.data(), name.size(), _obj));
+    return {name.data()};
   }
 
   size_t totalMem() const {
-    size_t size;
+    size_t size{};
     checkCudaCall(cuDeviceTotalMem(&size, _obj));
     return size;
   }
@@ -111,10 +112,10 @@ class Device : public Wrapper<CUdevice> {
   // Primary Context Management
 
   std::pair<unsigned, bool> primaryCtxGetState() const {
-    unsigned flags;
-    int active;
+    unsigned flags{};
+    int active{};
     checkCudaCall(cuDevicePrimaryCtxGetState(_obj, &flags, &active));
-    return std::pair<unsigned, bool>(flags, active);
+    return {flags, active};
   }
 
   // void primaryCtxRelease() not available; it is released on destruction of
@@ -143,17 +144,17 @@ class Context : public Wrapper<CUcontext> {
         });
   }
 
-  Context(CUcontext context)
+  explicit Context(CUcontext context)
       : Wrapper<CUcontext>(context), _primaryContext(false) {}
 
   unsigned getApiVersion() const {
-    unsigned version;
+    unsigned version{};
     checkCudaCall(cuCtxGetApiVersion(_obj, &version));
     return version;
   }
 
   static CUfunc_cache getCacheConfig() {
-    CUfunc_cache config;
+    CUfunc_cache config{};
     checkCudaCall(cuCtxGetCacheConfig(&config));
     return config;
   }
@@ -163,9 +164,9 @@ class Context : public Wrapper<CUcontext> {
   }
 
   static Context getCurrent() {
-    CUcontext context;
+    CUcontext context{};
     checkCudaCall(cuCtxGetCurrent(&context));
-    return std::move(Context(context));
+    return Context(context);
   }
 
   void setCurrent() const { checkCudaCall(cuCtxSetCurrent(_obj)); }
@@ -173,7 +174,7 @@ class Context : public Wrapper<CUcontext> {
   void pushCurrent() { checkCudaCall(cuCtxPushCurrent(_obj)); }
 
   static Context popCurrent() {
-    CUcontext context;
+    CUcontext context{};
     checkCudaCall(cuCtxPopCurrent(&context));
     return Context(context);
   }
@@ -183,13 +184,13 @@ class Context : public Wrapper<CUcontext> {
   }
 
   static Device getDevice() {
-    CUdevice device;
+    CUdevice device{};
     checkCudaCall(cuCtxGetDevice(&device));
     return Device(device);  // FIXME: ~Device()
   }
 
   static size_t getLimit(CUlimit limit) {
-    size_t value;
+    size_t value{};
     checkCudaCall(cuCtxGetLimit(&value, limit));
     return value;
   }
@@ -220,7 +221,7 @@ class Context : public Wrapper<CUcontext> {
 
 class HostMemory : public Wrapper<void *> {
  public:
-  HostMemory(size_t size, int flags = 0) {
+  explicit HostMemory(size_t size, unsigned int flags = 0) {
     checkCudaCall(cuMemHostAlloc(&_obj, size, flags));
     manager = std::shared_ptr<void *>(new (void *)(_obj), [](void **ptr) {
       cuMemFreeHost(*ptr);
@@ -236,7 +237,7 @@ class HostMemory : public Wrapper<void *> {
 
 class DeviceMemory : public Wrapper<CUdeviceptr> {
  public:
-  DeviceMemory(size_t size) {
+  explicit DeviceMemory(size_t size) {
     checkCudaCall(cuMemAlloc(&_obj, size));
     manager = std::shared_ptr<CUdeviceptr>(new CUdeviceptr(_obj),
                                            [](CUdeviceptr *ptr) {
@@ -245,9 +246,9 @@ class DeviceMemory : public Wrapper<CUdeviceptr> {
                                            });
   }
 
-  DeviceMemory(CUdeviceptr ptr) : Wrapper(ptr) {}
+  explicit DeviceMemory(CUdeviceptr ptr) : Wrapper(ptr) {}
 
-  DeviceMemory(const HostMemory &hostMemory) {
+  explicit DeviceMemory(const HostMemory &hostMemory) {
     checkCudaCall(cuMemHostGetDevicePointer(&_obj, hostMemory, 0));
   }
 
@@ -265,25 +266,12 @@ class DeviceMemory : public Wrapper<CUdeviceptr> {
 class Array : public Wrapper<CUarray> {
  public:
   Array(unsigned width, CUarray_format format, unsigned numChannels) {
-    Array(width, 0, format, numChannels);
-    manager = std::shared_ptr<CUarray>(new CUarray(_obj), [](CUarray *ptr) {
-      cuArrayDestroy(*ptr);
-      delete ptr;
-    });
+    create2DArray(width, 0, format, numChannels);
   }
 
   Array(unsigned width, unsigned height, CUarray_format format,
         unsigned numChannels) {
-    CUDA_ARRAY_DESCRIPTOR descriptor;
-    descriptor.Width = width;
-    descriptor.Height = height;
-    descriptor.Format = format;
-    descriptor.NumChannels = numChannels;
-    checkCudaCall(cuArrayCreate(&_obj, &descriptor));
-    manager = std::shared_ptr<CUarray>(new CUarray(_obj), [](CUarray *ptr) {
-      cuArrayDestroy(*ptr);
-      delete ptr;
-    });
+    create2DArray(width, height, format, numChannels);
   }
 
   Array(unsigned width, unsigned height, unsigned depth, CUarray_format format,
@@ -296,28 +284,45 @@ class Array : public Wrapper<CUarray> {
     descriptor.NumChannels = numChannels;
     descriptor.Flags = 0;
     checkCudaCall(cuArray3DCreate(&_obj, &descriptor));
+    createManager();
+  }
+
+  explicit Array(CUarray &array) : Wrapper(array) {}
+
+ private:
+  void create2DArray(unsigned width, unsigned height, CUarray_format format,
+                     unsigned numChannels) {
+    CUDA_ARRAY_DESCRIPTOR descriptor;
+    descriptor.Width = width;
+    descriptor.Height = height;
+    descriptor.Format = format;
+    descriptor.NumChannels = numChannels;
+    checkCudaCall(cuArrayCreate(&_obj, &descriptor));
+    createManager();
+  }
+
+  void createManager() {
     manager = std::shared_ptr<CUarray>(new CUarray(_obj), [](CUarray *ptr) {
       cuArrayDestroy(*ptr);
       delete ptr;
     });
   }
-
-  Array(CUarray &array) : Wrapper(array) {}
 };
 
 class Source {
  public:
-  Source(const char *input_file_name) : input_file_name(input_file_name) {}
+  explicit Source(const char *input_file_name)
+      : _input_file_name(input_file_name) {}
 
-  void compile(const char *ptx_name, const char *compile_options = 0);
+  void compile(const char *ptx_name, const char *compile_options = nullptr);
 
  private:
-  const char *input_file_name;
+  const char *_input_file_name;
 };
 
 class Module : public Wrapper<CUmodule> {
  public:
-  Module(const char *file_name) {
+  explicit Module(const char *file_name) {
 #if defined TEGRA_QUIRKS  // cuModuleLoad broken on Jetson TX1
     std::ifstream file(file_name);
     std::string program((std::istreambuf_iterator<char>(file)),
@@ -332,7 +337,7 @@ class Module : public Wrapper<CUmodule> {
     });
   }
 
-  Module(const void *data) {
+  explicit Module(const void *data) {
     checkCudaCall(cuModuleLoadData(&_obj, data));
     manager = std::shared_ptr<CUmodule>(new CUmodule(_obj), [](CUmodule *ptr) {
       cuModuleUnload(*ptr);
@@ -340,7 +345,7 @@ class Module : public Wrapper<CUmodule> {
     });
   }
 
-  Module(CUmodule &module) : Wrapper(module) {}
+  explicit Module(CUmodule &module) : Wrapper(module) {}
 
 #if 0
       TexRef getTexRef(const char *name) const
@@ -352,7 +357,7 @@ class Module : public Wrapper<CUmodule> {
 #endif
 
   CUdeviceptr getGlobal(const char *name) const {
-    CUdeviceptr deviceptr;
+    CUdeviceptr deviceptr{};
     checkCudaCall(cuModuleGetGlobal(&deviceptr, nullptr, _obj, name));
     return deviceptr;
   }
@@ -364,10 +369,10 @@ class Function : public Wrapper<CUfunction> {
     checkCudaCall(cuModuleGetFunction(&_obj, module, name));
   }
 
-  Function(CUfunction &function) : Wrapper(function) {}
+  explicit Function(CUfunction &function) : Wrapper(function) {}
 
   int getAttribute(CUfunction_attribute attribute) {
-    int value;
+    int value{};
     checkCudaCall(cuFuncGetAttribute(&value, attribute, _obj));
     return value;
   }
@@ -379,7 +384,7 @@ class Function : public Wrapper<CUfunction> {
 
 class Event : public Wrapper<CUevent> {
  public:
-  Event(int flags = CU_EVENT_DEFAULT) {
+  Event(unsigned int flags = CU_EVENT_DEFAULT) {
     checkCudaCall(cuEventCreate(&_obj, flags));
     manager = std::shared_ptr<CUevent>(new CUevent(_obj), [](CUevent *ptr) {
       cuEventDestroy(*ptr);
@@ -387,10 +392,10 @@ class Event : public Wrapper<CUevent> {
     });
   }
 
-  Event(CUevent &event) : Wrapper(event) {}
+  explicit Event(CUevent &event) : Wrapper(event) {}
 
   float elapsedTime(const Event &start) const {
-    float ms;
+    float ms{};
     checkCudaCall(cuEventElapsedTime(&ms, start, _obj));
     return ms;
   }
@@ -410,7 +415,7 @@ class Stream : public Wrapper<CUstream> {
   friend class Event;
 
  public:
-  Stream(int flags = CU_STREAM_DEFAULT) {
+  Stream(unsigned int flags = CU_STREAM_DEFAULT) {
     checkCudaCall(cuStreamCreate(&_obj, flags));
     manager = std::shared_ptr<CUstream>(new CUstream(_obj), [](CUstream *ptr) {
       cuStreamDestroy(*ptr);
@@ -418,7 +423,7 @@ class Stream : public Wrapper<CUstream> {
     });
   }
 
-  Stream(CUstream stream) : Wrapper<CUstream>(stream) {}
+  explicit Stream(CUstream stream) : Wrapper<CUstream>(stream) {}
 
   void memcpyHtoHAsync(void *dstPtr, const void *srcPtr, size_t size) {
     checkCudaCall(cuMemcpyAsync(reinterpret_cast<CUdeviceptr>(dstPtr),
@@ -444,7 +449,7 @@ class Stream : public Wrapper<CUstream> {
                     const std::vector<const void *> &parameters) {
     checkCudaCall(cuLaunchKernel(function, gridX, gridY, gridZ, blockX, blockY,
                                  blockZ, sharedMemBytes, _obj,
-                                 const_cast<void **>(&parameters[0]), 0));
+                                 const_cast<void **>(&parameters[0]), nullptr));
   }
 
 #if CUDART_VERSION >= 9000
@@ -467,7 +472,8 @@ class Stream : public Wrapper<CUstream> {
 
   void wait(Event &event) { checkCudaCall(cuStreamWaitEvent(_obj, event, 0)); }
 
-  void addCallback(CUstreamCallback callback, void *userData, int flags = 0) {
+  void addCallback(CUstreamCallback callback, void *userData,
+                   unsigned int flags = 0) {
     checkCudaCall(cuStreamAddCallback(_obj, callback, userData, flags));
   }
 
