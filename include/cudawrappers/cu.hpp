@@ -1,6 +1,7 @@
 #if !defined CU_WRAPPER_H
 #define CU_WRAPPER_H
 
+#include <array>
 #include <cstddef>
 #include <exception>
 #include <memory>
