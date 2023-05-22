@@ -11,7 +11,6 @@ jobs:
     steps:
 
       - name: Show git version
-        shell: bash
         run: |
           which git
           git --version
@@ -22,7 +21,6 @@ jobs:
           fetch-depth: 0
 
       - name: Show some relevant env vars
-        shell: bash
         run: |
           echo "GITHUB_BASE_REF = $GITHUB_BASE_REF"
           echo "GITHUB_HEAD_REF = $GITHUB_HEAD_REF"
@@ -30,20 +28,17 @@ jobs:
 
       - name: Set the target and source refs if the trigger was a pull request
         if: ${{ github.event_name == 'pull_request' }}
-        shell: bash
         run: |
           echo "precommit_from_ref=$GITHUB_BASE_REF" >> $GITHUB_ENV
           echo "precommit_to_ref=$GITHUB_HEAD_REF" >> $GITHUB_ENV
 
       - name: Set the target and source refs if the trigger was not a pull request
         if: ${{ github.event_name != 'pull_request' }}
-        shell: bash
         run: |
           echo "precommit_from_ref=main" >> $GITHUB_ENV
           echo "precommit_to_ref=$GITHUB_REF_NAME" >> $GITHUB_ENV
 
       - name: Avoid problems with missing refs later
-        shell: bash
         run: |
           git checkout ${{ env.precommit_from_ref }}
           git checkout ${{ env.precommit_to_ref }}
@@ -54,18 +49,15 @@ jobs:
             mamba-version: "*"
             environment-file: environment.yml
             activate-environment: recruit
-      - shell: bash
-        run: |
+      - run: |
             conda info
 
 #      - name: Install dependencies and generate compilation database
-#        shell: bash
 #        run: |
 #          sudo apt install clang-tidy cppcheck nvidia-cuda-toolkit clang
 #          cmake -DCMAKE_CXX_COMPILER=clang++ -S . -B build
 
       - name: Run pre-commit on all files changed in this branch using project standard configuration
-        shell: bash
         run: |
           git diff --name-only ${{ env.precommit_from_ref }}...${{ env.precommit_to_ref }}
           pre-commit run --from-ref ${{ env.precommit_from_ref }} --to-ref ${{ env.precommit_to_ref }}
