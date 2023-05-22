@@ -50,15 +50,10 @@ jobs:
             environment-file: environment.yml
             activate-environment: recruit
 
-      - shell: bash -el {0}
+      - name: Generate compilation database
+        shell: bash -el {0}
         run: |
-            conda info
-
-#      - name: Install dependencies and generate compilation database
-#        shell: bash -el {0}
-#        run: |
-#          sudo apt install clang-tidy cppcheck nvidia-cuda-toolkit clang
-#          cmake -DCMAKE_CXX_COMPILER=clang++ -S . -B build
+          cmake -DCMAKE_CXX_COMPILER=clang++ -S . -B build
 
       - name: Run pre-commit on all files changed in this branch using project standard configuration
         shell: bash -el {0}
