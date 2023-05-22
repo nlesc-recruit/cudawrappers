@@ -48,18 +48,20 @@ jobs:
           git checkout ${{ env.precommit_from_ref }}
           git checkout ${{ env.precommit_to_ref }}
 
-      - name: Install pre-commit
-        shell: bash
+      - name: Setup environment with Mamba
+        uses: conda-incubator/setup-miniconda@v2
+        with:
+            mamba-version: "*"
+            environment-file: environment.yml
+      - shell: bash
         run: |
-          sudo apt install python3 python3-pip
-          python3 -m pip install pre-commit
-          pre-commit install
+            conda info
 
-      - name: Install dependencies and generate compilation database
-        shell: bash
-        run: |
-          sudo apt install clang-tidy cppcheck nvidia-cuda-toolkit clang
-          cmake -DCMAKE_CXX_COMPILER=clang++ -S . -B build
+#      - name: Install dependencies and generate compilation database
+#        shell: bash
+#        run: |
+#          sudo apt install clang-tidy cppcheck nvidia-cuda-toolkit clang
+#          cmake -DCMAKE_CXX_COMPILER=clang++ -S . -B build
 
       - name: Run pre-commit on all files changed in this branch using project standard configuration
         shell: bash
