@@ -24,8 +24,8 @@ void Source::compile(const char *output_file_name,
   std::stringstream command_line;
   command_line << "nvcc -cubin " << compiler_options << " -o "
                << output_file_name << ' ' << _input_file_name;
-  //#pragma omp critical (clog)
-  // std::clog << command_line.str() << std::endl;
+  // #pragma omp critical (clog)
+  //  std::clog << command_line.str() << std::endl;
 
   int retval = system(command_line.str().c_str());
 

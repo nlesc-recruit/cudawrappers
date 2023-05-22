@@ -385,7 +385,7 @@ class Function : public Wrapper<CUfunction> {
 
 class Event : public Wrapper<CUevent> {
  public:
-  Event(unsigned int flags = CU_EVENT_DEFAULT) {
+  explicit Event(unsigned int flags = CU_EVENT_DEFAULT) {
     checkCudaCall(cuEventCreate(&_obj, flags));
     manager = std::shared_ptr<CUevent>(new CUevent(_obj), [](CUevent *ptr) {
       cuEventDestroy(*ptr);
@@ -416,7 +416,7 @@ class Stream : public Wrapper<CUstream> {
   friend class Event;
 
  public:
-  Stream(unsigned int flags = CU_STREAM_DEFAULT) {
+  explicit Stream(unsigned int flags = CU_STREAM_DEFAULT) {
     checkCudaCall(cuStreamCreate(&_obj, flags));
     manager = std::shared_ptr<CUstream>(new CUstream(_obj), [](CUstream *ptr) {
       cuStreamDestroy(*ptr);

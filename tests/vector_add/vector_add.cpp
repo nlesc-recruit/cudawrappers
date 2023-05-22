@@ -8,7 +8,7 @@
 #include <cudawrappers/nvrtc.hpp>
 
 void vector_add() {
-  int N = 1024;
+  const int N = 1024;
   size_t bytesize = N * sizeof(float);
 
   cu::Device device(0);
@@ -18,9 +18,9 @@ void vector_add() {
   cu::HostMemory h_b(bytesize);
   cu::HostMemory h_c(bytesize);
 
-  float *a = (float *)h_a;
-  float *b = (float *)h_b;
-  float *c = (float *)h_c;
+  auto *a = static_cast<float *>(h_a);
+  auto *b = static_cast<float *>(h_b);
+  auto *c = static_cast<float *>(h_c);
   for (int i = 0; i < N; i++) {
     a[i] = 1.0;
     b[i] = 1.0;
@@ -48,7 +48,8 @@ void vector_add() {
     throw;
   }
 
-  cu::Module module = cu::Module((void *)program.getPTX().data());
+  cu::Module module =
+      cu::Module(static_cast<const void *>(program.getPTX().data()));
 
   cu::Function function(module, "vector_add");
 
@@ -56,7 +57,7 @@ void vector_add() {
   std::vector<const void *> parameters = {d_c.parameter(), d_a.parameter(),
                                           d_b.parameter(), &N};
 
-  my_stream.launchKernel(function, 1, 1, 1, 1024, 1, 1, 0, parameters);
+  my_stream.launchKernel(function, 1, 1, 1, N, 1, 1, 0, parameters);
 
   my_stream.memcpyDtoHAsync(c, d_c, bytesize);
 
