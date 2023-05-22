@@ -53,6 +53,7 @@ jobs:
         with:
             mamba-version: "*"
             environment-file: environment.yml
+            activate-environment: recruit
       - shell: bash
         run: |
             conda info
