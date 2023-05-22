@@ -40,7 +40,7 @@ void vector_add() {
   // compile kernel
   std::vector<std::string> options = {};
   const std::string vector_add_kernel =
-#include "vector_add_kernel.cu"
+#include "vector_add_kernel.cu"  // NOLINT
       ;
   nvrtc::Program program(vector_add_kernel, "vector_add_kernel.cu");
   try {
