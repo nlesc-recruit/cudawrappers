@@ -81,7 +81,7 @@ IfMacros:
   - KJ_IF_MAYBE
 IncludeBlocks:   Regroup
 IncludeCategories:
-  - Regex:           '^<"ext/.*\.h|catch2/catch.hpp|cuda.h|cuda_runtime_api.h|nvrtc.h>'
+  - Regex:           '^<catch2/catch.hpp|cuda.h|cuda_runtime_api.h|nvrtc.h|cudawrappers/.*\.hpp>'
     Priority:        3
     SortPriority:    0
     CaseSensitive:   false
@@ -98,7 +98,7 @@ IncludeCategories:
     SortPriority:    0
     CaseSensitive:   false
 IncludeIsMainRegex: '([-_](test|unittest))?$'
-IncludeIsMainSourceRegex: ''
+IncludeIsMainSourceRegex: '^<cudawrappers/.*\.hpp>'
 IndentAccessModifiers: false
 IndentCaseLabels: true
 IndentCaseBlocks: false

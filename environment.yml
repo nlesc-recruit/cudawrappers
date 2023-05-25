@@ -1,0 +1,22 @@
+name: recruit
+channels:
+  - conda-forge
+dependencies:
+  - c-compiler
+  - clang
+  - clang-tools
+  - cmake
+  - cppcheck
+  - cudatoolkit-dev
+  - cxx-compiler
+  - doxygen
+  - include-what-you-use
+  - make
+  - pip
+  - pre-commit
+  - python
+  - yamllint
+  - pip:
+      - clang-format
+      - cmakelang
+      - flawfinder

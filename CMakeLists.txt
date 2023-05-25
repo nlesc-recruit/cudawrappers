@@ -40,9 +40,10 @@ set(CUDA_MIN_VERSION 10.0)
 find_package(CUDAToolkit ${CUDA_MIN_VERSION} REQUIRED)
 
 # Define components
-set(COMPONENTS cu nvrtc)
+set(COMPONENTS cu nvrtc nvtx)
 set(LINK_cu CUDA::cuda_driver)
 set(LINK_nvrtc CUDA::cuda_driver CUDA::nvrtc)
+set(LINK_nvtx CUDA::nvToolsExt)
 
 include(GNUInstallDirs)
 foreach(component ${COMPONENTS})
@@ -54,14 +55,15 @@ foreach(component ${COMPONENTS})
   target_sources(${component} PRIVATE src/${component}.cpp)
   # Add headers
   set_target_properties(
-    ${component} PROPERTIES PUBLIC_HEADER include/${component}.hpp
+    ${component} PROPERTIES PUBLIC_HEADER
+                            include/${PROJECT_NAME}/${component}.hpp
   )
   # Add the project name as a prefix to the output libraries
   set_target_properties(${component} PROPERTIES PREFIX ${PROJECT_NAME}-)
   # Add includes
   target_include_directories(
     ${component}
-    PUBLIC $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}>
+    PUBLIC $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
            $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     PRIVATE ${CUDAToolkit_INCLUDE_DIRS}
   )
