@@ -51,13 +51,10 @@ jobs:
           channels: conda-forge
           activate-environment: recruit
 
-      - name: Set cache date
-        run: echo "DATE=$(date +'%Y%m%d')" >> $GITHUB_ENV
-
       - uses: actions/cache@v2
         with:
           path: /usr/share/miniconda/envs/recruit
-          key: conda-${{ hashFiles('environment.yml') }}-${{ env.DATE }}
+          key: conda-${{ hashFiles('environment.yml') }}
         id: cache
 
       - name: Update mamba environment if cache is outdated
