@@ -1,8 +1,8 @@
 #include <string>
 #include <vector>
 
-#include "nvrtc.hpp"
 #include <catch2/catch.hpp>
+#include <cudawrappers/nvrtc.hpp>
 
 TEST_CASE("Test nvrtc::Program", "[program]") {
   const std::string kernel = R"(

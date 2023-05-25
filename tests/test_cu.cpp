@@ -5,8 +5,7 @@
 
 #include <catch2/catch.hpp>
 #include <cuda.h>
-
-#include "cu.hpp"
+#include <cudawrappers/cu.hpp>
 
 TEST_CASE("Test cu::Device", "[device]") {
   cu::init();
