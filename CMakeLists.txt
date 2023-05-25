@@ -39,6 +39,16 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS True)
 set(CUDA_MIN_VERSION 10.0)
 find_package(CUDAToolkit ${CUDA_MIN_VERSION} REQUIRED)
 
+# Configure tests
+if(CUDAWRAPPERS_BUILD_TESTING)
+  include(CTest)
+
+  # Set up coverage collection
+  add_compile_options(--coverage -g -O0)
+  add_link_options("--coverage")
+  add_subdirectory(tests)
+endif()
+
 # Define components
 set(COMPONENTS cu nvrtc nvtx)
 set(LINK_cu CUDA::cuda_driver)
@@ -109,15 +119,7 @@ include(cmake/linter-tools.cmake)
 if(CUDAWRAPPERS_BUILD_EXAMPLES)
   add_subdirectory(examples)
 endif()
-# Configure tests
-if(CUDAWRAPPERS_BUILD_TESTING)
-  include(CTest)
 
-  # Set up coverage collection
-  add_compile_options(--coverage -g -O0)
-  add_link_options("--coverage")
-  add_subdirectory(tests)
-endif()
 
 # --- auto-ignore build directory
 if(NOT EXISTS ${PROJECT_BINARY_DIR}/.gitignore)
