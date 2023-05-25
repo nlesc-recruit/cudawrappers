@@ -120,7 +120,6 @@ if(CUDAWRAPPERS_BUILD_EXAMPLES)
   add_subdirectory(examples)
 endif()
 
-
 # --- auto-ignore build directory
 if(NOT EXISTS ${PROJECT_BINARY_DIR}/.gitignore)
   file(WRITE ${PROJECT_BINARY_DIR}/.gitignore "*")
