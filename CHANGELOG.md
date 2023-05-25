@@ -11,6 +11,16 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Removed
 
+## [0.4.0]
+
+### Added
+
+### Changed
+
+### Removed
+
+- `Source` class. Use `nvrtc::Program` instead.
+
 ## [0.3.0] - 2022-03-08
 
 ### Added
