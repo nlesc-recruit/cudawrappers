@@ -2,21 +2,21 @@ name: recruit
 channels:
   - conda-forge
 dependencies:
-  - c-compiler==1.5.2
+  - c-compiler
   - clang==16.0.4
   - clang-tools==16.0.4
-  - cmake==3.26.4
+  - cmake>=3.17
   - cppcheck==2.10.3
-  - cudatoolkit-dev==10.1.243
-  - cxx-compiler==1.5.2
+  - cudatoolkit-dev>=10.0
+  - cxx-compiler
   - doxygen
   - include-what-you-use
   - make
   - pip
-  - python==3.11.3
+  - python>=3.10
   - yamllint==1.31.0
   - pip:
-      - pre-commit==3.3.2
+      - pre-commit
       - clang-format==16.0.4
       - cmakelang==0.6.13
       - flawfinder==2.0.19
