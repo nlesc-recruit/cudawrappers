@@ -1,4 +1,4 @@
-#include "nvtx.hpp"
+#include "cudawrappers/nvtx.hpp"
 
 namespace nvtx {
 
