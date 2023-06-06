@@ -98,9 +98,6 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config.cmake
         DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
 )
 
-# Including linters rules
-include(cmake/linter-tools.cmake)
-
 # Configure tests
 if(BUILD_TESTING)
   add_subdirectory(tests)

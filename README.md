@@ -1,6 +1,7 @@
 [![github url](https://img.shields.io/badge/github-url-000.svg?logo=github&labelColor=gray&color=blue)](https://github.com/nlesc-recruit/cudawrappers)
 [![github license badge](https://img.shields.io/github/license/nlesc-recruit/cudawrappers)](https://github.com/nlesc-recruit/cudawrappers)
 [![DOI](https://zenodo.org/badge/424944643.svg)](https://zenodo.org/badge/latestdoi/424944643)
+[![Research Software Directory](https://img.shields.io/badge/rsd-cudawrappers-00a3e3.svg)](https://www.research-software.nl/software/cudawrappers)
 [![cii badge](https://bestpractices.coreinfrastructure.org/projects/5686/badge)](https://bestpractices.coreinfrastructure.org/projects/5686)
 [![fair-software.eu](https://img.shields.io/badge/fair--software.eu-%E2%97%8F%20%20%E2%97%8F%20%20%E2%97%8B%20%20%E2%97%8F%20%20%E2%97%8F-orange)](https://fair-software.eu)
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/d38b0338fda24733ab41a64915af8248)](https://www.codacy.com/gh/nlesc-recruit/cudawrappers/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=nlesc-recruit/cudawrappers&amp;utm_campaign=Badge_Grade)
