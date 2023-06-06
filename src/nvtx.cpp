@@ -2,8 +2,7 @@
 
 namespace nvtx {
 
-Marker::Marker(const char* message, unsigned color) {
-  _attributes = {0};
+Marker::Marker(const char* message, unsigned color) : _attributes{0} {
   _attributes.version = NVTX_VERSION;
   _attributes.size = NVTX_EVENT_ATTRIB_STRUCT_SIZE;
   _attributes.colorType = NVTX_COLOR_ARGB;
