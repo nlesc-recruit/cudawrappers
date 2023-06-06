@@ -310,17 +310,6 @@ class Array : public Wrapper<CUarray> {
   }
 };
 
-class Source {
- public:
-  explicit Source(const char *input_file_name)
-      : _input_file_name(input_file_name) {}
-
-  void compile(const char *ptx_name, const char *compile_options = nullptr);
-
- private:
-  const char *_input_file_name;
-};
-
 class Module : public Wrapper<CUmodule> {
  public:
   explicit Module(const char *file_name) {
