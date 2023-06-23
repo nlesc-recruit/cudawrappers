@@ -18,7 +18,6 @@ class Error : public std::exception {
   const char *what() const noexcept override;
 
   operator cufftResult() const { return _result; }
-  ~Error() override = default;
 
  private:
   cufftResult _result;
