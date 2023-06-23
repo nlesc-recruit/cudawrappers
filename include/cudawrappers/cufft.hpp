@@ -85,8 +85,8 @@ inline FFT<cufftComplex, cufftComplex, 2>::FFT(unsigned nx, unsigned ny,
 }
 
 template <>
-inline FFT<cufftComplex, cufftComplex, 2>::FFT(unsigned nx, unsigned ny)
-    : FFT(nx, ny, 0, 0, 1) {
+inline FFT<cufftComplex, cufftComplex, 2>::FFT(unsigned nx, unsigned ny){
+
   checkCuFFTcall(cufftCreate(&plan));
   checkCuFFTcall(cufftPlan2d(&plan, nx, ny, CUFFT_C2C));
 }
