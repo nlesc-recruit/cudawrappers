@@ -1,4 +1,4 @@
-#include "cufft.hpp"
+#include "cudawrappers/cufft.hpp"
 
 #include <array>
 

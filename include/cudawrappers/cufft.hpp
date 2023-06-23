@@ -8,7 +8,7 @@
 #include <complex>
 #include <exception>
 
-#include "cu.hpp"
+#include "cudawrappers/cu.hpp"
 
 namespace cufft {
 class Error : public std::exception {

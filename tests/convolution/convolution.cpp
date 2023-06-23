@@ -1,7 +1,7 @@
-#include "cu.hpp"
-#include "cufft.hpp"
-#include "fstream"
+#include <cudawrappers/cufft.hpp>
 #include "iostream"
+#include "fstream"
+#include <cudawrappers/cu.hpp>
 
 void store_array_to_file(cufftComplex *array, std::string fname,
                          unsigned lSize) {
@@ -33,14 +33,16 @@ int main(int argc, char *argv[]) {
   cu::Stream my_stream;
   cufftComplex *in = in_host;
   cufftComplex *out = out_host;
-  for (int i = 0; i < 100; i++) {
-    for (int j = 0; j < 100; j++) in[(fftSize * i) + j] = cufftComplex{1, 1};
+
+  for(int i=0; i< 100; i ++){
+    for(int j=0; j<100; j++) in[(fftSize * i) + j] = cufftComplex{1, 1};
   }
   my_stream.memcpyHtoDAsync(in_dev, in, arraySize);
-  cufft::FFT<cufftComplex, cufftComplex, 2> fft{fftSize, fftSize};
+  cufft::FFT<cufftComplex,cufftComplex,2> fft{fftSize, fftSize};
   fft.setStream(my_stream);
   fft.execute(in_dev, out_dev, CUFFT_FORWARD);
   my_stream.memcpyDtoHAsync(out_host, out_dev, arraySize);
   my_stream.synchronize();
   store_array_to_file(out, "output.dat", fftSize);
+
 }
