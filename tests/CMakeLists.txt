@@ -32,3 +32,7 @@ foreach(component ${COMPONENTS})
     )
   endforeach()
 endforeach()
+
+# vector_add
+add_subdirectory(vector_add)
+add_subdirectory(convolution)
