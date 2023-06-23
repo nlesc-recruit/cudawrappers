@@ -9,7 +9,7 @@ class Marker {
  public:
   enum Color { red, green, blue, yellow, black };
 
-  Marker(const char* message, unsigned color = 0xff00ff00);
+  explicit Marker(const char* message, unsigned color = 0xff00ff00);
   Marker(const char* message, Marker::Color color);
   void start();
   void end();

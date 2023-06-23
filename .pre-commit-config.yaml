@@ -1,6 +1,6 @@
 repos:
   - repo: https://github.com/pre-commit/mirrors-clang-format
-    rev: v14.0.6
+    rev: v16.0.4
     hooks:
       - id: clang-format
   - repo: https://github.com/pocc/pre-commit-hooks
@@ -16,14 +16,9 @@ repos:
     hooks:
       - id: cmake-format
       - id: cmake-lint
-  - repo: https://github.com/citation-file-format/cff-converter-python
-    rev: ebf0b5e44d67f8beaa1cd13a0d0393ea04c6058d
-    hooks:
-      - id: validate-cff
 
 ci:
   skip:
     - clang-tidy
     - cppcheck
     - cmake-lint
-    - validate-cff
