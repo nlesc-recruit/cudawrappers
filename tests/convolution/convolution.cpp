@@ -20,6 +20,13 @@ void store_array_to_file(cufftComplex *array, std::string fname,
   }
 }
 
+void generateSignal(cufftComplex *signal, unsigned signalSize){
+  const unsigned patchSize = 100;
+  for(int i=0; i< patchSize; i ++){
+    for(int j=0; j<patchSize; j++) signal[(signalSize * i) + j] = cufftComplex{1, 1};
+  }
+}
+
 int main(int argc, char *argv[]) {
   const unsigned fftSize = 1024u;
   const size_t arraySize = sizeof(cufftComplex) * fftSize * fftSize;
@@ -34,9 +41,7 @@ int main(int argc, char *argv[]) {
   cufftComplex *in = in_host;
   cufftComplex *out = out_host;
 
-  for(int i=0; i< 100; i ++){
-    for(int j=0; j<100; j++) in[(fftSize * i) + j] = cufftComplex{1, 1};
-  }
+  generateSignal(in, fftSize);
   my_stream.memcpyHtoDAsync(in_dev, in, arraySize);
   cufft::FFT<cufftComplex,cufftComplex,2> fft{fftSize, fftSize};
   fft.setStream(my_stream);
