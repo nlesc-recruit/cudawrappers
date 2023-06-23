@@ -67,7 +67,6 @@ ArrayComparisonStats compareResults(
     cufftComplex *signal, cufftComplex *expected, unsigned linearSize,
     float tolerance = DEFAULT_FLOAT_TOLERANCE,
     float absolute_tolerance = DEFAULT_FLOAT_TOLERANCE) {
-
   float totalDiff = 0.;
   unsigned exceedingCount = 0;
   const unsigned totalElements = linearSize * linearSize;
