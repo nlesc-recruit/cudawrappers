@@ -4,6 +4,7 @@
 #include "fstream"
 #include "iostream"
 
+const float DEFAULT_FLOAT_TOLERANCE = 1.e-6;
 void store_array_to_file(cufftComplex *array, std::string fname,
                          unsigned lSize) {
   std::ofstream ofile(fname, std::ios::binary);
@@ -29,10 +30,14 @@ void generateSignal(cufftComplex *signal, unsigned signalSize) {
   }
 }
 
-inline float norm(cufftComplex a) { return sqrt(a.x * a.x + a.y * a.y); }
-
-inline float absoluteDistance(cufftComplex a, cufftComplex b) {
-  return norm(cufftComplex{a.x - b.x, b.x - b.y});
+void rescaleFFT(cufftComplex *signal, cufftComplex *output,
+                unsigned signalSize) {
+  const unsigned totalElements = signalSize * signalSize;
+  const float rescale = float(totalElements);
+  for (int i = 0; i < totalElements; i++) {
+    output[i].x = signal[i].x / rescale;
+    output[i].y = signal[i].y / rescale;
+  }
 }
 
 struct ArrayComparisonStats {
@@ -52,32 +57,49 @@ struct ArrayComparisonStats {
 };
 using ArrayComparisonStats = struct ArrayComparisonStats;
 
-ArrayComparisonStats compareResults(cufftComplex *signal,
-                                    cufftComplex *expected, unsigned linearSize,
-                                    float tolerance) {
+inline float norm(cufftComplex a) { return sqrt((a.x * a.x) + (a.y * a.y)); }
+
+inline float absoluteDistance(cufftComplex a, cufftComplex b) {
+  return norm(cufftComplex{a.x - b.x, b.y - b.y});
+}
+
+ArrayComparisonStats compareResults(
+    cufftComplex *signal, cufftComplex *expected, unsigned linearSize,
+    float tolerance = DEFAULT_FLOAT_TOLERANCE,
+    float absolute_tolerance = DEFAULT_FLOAT_TOLERANCE) {
+
   float totalDiff = 0.;
   unsigned exceedingCount = 0;
   const unsigned totalElements = linearSize * linearSize;
   for (int i = 0; i < totalElements; i++) {
     const float adistance = absoluteDistance(signal[i], expected[i]);
     totalDiff += adistance;
-    if (adistance > tolerance * norm(expected[i])) exceedingCount++;
+    if (adistance > (absolute_tolerance + (tolerance * norm(expected[i])))) {
+      exceedingCount++;
+    }
   }
 
   return ArrayComparisonStats::computeStats(totalDiff, exceedingCount,
                                             totalElements);
 }
 
+std::ostream &operator<<(std::ostream &os, ArrayComparisonStats const &stats) {
+  return os << "Total difference is " << stats.totalDifference << "\n"
+            << "Mean difference is " << stats.meanDifference << "\n"
+            << "Total count is " << stats.exceedingCount << "\n"
+            << "Percentage count is " << stats.exceedingFraction << "\n";
+}
+
 int main(int argc, char *argv[]) {
   const unsigned fftSize = 1024u;
   const size_t arraySize = sizeof(cufftComplex) * fftSize * fftSize;
-  std::cout << "HERE WE ARE";
+
   cu::init();
   cu::Device device(0);
   cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, device);
-  cu::DeviceMemory in_dev(arraySize), out_dev(arraySize);
-  cu::HostMemory in_host(arraySize), out_host(arraySize),
-      out_testing(arraySize);
+  cu::DeviceMemory in_dev(arraySize), out_dev(arraySize),
+      out_test_dev(arraySize);
+  cu::HostMemory in_host(arraySize), out_host(arraySize), out_test(arraySize);
 
   cu::Stream my_stream;
   cufftComplex *in = in_host;
@@ -85,20 +107,20 @@ int main(int argc, char *argv[]) {
   generateSignal(in, fftSize);
 
   my_stream.memcpyHtoDAsync(in_dev, in, arraySize);
+
   cufft::FFT<cufftComplex, cufftComplex, 2> fft{fftSize, fftSize};
   fft.setStream(my_stream);
   fft.execute(in_dev, out_dev, CUFFT_FORWARD);
   my_stream.memcpyDtoHAsync(out_host, out_dev, arraySize);
   my_stream.synchronize();
 
-  fft.execute(out_dev, in_dev, CUFFT_INVERSE);
-  my_stream.memcpyDtoHAsync(out_testing, in_dev, arraySize);
+  fft.execute(out_dev, out_test_dev, CUFFT_INVERSE);
+  my_stream.memcpyDtoHAsync(out_test, out_test_dev, arraySize);
   my_stream.synchronize();
 
-  ArrayComparisonStats result = compareResults(in, out_testing, fftSize, 1.e-6);
+  rescaleFFT(out_test, out_test, fftSize);
 
-  std::cout << "Total difference is " << result.totalDifference << "\n"
-            << "Mean difference is " << result.meanDifference << "\n"
-            << "Total count is " << result.exceedingCount << "\n"
-            << "Percentage count is " << result.exceedingFraction << "\n";
+  ArrayComparisonStats result = compareResults(out_test, in, fftSize, 1.e-6);
+
+  std::cout << result << std::endl;
 }
