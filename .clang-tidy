@@ -3,7 +3,7 @@
 # Which is under CC0 (https://github.com/fbaeuerlein/cpp-vscode-guide/blob/02617fe158f456d254fbebffcf6a7957198cbc5f/LICENSE)
 Checks:          'clang-diagnostic-*,clang-analyzer-*,cppcoreguidelines-*,modernize-*,-modernize-use-trailing-return-type'
 WarningsAsErrors: true
-HeaderFilterRegex: '.*.cu'  # Ignore warnings about including CUDA code.
+HeaderFilterRegex: ''
 AnalyzeTemporaryDtors: false
 FormatStyle:     google
 CheckOptions:
