@@ -119,7 +119,6 @@ class Device : public Wrapper<CUdevice> {
     return {flags, active};
   }
 
-
   void primaryCtxReset() { checkCudaCall(cuDevicePrimaryCtxReset(_obj)); }
 
   Context primaryCtxRetain();
@@ -254,11 +253,8 @@ class DeviceMemory : public Wrapper<CUdeviceptr> {
 
   void zero(size_t size, Stream &stream);
 
-  const void *parameter()
-      const;
-  {
-    return &_obj;
-  }
+  const void *parameter() const;
+  { return &_obj; }
 };
 
 class Array : public Wrapper<CUarray> {
@@ -387,9 +383,7 @@ class Event : public Wrapper<CUevent> {
     return ms;
   }
 
-  void query() const {
-    checkCudaCall(cuEventQuery(_obj));
-  }
+  void query() const { checkCudaCall(cuEventQuery(_obj)); }
 
   void record() { checkCudaCall(cuEventRecord(_obj, 0)); }
 
@@ -451,9 +445,7 @@ class Stream : public Wrapper<CUstream> {
   }
 #endif
 
-  void query() {
-    checkCudaCall(cuStreamQuery(_obj));
-  }
+  void query() { checkCudaCall(cuStreamQuery(_obj)); }
 
   void synchronize() { checkCudaCall(cuStreamSynchronize(_obj)); }
 
@@ -554,6 +546,6 @@ class Stream : public Wrapper<CUstream> {
 inline void Event::record(Stream &stream) {
   checkCudaCall(cuEventRecord(_obj, stream._obj));
 }
-}
+}  // namespace cu
 
 #endif
