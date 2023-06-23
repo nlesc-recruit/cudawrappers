@@ -18,6 +18,7 @@ class Error : public std::exception {
   const char *what() const noexcept override;
 
   operator cufftResult() const { return _result; }
+  ~Error() override = default;
 
  private:
   cufftResult _result;
@@ -29,6 +30,7 @@ class FFT {
  public:
   FFT(unsigned n, unsigned count);
   FFT(unsigned n, unsigned count, CUdeviceptr workArea, size_t workSize);
+  FFT(unsigned nx, unsigned ny, unsigned stride, unsigned dist, unsigned count);
 
   FFT &operator=(FFT &) = delete;
   FFT(FFT &) = delete;
@@ -47,12 +49,15 @@ class FFT {
   void setStream(CUstream stream) {
     checkCuFFTcall(cufftSetStream(plan, stream));
   }
-
-  void execute(Tin *in, Tout *out, int direction = CUFFT_FORWARD) {
-    checkCuFFTcall(cufftXtExec(plan, in, out, direction));
+  void execute(cu::DeviceMemory in, cu::DeviceMemory out,
+               int direction = CUFFT_FORWARD){
+    execCuFFTXt(in, out, direction);
   }
-
  private:
+  void execCuFFTXt(CUdeviceptr in, CUdeviceptr out, int direction){
+    checkCuFFTcall(cufftXtExec(
+        plan, reinterpret_cast<void *>(in), reinterpret_cast<void *>(out), direction));
+  }
   static void checkCuFFTcall(cufftResult result) {
     if (result != CUFFT_SUCCESS) {
       throw Error(result);
@@ -69,11 +74,6 @@ inline FFT<cufftComplex, cufftComplex, 1>::FFT(unsigned n, unsigned count) {
                              static_cast<int>(count)));
 }
 
-template <>
-inline FFT<cufftComplex, cufftComplex, 2>::FFT(unsigned nx, unsigned ny) {
-  checkCuFFTcall(cufftCreate(&plan));
-  checkCuFFTcall(cufftPlan2d(&plan, nx, ny, CUFFT_C2C));
-}
 
 template <>
 inline FFT<cufftComplex, cufftComplex, 2>::FFT(unsigned nx, unsigned ny,
@@ -84,6 +84,13 @@ inline FFT<cufftComplex, cufftComplex, 2>::FFT(unsigned nx, unsigned ny,
   checkCuFFTcall(cufftPlanMany(&plan, 2, n, n, stride, dist, n, stride, dist,
                                CUFFT_C2C, count));
 }
+
+template <>
+inline FFT<cufftComplex, cufftComplex, 2>::FFT(unsigned nx, unsigned ny): FFT(nx, ny, 0, 0, 1){
+  checkCuFFTcall(cufftCreate(&plan));
+  checkCuFFTcall(cufftPlan2d(&plan, nx, ny, CUFFT_C2C));
+}
+
 
 template <>
 inline FFT<cufftComplex, cufftComplex, 1>::FFT(unsigned n, unsigned count,
