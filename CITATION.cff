@@ -22,6 +22,26 @@ authors:
     affiliation: ASTRON
     email: vlugt@astron.nl
     orcid: 'https://orcid.org/0000-0001-6834-4860'
+  - given-names: Mattia
+    family-names: Mancini
+    affiliation: ASTRON
+    email: mancini@astron.nl
+    orcid: 'https://orcid.org/0000-0002-3861-9234'
+  - given-names: Bouwe
+    family-names: Andela
+    email: b.andela@esciencecenter.nl
+    affiliation: Netherlands eScience Center
+    orcid: 'https://orcid.org/0000-0001-9005-8940'
+  - given-names: Leon
+    family-names: Oostrum
+    email: l.oostrum@esciencecenter.nl
+    affiliation: Netherlands eScience Center
+    orcid: 'https://orcid.org/0000-0001-8724-8372'
+  - given-names: Laura
+    family-names: Ootes
+    email: l.ootes@esciencecenter.nl
+    affiliation: Netherlands eScience Center
+    orcid: 'https://orcid.org/0000-0002-2800-8309'
   - given-names: Ben
     name-particle: van
     family-names: Werkhoven
@@ -48,11 +68,6 @@ authors:
     email: abel.siqueira@esciencecenter.nl
     affiliation: Netherlands eScience Center
     orcid: 'https://orcid.org/0000-0003-4451-281X'
-  - given-names: Bouwe
-    family-names: Andela
-    email: b.andela@esciencecenter.nl
-    affiliation: Netherlands eScience Center
-    orcid: 'https://orcid.org/0000-0001-9005-8940'
 identifiers:
   - type: doi
     value: 10.5281/zenodo.6076447
