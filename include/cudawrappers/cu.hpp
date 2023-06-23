@@ -41,7 +41,7 @@ inline void memcpyHtoD(CUdeviceptr dst, const void *src, size_t size) {
   checkCudaCall(cuMemcpyHtoD(dst, src, size));
 }
 
-inline void memcpyDtoH(void * dst, CUdeviceptr src, size_t size) {
+inline void memcpyDtoH(void *dst, CUdeviceptr src, size_t size) {
   checkCudaCall(cuMemcpyDtoH(dst, src, size));
 }
 

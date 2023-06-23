@@ -49,13 +49,14 @@ class FFT {
     checkCuFFTcall(cufftSetStream(plan, stream));
   }
   void execute(cu::DeviceMemory in, cu::DeviceMemory out,
-               int direction = CUFFT_FORWARD){
+               int direction = CUFFT_FORWARD) {
     execCuFFTXt(in, out, direction);
   }
+
  private:
-  void execCuFFTXt(CUdeviceptr in, CUdeviceptr out, int direction){
-    checkCuFFTcall(cufftXtExec(
-        plan, reinterpret_cast<void *>(in), reinterpret_cast<void *>(out), direction));
+  void execCuFFTXt(CUdeviceptr in, CUdeviceptr out, int direction) {
+    checkCuFFTcall(cufftXtExec(plan, reinterpret_cast<void *>(in),
+                               reinterpret_cast<void *>(out), direction));
   }
   static void checkCuFFTcall(cufftResult result) {
     if (result != CUFFT_SUCCESS) {
@@ -73,7 +74,6 @@ inline FFT<cufftComplex, cufftComplex, 1>::FFT(unsigned n, unsigned count) {
                              static_cast<int>(count)));
 }
 
-
 template <>
 inline FFT<cufftComplex, cufftComplex, 2>::FFT(unsigned nx, unsigned ny,
                                                unsigned stride, unsigned dist,
@@ -85,11 +85,11 @@ inline FFT<cufftComplex, cufftComplex, 2>::FFT(unsigned nx, unsigned ny,
 }
 
 template <>
-inline FFT<cufftComplex, cufftComplex, 2>::FFT(unsigned nx, unsigned ny): FFT(nx, ny, 0, 0, 1){
+inline FFT<cufftComplex, cufftComplex, 2>::FFT(unsigned nx, unsigned ny)
+    : FFT(nx, ny, 0, 0, 1) {
   checkCuFFTcall(cufftCreate(&plan));
   checkCuFFTcall(cufftPlan2d(&plan, nx, ny, CUFFT_C2C));
 }
-
 
 template <>
 inline FFT<cufftComplex, cufftComplex, 1>::FFT(unsigned n, unsigned count,
