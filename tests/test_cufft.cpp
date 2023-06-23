@@ -1,8 +1,9 @@
 
+#include <fstream>
+#include <iostream>
+
 #include <catch2/catch.hpp>
 #include <cudawrappers/cufft.hpp>
-#include <iostream>
-#include <fstream>
 
 const float DEFAULT_FLOAT_TOLERANCE = 1.e-6;
 void store_array_to_file(cufftComplex *array, std::string fname,
@@ -89,9 +90,8 @@ std::ostream &operator<<(std::ostream &os, ArrayComparisonStats const &stats) {
             << "Percentage count is " << stats.exceedingFraction << "\n";
 }
 
-
 TEST_CASE("Test FFT is correct: 2D", "[correctness]") {
-  const int fftSize= 1024;
+  const int fftSize = 1024;
   const size_t arraySize = fftSize * fftSize * sizeof(cufftComplex);
 
   cu::init();
@@ -100,7 +100,7 @@ TEST_CASE("Test FFT is correct: 2D", "[correctness]") {
   cu::DeviceMemory in_dev(arraySize), out_dev(arraySize),
       out_test_dev(arraySize);
   cu::HostMemory in_host(arraySize), out_host(arraySize), out_test(arraySize);
-  cufftComplex * in=in_host;
+  cufftComplex *in = in_host;
   cu::Stream my_stream;
   generateSignal(in, fftSize);
 
@@ -110,7 +110,6 @@ TEST_CASE("Test FFT is correct: 2D", "[correctness]") {
 
   my_stream.memcpyHtoDAsync(in_dev, in_host, arraySize);
   SECTION("Test direct fft") {
-
     fft.execute(in_dev, out_dev, CUFFT_FORWARD);
     my_stream.memcpyDtoHAsync(out_host, out_dev, arraySize);
     my_stream.synchronize();
@@ -127,5 +126,4 @@ TEST_CASE("Test FFT is correct: 2D", "[correctness]") {
     ArrayComparisonStats stats = compareResults(out_test, in, fftSize);
     CHECK(stats.exceedingFraction < DEFAULT_FLOAT_TOLERANCE);
   }
-
 }

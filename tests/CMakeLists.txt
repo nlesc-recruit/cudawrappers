@@ -25,9 +25,7 @@ set(COMPONENTS cu nvrtc cufft)
 foreach(component ${COMPONENTS})
   add_executable(test_${component} test_${component}.cpp)
   target_sources(test_${component} PRIVATE test_${component}.cpp)
-  target_link_libraries(
-    test_${component} PUBLIC ${LINK_${component}} tests
-  )
+  target_link_libraries(test_${component} PUBLIC ${LINK_${component}} tests)
   catch_discover_tests(test_${component})
   foreach(test_name ${test_${component}_TESTS})
     add_test(NAME test_${component}::${test_name} COMMAND test_${component}
@@ -35,4 +33,3 @@ foreach(component ${COMPONENTS})
     )
   endforeach()
 endforeach()
-

@@ -55,10 +55,10 @@ class FFT {
 
  private:
   void execCuFFTXt(CUdeviceptr in, CUdeviceptr out, int direction) {
-    //NOLINTBEGIN(cppcoreguidelines-pro-type-reinterpret-cast)
+    // NOLINTBEGIN(cppcoreguidelines-pro-type-reinterpret-cast)
     checkCuFFTcall(cufftXtExec(plan, reinterpret_cast<void *>(in),
                                reinterpret_cast<void *>(out), direction));
-    //NOLINTEND(cppcoreguidelines-pro-type-reinterpret-cast)
+    // NOLINTEND(cppcoreguidelines-pro-type-reinterpret-cast)
   }
   static void checkCuFFTcall(cufftResult result) {
     if (result != CUFFT_SUCCESS) {

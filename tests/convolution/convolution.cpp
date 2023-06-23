@@ -4,12 +4,9 @@
 #include "fstream"
 #include "iostream"
 
-
 int main(int argc, char *argv[]) {
   const unsigned fftSize = 1024u;
   const size_t arraySize = sizeof(cufftComplex) * fftSize * fftSize;
-
-
 
   my_stream.memcpyHtoDAsync(in_dev, in, arraySize);
 
