@@ -15,7 +15,7 @@ TEST_CASE("Test cu::Device", "[device]") {
   SECTION("Test Device.getName") {
     const std::string name = device.getName();
     std::cout << "Device name: " << name << std::endl;
-    REQUIRE(name.size() > 0);
+    CHECK(name.size() > 0);
   }
 }
 
@@ -37,7 +37,7 @@ TEST_CASE("Test copying cu::DeviceMemory and cu::HostMemory using cu::Stream",
     stream.memcpyDtoHAsync(tgt.data(), mem, size);
     stream.synchronize();
 
-    REQUIRE(src == tgt);
+    CHECK(src == tgt);
   }
 
   SECTION("Test copying HostMemory to the device and back") {
@@ -60,6 +60,6 @@ TEST_CASE("Test copying cu::DeviceMemory and cu::HostMemory using cu::Stream",
     stream.memcpyDtoHAsync(tgt, mem, size);
     stream.synchronize();
 
-    REQUIRE(!static_cast<bool>(memcmp(src, tgt, size)));
+    CHECK(!static_cast<bool>(memcmp(src, tgt, size)));
   }
 }

@@ -18,11 +18,11 @@ TEST_CASE("Test nvrtc::Program", "[program]") {
 
   SECTION("Test Program.compile") {
     const std::vector<std::string> options = {"--generate-line-info"};
-    REQUIRE_NOTHROW(program.compile(options));
+    CHECK_NOTHROW(program.compile(options));
   }
 
   SECTION("Test Program.getPTX") {
     const std::string ptx{program.getPTX()};
-    REQUIRE(ptx.size() > 0);
+    CHECK(ptx.size() > 0);
   }
 }

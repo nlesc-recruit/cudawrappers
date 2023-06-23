@@ -97,7 +97,7 @@ make test
 ```
 
 After running the tests, a coverage report `build/coverage.html` can be
-generated with [gcovr](https://gcovr.com/en/stable/installation.html) by running:
+generated with [gcovr](https://gcovr.com/en/stable/index.html) by running:
 
 ```
 gcovr

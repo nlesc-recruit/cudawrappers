@@ -1,5 +1,7 @@
 include(FetchContent)
 
+# We use Catch2 v2.x because it is the last version that supports C++11, see
+# https://github.com/catchorg/Catch2.
 FetchContent_Declare(
   Catch2
   GIT_REPOSITORY https://github.com/catchorg/Catch2.git
