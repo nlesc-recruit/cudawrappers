@@ -16,14 +16,17 @@ include(Catch)
 add_library(tests)
 target_sources(tests PRIVATE main.cpp)
 target_link_libraries(tests PUBLIC Catch2::Catch2)
+set(LINK_cu cudawrappers::cu)
+set(LINK_cufft cudawrappers::cu cudawrappers::cufft)
+set(LINK_nvrtc cudawrappers::nvrtc)
 
 # Add library tests
-set(COMPONENTS cu nvrtc)
+set(COMPONENTS cu nvrtc cufft)
 foreach(component ${COMPONENTS})
-  add_executable(test_${component})
+  add_executable(test_${component} test_${component}.cpp)
   target_sources(test_${component} PRIVATE test_${component}.cpp)
   target_link_libraries(
-    test_${component} PUBLIC cudawrappers::${component} tests
+    test_${component} PUBLIC ${LINK_${component}} tests
   )
   catch_discover_tests(test_${component})
   foreach(test_name ${test_${component}_TESTS})
@@ -33,6 +36,3 @@ foreach(component ${COMPONENTS})
   endforeach()
 endforeach()
 
-# vector_add
-add_subdirectory(vector_add)
-add_subdirectory(convolution)
