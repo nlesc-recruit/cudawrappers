@@ -122,8 +122,7 @@ class Device : public Wrapper<CUdevice> {
 
   void primaryCtxReset() { checkCudaCall(cuDevicePrimaryCtxReset(_obj)); }
 
-  Context primaryCtxRetain();  // retain this context until the primary context
-                               // can be released
+  Context primaryCtxRetain();
 
   void primaryCtxSetFlags(unsigned flags) {
     checkCudaCall(cuDevicePrimaryCtxSetFlags(_obj, flags));
