@@ -1,4 +1,3 @@
-// Do not complain about using pointer arithmetic in this test file
 // NOLINTBEGIN(cppcoreguidelines-pro-bounds-pointer-arithmetic)
 #include <cstddef>
 #include <iostream>
