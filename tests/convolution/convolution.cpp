@@ -84,7 +84,6 @@ int main(int argc, char *argv[]) {
   cufftComplex *out = out_host;
   generateSignal(in, fftSize);
 
-
   my_stream.memcpyHtoDAsync(in_dev, in, arraySize);
   cufft::FFT<cufftComplex, cufftComplex, 2> fft{fftSize, fftSize};
   fft.setStream(my_stream);
@@ -92,19 +91,14 @@ int main(int argc, char *argv[]) {
   my_stream.memcpyDtoHAsync(out_host, out_dev, arraySize);
   my_stream.synchronize();
 
-
   fft.execute(out_dev, in_dev, CUFFT_INVERSE);
   my_stream.memcpyDtoHAsync(out_testing, in_dev, arraySize);
   my_stream.synchronize();
 
-  ArrayComparisonStats result = compareResults(in,
-                                               out_testing,
-                                               fftSize,
-                                               1.e-6);
+  ArrayComparisonStats result = compareResults(in, out_testing, fftSize, 1.e-6);
 
-  std::cout<< "Total difference is "<< result.totalDifference << "\n"<<
-              "Mean difference is "<< result.meanDifference << "\n"<<
-              "Total count is "<< result.exceedingCount << "\n"<<
-              "Percentage count is "<< result.exceedingFraction << "\n";
-
+  std::cout << "Total difference is " << result.totalDifference << "\n"
+            << "Mean difference is " << result.meanDifference << "\n"
+            << "Total count is " << result.exceedingCount << "\n"
+            << "Percentage count is " << result.exceedingFraction << "\n";
 }
