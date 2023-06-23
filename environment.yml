@@ -18,6 +18,6 @@ dependencies:
   - pip:
       - pre-commit
       - bump2version==1.0.1
-      - clang-format==16.0.4
+      - clang-format==16.0.6
       - cmakelang==0.6.13
       - flawfinder==2.0.19
