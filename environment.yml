@@ -10,6 +10,7 @@ dependencies:
   - cudatoolkit-dev>=10.0
   - cxx-compiler
   - doxygen
+  - gcovr
   - include-what-you-use
   - make
   - pip

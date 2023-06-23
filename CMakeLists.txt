@@ -1,5 +1,13 @@
 cmake_minimum_required(VERSION 3.17 FATAL_ERROR)
 
+# Find out if cudawrappers if used as a dependency. Build tests by default only
+# if not used as a dependency.
+if(NOT DEFINED PROJECT_NAME AND BUILD_TESTING)
+  set(CUDAWRAPPERS_TESTING_DEFAULT True)
+else()
+  set(CUDAWRAPPERS_TESTING_DEFAULT False)
+endif()
+
 project(
   cudawrappers
   DESCRIPTION "C++ Wrappers for the CUDA Driver API"
@@ -9,24 +17,20 @@ project(
 )
 
 set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_CXX_EXTENSIONS False)
 set(CMAKE_BUILD_TYPE Release)
 option(BUILD_SHARED_LIBS "Create shared libraries" True)
-option(BUILD_TESTING "Built tests" False)
-include(CTest)
+option(CUDAWRAPPERS_BUILD_TESTING "Build cudawrappers tests"
+       ${CUDAWRAPPERS_TESTING_DEFAULT}
+)
+option(CUDAWRAPPERS_BUILD_EXAMPLES "Build cudawrappers examples" False)
 
 # Enable Clang compiler warnings
 if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-  string(
-    JOIN
-    " "
-    CLANG_WARNING_FLAGS
-    -Weverything
-    -Wno-c++98-compat
-    -Wno-c++98-compat-pedantic
-    -Wno-padded
+  add_compile_options(
+    -Weverything -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-padded
   )
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CLANG_WARNING_FLAGS}")
 endif()
 
 # Export compile commands for use by clang-tidy and cppcheck
@@ -34,6 +38,16 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS True)
 
 set(CUDA_MIN_VERSION 10.0)
 find_package(CUDAToolkit ${CUDA_MIN_VERSION} REQUIRED)
+
+# Configure tests
+if(CUDAWRAPPERS_BUILD_TESTING)
+  include(CTest)
+
+  # Set up coverage collection
+  add_compile_options(--coverage -g -O0)
+  add_link_options("--coverage")
+  add_subdirectory(tests)
+endif()
 
 # Define components
 set(COMPONENTS cu nvrtc nvtx)
@@ -98,9 +112,9 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config.cmake
         DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
 )
 
-# Configure tests
-if(BUILD_TESTING)
-  add_subdirectory(tests)
+# Configure examples
+if(CUDAWRAPPERS_BUILD_EXAMPLES)
+  add_subdirectory(examples)
 endif()
 
 # --- auto-ignore build directory
