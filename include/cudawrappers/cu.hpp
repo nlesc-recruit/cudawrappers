@@ -119,8 +119,6 @@ class Device : public Wrapper<CUdevice> {
     return {flags, active};
   }
 
-  // void primaryCtxRelease() not available; it is released on destruction of
-  // the Context returned by Device::primaryContextRetain()
 
   void primaryCtxReset() { checkCudaCall(cuDevicePrimaryCtxReset(_obj)); }
 
@@ -187,7 +185,7 @@ class Context : public Wrapper<CUcontext> {
   static Device getDevice() {
     CUdevice device{};
     checkCudaCall(cuCtxGetDevice(&device));
-    return Device(device);  // FIXME: ~Device()
+    return Device(device);
   }
 
   static size_t getLimit(CUlimit limit) {
@@ -258,7 +256,7 @@ class DeviceMemory : public Wrapper<CUdeviceptr> {
   void zero(size_t size, Stream &stream);
 
   const void *parameter()
-      const  // used to construct parameter list for launchKernel();
+      const;
   {
     return &_obj;
   }
@@ -313,7 +311,7 @@ class Array : public Wrapper<CUarray> {
 class Module : public Wrapper<CUmodule> {
  public:
   explicit Module(const char *file_name) {
-#if defined TEGRA_QUIRKS  // cuModuleLoad broken on Jetson TX1
+#if defined TEGRA_QUIRKS
     std::ifstream file(file_name);
     std::string program((std::istreambuf_iterator<char>(file)),
                         std::istreambuf_iterator<char>());
@@ -391,7 +389,7 @@ class Event : public Wrapper<CUevent> {
   }
 
   void query() const {
-    checkCudaCall(cuEventQuery(_obj));  // unsuccessful result throws cu::Error
+    checkCudaCall(cuEventQuery(_obj));
   }
 
   void record() { checkCudaCall(cuEventRecord(_obj, 0)); }
@@ -455,7 +453,7 @@ class Stream : public Wrapper<CUstream> {
 #endif
 
   void query() {
-    checkCudaCall(cuStreamQuery(_obj));  // unsuccessful result throws cu::Error
+    checkCudaCall(cuStreamQuery(_obj));
   }
 
   void synchronize() { checkCudaCall(cuStreamSynchronize(_obj)); }
@@ -557,6 +555,6 @@ class Stream : public Wrapper<CUstream> {
 inline void Event::record(Stream &stream) {
   checkCudaCall(cuEventRecord(_obj, stream._obj));
 }
-}  // namespace cu
+}
 
 #endif
