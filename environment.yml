@@ -3,8 +3,8 @@ channels:
   - conda-forge
 dependencies:
   - c-compiler
-  - clang==16.0.4
-  - clang-tools==16.0.4
+  - clang==16.0.6
+  - clang-tools==16.0.6
   - cmake>=3.17
   - cppcheck==2.10.3
   - cudatoolkit-dev>=10.0

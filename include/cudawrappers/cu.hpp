@@ -337,15 +337,6 @@ class Module : public Wrapper<CUmodule> {
 
   explicit Module(CUmodule &module) : Wrapper(module) {}
 
-#if 0
-      TexRef getTexRef(const char *name) const
-      {
-	CUtexref texref;
-	checkCudaCall(cuModuleGetTexRef(&texref, _obj, name));
-	return TexRef(texref);
-      }
-#endif
-
   CUdeviceptr getGlobal(const char *name) const {
     CUdeviceptr deviceptr{};
     checkCudaCall(cuModuleGetGlobal(&deviceptr, nullptr, _obj, name));
@@ -482,77 +473,6 @@ class Stream : public Wrapper<CUstream> {
     checkCudaCall(cuStreamWriteValue32(_obj, addr, value, flags));
   }
 };
-
-#if 0
-  class Graph : public Wrapper<CUgraph>
-  {
-    public:
-      class GraphNode : public Wrapper<CUgraphNode>
-      {
-      };
-
-      class ExecKernelNode : public GraphNode
-      {
-      };
-
-      class KernelNodeParams : public Wrapper<CUDA_KERNEL_NODE_PARAMS>
-      {
-	public:
-	  KernelNodeParams(const Function &function,
-			   unsigned gridDimX, unsigned gridDimY, unsigned gridDimZ,
-			   unsigned blockDimX, unsigned blockDimY, unsigned blockDimZ,
-			   unsigned sharedMemBytes,
-			   const std::vector<const void *> &kernelParams)
-	  {
-	    _obj.func	   = function;
-	    _obj.blockDimX = blockDimX;
-	    _obj.blockDimY = blockDimY;
-	    _obj.blockDimZ = blockDimZ;
-	    _obj.gridDimX  = gridDimX;
-	    _obj.gridDimY  = gridDimY;
-	    _obj.gridDimZ  = gridDimZ;
-	    _obj.sharedMemBytes = sharedMemBytes;
-	    _obj.kernelParams = const_cast<void **>(kernelParams.data());
-	    _obj.extra	   = nullptr;
-	  }
-      };
-
-      class Exec : public Wrapper<CUgraphExec>
-      {
-	public:
-	  void launch(Stream &stream)
-	  {
-	    checkCudaCall(cuGraphLaunch(_obj, stream));
-	  }
-      };
-
-      Graph(unsigned flags = 0)
-      {
-	checkCudaCall(cuGraphCreate(&_obj, flags));
-	manager = std::shared_ptr<CUgraphNode>(new CUgraphNode(_obj), [] (CUgraphNode *ptr) { cuGraphDestroy(*ptr); delete ptr; });
-      }
-
-      Graph(CUgraph &graph)
-      :
-	Wrapper(graph)
-      {
-      }
-
-      ExecKernelNode addKernelNode(/* std::vector<GraphNode> dependencies, */ const KernelNodeParams &kernelArgs)
-      {
-	ExecKernelNode node;
-	checkCudaCall(cuGraphAddKernelNode(& (CUgraphNode &) node, _obj, nullptr, 0, & (const CUDA_KERNEL_NODE_PARAMS &) kernelArgs));
-	return node;
-      }
-
-      Exec instantiate()
-      {
-	Exec exec;
-	checkCudaCall(cuGraphInstantiate(& (CUgraphExec &) exec, _obj, nullptr, nullptr, 0));
-	return exec;
-      }
-  };
-#endif
 
 inline void Event::record(Stream &stream) {
   checkCudaCall(cuEventRecord(_obj, stream._obj));
