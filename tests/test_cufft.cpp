@@ -100,16 +100,16 @@ TEST_CASE("Test FFT is correct: 2D", "[correctness]") {
   cu::DeviceMemory in_dev(arraySize), out_dev(arraySize),
       out_test_dev(arraySize);
   cu::HostMemory in_host(arraySize), out_host(arraySize), out_test(arraySize);
-
+  cufftComplex * in=in_host;
   cu::Stream my_stream;
-  generateSignal(in_host, fftSize);
+  generateSignal(in, fftSize);
 
   cufft::FFT<cufftComplex, cufftComplex, 2> fft{fftSize, fftSize};
   fft.setStream(my_stream);
   const float percentageOfExpectedDifference = 0.9;
 
+  my_stream.memcpyHtoDAsync(in_dev, in_host, arraySize);
   SECTION("Test direct fft") {
-    my_stream.memcpyHtoDAsync(in_dev, in_host, arraySize);
 
     fft.execute(in_dev, out_dev, CUFFT_FORWARD);
     my_stream.memcpyDtoHAsync(out_host, out_dev, arraySize);
@@ -119,12 +119,12 @@ TEST_CASE("Test FFT is correct: 2D", "[correctness]") {
     CHECK(stats.exceedingFraction > percentageOfExpectedDifference);
   }
   SECTION("Test inverse fft") {
-
-    fft.execute(out_dev, out_test_dev, CUFFT_FORWARD);
+    fft.execute(in_dev, out_dev, CUFFT_FORWARD);
+    fft.execute(out_dev, out_test_dev, CUFFT_INVERSE);
     my_stream.memcpyDtoHAsync(out_test, out_test_dev, arraySize);
     my_stream.synchronize();
     rescaleFFT(out_test, out_test, fftSize);
-    ArrayComparisonStats stats = compareResults(in_host, out_test, fftSize);
+    ArrayComparisonStats stats = compareResults(out_test, in, fftSize);
     CHECK(stats.exceedingFraction < DEFAULT_FLOAT_TOLERANCE);
   }
 
