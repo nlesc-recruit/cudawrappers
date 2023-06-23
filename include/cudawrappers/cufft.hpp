@@ -79,9 +79,11 @@ inline FFT<cufftComplex, cufftComplex, 2>::FFT(unsigned nx, unsigned ny,
                                                unsigned stride, unsigned dist,
                                                unsigned count) {
   checkCuFFTcall(cufftCreate(&plan));
-  int n[] = {static_cast<int>(ny), static_cast<int>(nx)};
-  checkCuFFTcall(cufftPlanMany(&plan, 2, n, n, stride, dist, n, stride, dist,
-                               CUFFT_C2C, count));
+  std::unique_ptr<int> n(
+      new int[2]{static_cast<int>(ny), static_cast<int>(nx)});
+
+  checkCuFFTcall(cufftPlanMany(&plan, 2, n.get(), n.get(), stride, dist,
+                               n.get(), stride, dist, CUFFT_C2C, count));
 }
 
 template <>
