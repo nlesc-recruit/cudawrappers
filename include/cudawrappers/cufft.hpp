@@ -27,9 +27,9 @@ template <typename Tin = cufftComplex, typename Tout = cufftComplex,
           unsigned DIM = 1>
 class FFT {
  public:
-  FFT(unsigned n, unsigned count);
-  FFT(unsigned n, unsigned count, CUdeviceptr workArea, size_t workSize);
-  FFT(unsigned nx, unsigned ny, unsigned stride, unsigned dist, unsigned count);
+  FFT(int n, int count);
+  FFT(int n, int count, CUdeviceptr workArea, size_t workSize);
+  FFT(int nx, int ny, int stride, int dist, int count);
 
   FFT &operator=(FFT &) = delete;
   FFT(FFT &) = delete;
@@ -55,8 +55,10 @@ class FFT {
 
  private:
   void execCuFFTXt(CUdeviceptr in, CUdeviceptr out, int direction) {
+    //NOLINTBEGIN(cppcoreguidelines-pro-type-reinterpret-cast)
     checkCuFFTcall(cufftXtExec(plan, reinterpret_cast<void *>(in),
                                reinterpret_cast<void *>(out), direction));
+    //NOLINTEND(cppcoreguidelines-pro-type-reinterpret-cast)
   }
   static void checkCuFFTcall(cufftResult result) {
     if (result != CUFFT_SUCCESS) {
@@ -68,16 +70,14 @@ class FFT {
 };
 
 template <>
-inline FFT<cufftComplex, cufftComplex, 1>::FFT(unsigned n, unsigned count) {
+inline FFT<cufftComplex, cufftComplex, 1>::FFT(int n, int count) {
   checkCuFFTcall(cufftCreate(&plan));
-  checkCuFFTcall(cufftPlan1d(&plan, static_cast<int>(n), CUFFT_C2C,
-                             static_cast<int>(count)));
+  checkCuFFTcall(cufftPlan1d(&plan, n, CUFFT_C2C, count));
 }
 
 template <>
-inline FFT<cufftComplex, cufftComplex, 2>::FFT(unsigned nx, unsigned ny,
-                                               unsigned stride, unsigned dist,
-                                               unsigned count) {
+inline FFT<cufftComplex, cufftComplex, 2>::FFT(int nx, int ny, int stride,
+                                               int dist, int count) {
   checkCuFFTcall(cufftCreate(&plan));
   std::unique_ptr<int> n(
       new int[2]{static_cast<int>(ny), static_cast<int>(nx)});
@@ -87,21 +87,20 @@ inline FFT<cufftComplex, cufftComplex, 2>::FFT(unsigned nx, unsigned ny,
 }
 
 template <>
-inline FFT<cufftComplex, cufftComplex, 2>::FFT(unsigned nx, unsigned ny) {
+inline FFT<cufftComplex, cufftComplex, 2>::FFT(int nx, int ny) {
   checkCuFFTcall(cufftCreate(&plan));
   checkCuFFTcall(cufftPlan2d(&plan, nx, ny, CUFFT_C2C));
 }
 
 template <>
-inline FFT<cufftComplex, cufftComplex, 1>::FFT(unsigned n, unsigned count,
+inline FFT<cufftComplex, cufftComplex, 1>::FFT(int n, int count,
                                                CUdeviceptr workArea,
                                                size_t workSize) {
   checkCuFFTcall(cufftCreate(&plan));
   checkCuFFTcall(cufftSetAutoAllocation(plan, false));
 
   size_t neededWorkSize{};
-  checkCuFFTcall(cufftMakePlan1d(plan, static_cast<int>(n), CUFFT_C2C,
-                                 static_cast<int>(count), &neededWorkSize));
+  checkCuFFTcall(cufftMakePlan1d(plan, n, CUFFT_C2C, count, &neededWorkSize));
 
   if (workSize < neededWorkSize) {
     throw Error(CUFFT_ALLOC_FAILED);
@@ -111,8 +110,7 @@ inline FFT<cufftComplex, cufftComplex, 1>::FFT(unsigned n, unsigned count,
 }
 
 template <>
-inline FFT<std::complex<half>, std::complex<half>, 1>::FFT(unsigned n,
-                                                           unsigned count) {
+inline FFT<std::complex<half>, std::complex<half>, 1>::FFT(int n, int count) {
   checkCuFFTcall(cufftCreate(&plan));
 
   long long size = n;
