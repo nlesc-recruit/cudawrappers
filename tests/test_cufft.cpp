@@ -25,53 +25,26 @@ void rescaleFFT(cufftComplex *signal, cufftComplex *output,
   }
 }
 
-struct ArrayComparisonStats {
-  float totalDifference;
-  unsigned exceedingCount;
-
-  float meanDifference;
-  float exceedingFraction;
-
-  static struct ArrayComparisonStats computeStats(float totalDifference,
-                                                  unsigned exceedingCount,
-                                                  unsigned totalCount) {
-    return ArrayComparisonStats{totalDifference, exceedingCount,
-                                totalDifference / float(totalCount),
-                                float(exceedingCount) / float(totalCount)};
-  }
-};
-using ArrayComparisonStats = struct ArrayComparisonStats;
-
-inline float norm(cufftComplex a) { return sqrt((a.x * a.x) + (a.y * a.y)); }
-
-inline float absoluteDistance(cufftComplex a, cufftComplex b) {
-  return norm(cufftComplex{a.x - b.x, b.y - b.y});
+void compare(float a, float b) {
+  REQUIRE_THAT(a, Catch::Matchers::WithinRel(b, DEFAULT_FLOAT_TOLERANCE) ||
+                      Catch::Matchers::WithinAbs(0, DEFAULT_FLOAT_TOLERANCE));
 }
 
-ArrayComparisonStats compareResults(
-    cufftComplex *signal, cufftComplex *expected, unsigned linearSize,
-    float tolerance = DEFAULT_FLOAT_TOLERANCE,
-    float absolute_tolerance = DEFAULT_FLOAT_TOLERANCE) {
-  float totalDiff = 0.;
-  unsigned exceedingCount = 0;
-  const unsigned totalElements = linearSize * linearSize;
-  for (int i = 0; i < totalElements; i++) {
-    const float adistance = absoluteDistance(signal[i], expected[i]);
-    totalDiff += adistance;
-    if (adistance > (absolute_tolerance + (tolerance * norm(expected[i])))) {
-      exceedingCount++;
-    }
-  }
-
-  return ArrayComparisonStats::computeStats(totalDiff, exceedingCount,
-                                            totalElements);
+void compare(cuFloatComplex a, cuFloatComplex b) {
+  compare(a.x, b.x);
+  compare(a.y, b.y);
 }
 
-std::ostream &operator<<(std::ostream &os, ArrayComparisonStats const &stats) {
-  return os << "Total difference is " << stats.totalDifference << "\n"
-            << "Mean difference is " << stats.meanDifference << "\n"
-            << "Total count is " << stats.exceedingCount << "\n"
-            << "Percentage count is " << stats.exceedingFraction << "\n";
+void compare(cufftComplex *a, cufftComplex *b, size_t n) {
+  for (size_t i = 0; i < n; i++) {
+    const float a_real = a[i].x;
+    const float a_imag = a[i].x;
+    const float b_real = b[i].x;
+    const float b_imag = b[i].x;
+    compare(a_real, b_real);
+    compare(a_imag, b_imag);
+    compare(a[i], b[i]);
+  }
 }
 
 TEST_CASE("Test FFT is correct: 2D", "[correctness]") {
@@ -93,21 +66,20 @@ TEST_CASE("Test FFT is correct: 2D", "[correctness]") {
   const float percentageOfExpectedDifference = 0.9;
 
   stream.memcpyHtoDAsync(in_dev, in_host, arraySize);
-  SECTION("Test direct fft") {
+
+  SECTION("Test forward fft") {
     fft.execute(in_dev, out_dev, CUFFT_FORWARD);
     stream.memcpyDtoHAsync(out_host, out_dev, arraySize);
     stream.synchronize();
-
-    ArrayComparisonStats stats = compareResults(in_host, out_host, fftSize);
-    CHECK(stats.exceedingFraction > percentageOfExpectedDifference);
+    compare(out_test, in, fftSize);
   }
+
   SECTION("Test inverse fft") {
     fft.execute(in_dev, out_dev, CUFFT_FORWARD);
     fft.execute(out_dev, out_test_dev, CUFFT_INVERSE);
     stream.memcpyDtoHAsync(out_test, out_test_dev, arraySize);
     stream.synchronize();
     rescaleFFT(out_test, out_test, fftSize);
-    ArrayComparisonStats stats = compareResults(out_test, in, fftSize);
-    CHECK(stats.exceedingFraction < DEFAULT_FLOAT_TOLERANCE);
+    compare(out_test, in, fftSize);
   }
 }
