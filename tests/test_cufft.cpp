@@ -7,8 +7,8 @@
 
 const float DEFAULT_FLOAT_TOLERANCE = 1.e-6f;
 
-void generateSignal(cufftComplex *signal, unsigned signalSize) {
-  const unsigned patchSize = 100;
+void generateSignal(cufftComplex *signal, unsigned signalSize,
+                    unsigned patchSize = 100) {
   for (int i = 0; i < patchSize; i++) {
     for (int j = 0; j < patchSize; j++)
       signal[(signalSize * i) + j] = cufftComplex{1, 1};
