@@ -5,7 +5,7 @@
 #include <catch2/catch.hpp>
 #include <cudawrappers/cufft.hpp>
 
-const float DEFAULT_FLOAT_TOLERANCE = 1.e-6;
+const float DEFAULT_FLOAT_TOLERANCE = 1.e-6f;
 
 void generateSignal(cufftComplex *signal, unsigned signalSize) {
   const unsigned patchSize = 100;
