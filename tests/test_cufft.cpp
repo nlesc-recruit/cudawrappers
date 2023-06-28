@@ -6,22 +6,6 @@
 #include <cudawrappers/cufft.hpp>
 
 const float DEFAULT_FLOAT_TOLERANCE = 1.e-6;
-void store_array_to_file(cufftComplex *array, std::string fname,
-                         unsigned lSize) {
-  std::ofstream ofile(fname, std::ios::binary);
-
-  if (ofile.is_open()) {
-    for (size_t k = 0; k < (lSize * lSize); k++) {
-      ofile.write((char *)&array[k].x, sizeof(float));
-      ofile.write((char *)&array[k].y, sizeof(float));
-    }
-    ofile.close();
-    std::cout << "Completed" << std::endl;
-  } else {
-    std::cerr << "Cannot open file " << fname << std::endl;
-    exit(1);
-  }
-}
 
 void generateSignal(cufftComplex *signal, unsigned signalSize) {
   const unsigned patchSize = 100;
