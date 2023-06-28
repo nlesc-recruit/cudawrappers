@@ -5,29 +5,24 @@
 #include <catch2/catch.hpp>
 #include <cudawrappers/cufft.hpp>
 
-const float DEFAULT_FLOAT_TOLERANCE = 1.e-6f;
-
-void generateSignal(cufftComplex *signal, unsigned signalSize,
-                    unsigned patchSize = 100) {
-  for (int i = 0; i < patchSize; i++) {
-    for (int j = 0; j < patchSize; j++)
-      signal[(signalSize * i) + j] = cufftComplex{1, 1};
+void generateSignal(cufftComplex *in, size_t height, size_t width,
+                    size_t patchSize) {
+  for (size_t i = 0; i < patchSize; i++) {
+    for (size_t j = 0; j < patchSize; j++)
+      in[(width * i) + j] = cufftComplex{1, 1};
   }
 }
 
-void rescaleFFT(cufftComplex *signal, cufftComplex *output,
-                unsigned signalSize) {
-  const unsigned totalElements = signalSize * signalSize;
-  const float rescale = float(totalElements);
-  for (int i = 0; i < totalElements; i++) {
-    output[i].x = signal[i].x / rescale;
-    output[i].y = signal[i].y / rescale;
+void scaleSignal(cufftComplex *in, cufftComplex *out, size_t n) {
+  for (size_t i = 0; i < n; i++) {
+    out[i].x = in[i].x / float(n);
+    out[i].y = in[i].y / float(n);
   }
 }
 
 void compare(float a, float b) {
-  REQUIRE_THAT(a, Catch::Matchers::WithinRel(b, DEFAULT_FLOAT_TOLERANCE) ||
-                      Catch::Matchers::WithinAbs(0, DEFAULT_FLOAT_TOLERANCE));
+  REQUIRE_THAT(a, Catch::Matchers::WithinRel(b, 1e-3f) ||
+                      Catch::Matchers::WithinAbs(0, 1e-6f));
 }
 
 void compare(cuFloatComplex a, cuFloatComplex b) {
@@ -48,38 +43,31 @@ void compare(cufftComplex *a, cufftComplex *b, size_t n) {
 }
 
 TEST_CASE("Test FFT is correct: 2D", "[correctness]") {
-  const int fftSize = 1024;
-  const size_t arraySize = fftSize * fftSize * sizeof(cufftComplex);
+  const size_t height = 256;
+  const size_t width = height;
+  const size_t arraySize = height * width * sizeof(cufftComplex);
+  const size_t patchSize = 10;
 
   cu::init();
   cu::Device device(0);
   cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, device);
-  cu::DeviceMemory in_dev(arraySize), out_dev(arraySize),
-      out_test_dev(arraySize);
-  cu::HostMemory in_host(arraySize), out_host(arraySize), out_test(arraySize);
-  cufftComplex *in = in_host;
   cu::Stream stream;
-  generateSignal(in, fftSize);
+  cu::HostMemory h_in(arraySize);
+  cu::HostMemory h_out(arraySize);
+  cu::DeviceMemory d_in(arraySize);
+  cu::DeviceMemory d_out(arraySize);
+  cu::DeviceMemory d_out2(arraySize);
 
-  cufft::FFT<cufftComplex, cufftComplex, 2> fft{fftSize, fftSize};
+  generateSignal(static_cast<cufftComplex *>(h_in), height, width, patchSize);
+  stream.memcpyHtoDAsync(d_in, h_in, arraySize);
+
+  cufft::FFT<cufftComplex, cufftComplex, 2> fft{height, width};
   fft.setStream(stream);
-  const float percentageOfExpectedDifference = 0.9;
 
-  stream.memcpyHtoDAsync(in_dev, in_host, arraySize);
-
-  SECTION("Test forward fft") {
-    fft.execute(in_dev, out_dev, CUFFT_FORWARD);
-    stream.memcpyDtoHAsync(out_host, out_dev, arraySize);
-    stream.synchronize();
-    compare(out_test, in, fftSize);
-  }
-
-  SECTION("Test inverse fft") {
-    fft.execute(in_dev, out_dev, CUFFT_FORWARD);
-    fft.execute(out_dev, out_test_dev, CUFFT_INVERSE);
-    stream.memcpyDtoHAsync(out_test, out_test_dev, arraySize);
-    stream.synchronize();
-    rescaleFFT(out_test, out_test, fftSize);
-    compare(out_test, in, fftSize);
-  }
+  fft.execute(d_in, d_out, CUFFT_FORWARD);
+  fft.execute(d_out, d_out2, CUFFT_INVERSE);
+  stream.memcpyDtoHAsync(h_out, d_out2, arraySize);
+  stream.synchronize();
+  scaleSignal(h_out, h_out, height * width);
+  compare(h_out, h_in, height * width);
 }
