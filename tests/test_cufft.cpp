@@ -5,7 +5,7 @@
 #include <catch2/catch.hpp>
 #include <cudawrappers/cufft.hpp>
 
-#define FP16_EPSILON 1e-2f
+#define FP16_EPSILON 1e-3f
 #define FP32_EPSILON 1e-6f
 
 template <typename T>
