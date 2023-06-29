@@ -95,7 +95,7 @@ class Error : public std::exception {
  */
 class FFT {
  public:
-  FFT(){};
+  FFT() = default;
   FFT &operator=(FFT &) = delete;
   FFT(FFT &) = delete;
   FFT &operator=(FFT &&other) noexcept {
@@ -133,7 +133,7 @@ class FFT {
     }
   }
 
-  cufftHandle plan_;
+  cufftHandle plan_{};
 };
 
 /*
@@ -160,13 +160,13 @@ FFT1D<CUDA_C_16F>::FFT1D(int nx, int batch) {
   checkCuFFTCall(cufftCreate(&plan_));
   const int rank = 1;
   size_t ws = 0;
-  long long n[rank] = {nx};
+  std::array<long long, 1> n{nx};
   long long int idist = 1;
   long long int odist = 1;
   int istride = 1;
   int ostride = 1;
-  checkCuFFTCall(cufftXtMakePlanMany(plan_, rank, n, NULL, istride, idist,
-                                     CUDA_C_16F, NULL, ostride, odist,
+  checkCuFFTCall(cufftXtMakePlanMany(plan_, rank, n.data(), nullptr, istride,
+                                     idist, CUDA_C_16F, nullptr, ostride, odist,
                                      CUDA_C_16F, batch, &ws, CUDA_C_16F));
 }
 
@@ -192,9 +192,9 @@ FFT2D<CUDA_C_32F>::FFT2D(int nx, int ny) {
 template <>
 FFT2D<CUDA_C_32F>::FFT2D(int nx, int ny, int stride, int dist, int batch) {
   checkCuFFTCall(cufftCreate(&plan_));
-  int n[2]{nx, ny};
-  checkCuFFTCall(cufftPlanMany(&plan_, 2, n, n, stride, dist, n, stride, dist,
-                               CUFFT_C2C, batch));
+  std::array<int, 2> n{nx, ny};
+  checkCuFFTCall(cufftPlanMany(&plan_, 2, n.data(), n.data(), stride, dist,
+                               n.data(), stride, dist, CUFFT_C2C, batch));
 }
 
 template <>
@@ -202,13 +202,13 @@ FFT2D<CUDA_C_16F>::FFT2D(int nx, int ny, int stride, int dist, int batch) {
   checkCuFFTCall(cufftCreate(&plan_));
   const int rank = 2;
   size_t ws = 0;
-  long long n[rank] = {nx, ny};
+  std::array<long long, 2> n{nx, ny};
   long long int idist = 1;
   long long int odist = 1;
   int istride = 1;
   int ostride = 1;
-  checkCuFFTCall(cufftXtMakePlanMany(plan_, rank, n, NULL, istride, idist,
-                                     CUDA_C_16F, NULL, ostride, odist,
+  checkCuFFTCall(cufftXtMakePlanMany(plan_, rank, n.data(), nullptr, istride,
+                                     idist, CUDA_C_16F, nullptr, ostride, odist,
                                      CUDA_C_16F, batch, &ws, CUDA_C_16F));
 }
 
