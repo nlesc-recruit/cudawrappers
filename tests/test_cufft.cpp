@@ -92,10 +92,6 @@ TEST_CASE("Test 1D FFT", "[FFT1D]") {
   SECTION("FP16") {
     const size_t arraySize = size * sizeof(half2);
 
-    cu::init();
-    cu::Device device(0);
-    cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, device);
-    cu::Stream stream;
     cu::HostMemory h_in(arraySize);
     cu::HostMemory h_out(arraySize);
     cu::DeviceMemory d_in(arraySize);
