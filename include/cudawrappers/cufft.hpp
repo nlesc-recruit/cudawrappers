@@ -5,120 +5,216 @@
 #include <cufft.h>
 #include <cufftXt.h>
 
-#include <complex>
 #include <exception>
 
 #include "cudawrappers/cu.hpp"
 
+namespace {
+/*
+ * Error handling helper function, copied from cuda-samples Common/helper_cuda.h
+ */
+static const char *_cudaGetErrorEnum(cufftResult error) {
+  switch (error) {
+    case CUFFT_SUCCESS:
+      return "CUFFT_SUCCESS";
+
+    case CUFFT_INVALID_PLAN:
+      return "CUFFT_INVALID_PLAN";
+
+    case CUFFT_ALLOC_FAILED:
+      return "CUFFT_ALLOC_FAILED";
+
+    case CUFFT_INVALID_TYPE:
+      return "CUFFT_INVALID_TYPE";
+
+    case CUFFT_INVALID_VALUE:
+      return "CUFFT_INVALID_VALUE";
+
+    case CUFFT_INTERNAL_ERROR:
+      return "CUFFT_INTERNAL_ERROR";
+
+    case CUFFT_EXEC_FAILED:
+      return "CUFFT_EXEC_FAILED";
+
+    case CUFFT_SETUP_FAILED:
+      return "CUFFT_SETUP_FAILED";
+
+    case CUFFT_INVALID_SIZE:
+      return "CUFFT_INVALID_SIZE";
+
+    case CUFFT_UNALIGNED_DATA:
+      return "CUFFT_UNALIGNED_DATA";
+
+    case CUFFT_INCOMPLETE_PARAMETER_LIST:
+      return "CUFFT_INCOMPLETE_PARAMETER_LIST";
+
+    case CUFFT_INVALID_DEVICE:
+      return "CUFFT_INVALID_DEVICE";
+
+    case CUFFT_PARSE_ERROR:
+      return "CUFFT_PARSE_ERROR";
+
+    case CUFFT_NO_WORKSPACE:
+      return "CUFFT_NO_WORKSPACE";
+
+    case CUFFT_NOT_IMPLEMENTED:
+      return "CUFFT_NOT_IMPLEMENTED";
+
+    case CUFFT_LICENSE_ERROR:
+      return "CUFFT_LICENSE_ERROR";
+
+    case CUFFT_NOT_SUPPORTED:
+      return "CUFFT_NOT_SUPPORTED";
+  }
+
+  return "<unknown>";
+}
+
+}  // namespace
 namespace cufft {
+
+/*
+ * Error
+ */
 class Error : public std::exception {
  public:
-  explicit Error(cufftResult result) : _result(result) {}
+  explicit Error(cufftResult result) : result_(result) {}
 
-  const char *what() const noexcept override;
+  const char *what() const noexcept override {
+    return _cudaGetErrorEnum(result_);
+  }
 
-  operator cufftResult() const { return _result; }
+  operator cufftResult() const { return result_; }
 
  private:
-  cufftResult _result;
+  cufftResult result_;
 };
 
-template <typename Tin = cufftComplex, typename Tout = cufftComplex,
-          unsigned DIM = 1>
+/*
+ * FFT
+ */
 class FFT {
  public:
-  FFT(int n, int count);
-  FFT(int n, int count, CUdeviceptr workArea, size_t workSize);
-  FFT(int nx, int ny, int stride, int dist, int count);
-
+  FFT(){};
   FFT &operator=(FFT &) = delete;
   FFT(FFT &) = delete;
-
   FFT &operator=(FFT &&other) noexcept {
-    if (other != this) {
-      plan = other.plan;
-      other.plan = 0;
+    if (&other != this) {
+      plan_ = other.plan_;
+      other.plan_ = 0;
     }
     return *this;
   }
   FFT(FFT &&other) noexcept { *this = std::move(other); }
 
-  ~FFT() { checkCuFFTcall(cufftDestroy(plan)); }
+  ~FFT() { checkCuFFTCall(cufftDestroy(plan_)); }
 
   void setStream(CUstream stream) {
-    checkCuFFTcall(cufftSetStream(plan, stream));
-  }
-  void execute(cu::DeviceMemory in, cu::DeviceMemory out,
-               int direction = CUFFT_FORWARD) {
-    execCuFFTXt(in, out, direction);
+    checkCuFFTCall(cufftSetStream(plan_, stream));
   }
 
- private:
-  void execCuFFTXt(CUdeviceptr in, CUdeviceptr out, int direction) {
-    // NOLINTBEGIN(cppcoreguidelines-pro-type-reinterpret-cast)
-    checkCuFFTcall(cufftXtExec(plan, reinterpret_cast<void *>(in),
-                               reinterpret_cast<void *>(out), direction));
-    // NOLINTEND(cppcoreguidelines-pro-type-reinterpret-cast)
+  void execute(cu::DeviceMemory &in, cu::DeviceMemory &out,
+               int direction = CUFFT_FORWARD) {
+    void *in_ptr = reinterpret_cast<void *>(static_cast<CUdeviceptr>(in));
+    void *out_ptr = reinterpret_cast<void *>(static_cast<CUdeviceptr>(out));
+    checkCuFFTCall(cufftXtExec(plan_, in_ptr, out_ptr, direction));
   }
-  static void checkCuFFTcall(cufftResult result) {
+
+  void execute(CUdeviceptr in, CUdeviceptr out, int direction) {
+    void *in_ptr = reinterpret_cast<void *>(in);
+    void *out_ptr = reinterpret_cast<void *>(out);
+    checkCuFFTCall(cufftXtExec(plan_, in_ptr, out_ptr, direction));
+  }
+
+ protected:
+  void checkCuFFTCall(cufftResult result) {
     if (result != CUFFT_SUCCESS) {
       throw Error(result);
     }
   }
 
-  cufftHandle plan{};
+  cufftHandle plan_;
+};
+
+/*
+ * FFT1D
+ */
+template <cudaDataType_t T>
+class FFT1D : public FFT {
+ public:
+  FFT1D(int nx) = delete;
+  FFT1D(int nx, int batch) = delete;
 };
 
 template <>
-inline FFT<cufftComplex, cufftComplex, 1>::FFT(int n, int count) {
-  checkCuFFTcall(cufftCreate(&plan));
-  checkCuFFTcall(cufftPlan1d(&plan, n, CUFFT_C2C, count));
+FFT1D<CUDA_C_32F>::FFT1D(int nx, int batch) {
+  checkCuFFTCall(cufftCreate(&plan_));
+  checkCuFFTCall(cufftPlan1d(&plan_, nx, CUFFT_C2C, batch));
 }
 
 template <>
-inline FFT<cufftComplex, cufftComplex, 2>::FFT(int nx, int ny, int stride,
-                                               int dist, int count) {
-  checkCuFFTcall(cufftCreate(&plan));
-  std::unique_ptr<int> n(
-      new int[2]{static_cast<int>(ny), static_cast<int>(nx)});
+FFT1D<CUDA_C_32F>::FFT1D(int nx) : FFT1D(nx, 1) {}
 
-  checkCuFFTcall(cufftPlanMany(&plan, 2, n.get(), n.get(), stride, dist,
-                               n.get(), stride, dist, CUFFT_C2C, count));
+template <>
+FFT1D<CUDA_C_16F>::FFT1D(int nx, int batch) {
+  checkCuFFTCall(cufftCreate(&plan_));
+  const int rank = 1;
+  size_t ws = 0;
+  long long n[rank] = {nx};
+  long long int idist = 1;
+  long long int odist = 1;
+  int istride = 1;
+  int ostride = 1;
+  checkCuFFTCall(cufftXtMakePlanMany(plan_, rank, n, NULL, istride, idist,
+                                     CUDA_C_16F, NULL, ostride, odist,
+                                     CUDA_C_16F, batch, &ws, CUDA_C_16F));
 }
 
 template <>
-inline FFT<cufftComplex, cufftComplex, 2>::FFT(int nx, int ny) {
-  checkCuFFTcall(cufftCreate(&plan));
-  checkCuFFTcall(cufftPlan2d(&plan, nx, ny, CUFFT_C2C));
+FFT1D<CUDA_C_16F>::FFT1D(int nx) : FFT1D(nx, 1) {}
+
+/*
+ * FFT2D
+ */
+template <cudaDataType_t T>
+class FFT2D : public FFT {
+ public:
+  FFT2D(int nx, int ny) = delete;
+  FFT2D(int nx, int ny, int stride, int dist, int batch) = delete;
+};
+
+template <>
+FFT2D<CUDA_C_32F>::FFT2D(int nx, int ny) {
+  checkCuFFTCall(cufftCreate(&plan_));
+  checkCuFFTCall(cufftPlan2d(&plan_, nx, ny, CUFFT_C2C));
 }
 
 template <>
-inline FFT<cufftComplex, cufftComplex, 1>::FFT(int n, int count,
-                                               CUdeviceptr workArea,
-                                               size_t workSize) {
-  checkCuFFTcall(cufftCreate(&plan));
-  checkCuFFTcall(cufftSetAutoAllocation(plan, false));
-
-  size_t neededWorkSize{};
-  checkCuFFTcall(cufftMakePlan1d(plan, n, CUFFT_C2C, count, &neededWorkSize));
-
-  if (workSize < neededWorkSize) {
-    throw Error(CUFFT_ALLOC_FAILED);
-  }
-
-  checkCuFFTcall(cufftSetWorkArea(plan, reinterpret_cast<void *>(workArea)));
+FFT2D<CUDA_C_32F>::FFT2D(int nx, int ny, int stride, int dist, int batch) {
+  checkCuFFTCall(cufftCreate(&plan_));
+  int n[2]{nx, ny};
+  checkCuFFTCall(cufftPlanMany(&plan_, 2, n, n, stride, dist, n, stride, dist,
+                               CUFFT_C2C, batch));
 }
 
 template <>
-inline FFT<std::complex<half>, std::complex<half>, 1>::FFT(int n, int count) {
-  checkCuFFTcall(cufftCreate(&plan));
-
-  long long size = n;
-  size_t neededWorkSize{};
-  checkCuFFTcall(cufftXtMakePlanMany(plan, 1, &size, nullptr, 1, 1, CUDA_C_16F,
-                                     nullptr, 1, 1, CUDA_C_16F, count,
-                                     &neededWorkSize, CUDA_C_16F));
+FFT2D<CUDA_C_16F>::FFT2D(int nx, int ny, int stride, int dist, int batch) {
+  checkCuFFTCall(cufftCreate(&plan_));
+  const int rank = 2;
+  size_t ws = 0;
+  long long n[rank] = {nx, ny};
+  long long int idist = 1;
+  long long int odist = 1;
+  int istride = 1;
+  int ostride = 1;
+  checkCuFFTCall(cufftXtMakePlanMany(plan_, rank, n, NULL, istride, idist,
+                                     CUDA_C_16F, NULL, ostride, odist,
+                                     CUDA_C_16F, batch, &ws, CUDA_C_16F));
 }
+
+template <>
+FFT2D<CUDA_C_16F>::FFT2D(int nx, int ny) : FFT2D(nx, ny, 1, nx * ny, 1) {}
+
 }  // namespace cufft
 
-#endif
+#endif // CUFFT_WRAPPER_H
