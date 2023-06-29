@@ -217,4 +217,4 @@ FFT2D<CUDA_C_16F>::FFT2D(int nx, int ny) : FFT2D(nx, ny, 1, nx * ny, 1) {}
 
 }  // namespace cufft
 
-#endif // CUFFT_WRAPPER_H
+#endif  // CUFFT_WRAPPER_H
