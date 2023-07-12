@@ -206,10 +206,10 @@ FFT2D<CUDA_C_16F>::FFT2D(int nx, int ny, int stride, int dist, int batch) {
   const int rank = 2;
   size_t ws = 0;
   std::array<long long, 2> n{nx, ny};
-  long long int idist = 1;
-  long long int odist = 1;
-  int istride = 1;
-  int ostride = 1;
+  int istride = stride;
+  int ostride = stride;
+  long long int idist = dist;
+  long long int odist = dist;
   checkCuFFTCall(cufftXtMakePlanMany(*plan(), rank, n.data(), nullptr, istride,
                                      idist, CUDA_C_16F, nullptr, ostride, odist,
                                      CUDA_C_16F, batch, &ws, CUDA_C_16F));
