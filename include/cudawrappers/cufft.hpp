@@ -9,7 +9,6 @@
 
 #include "cudawrappers/cu.hpp"
 
-namespace {
 /*
  * Error handling helper function, copied from cuda-samples Common/helper_cuda.h
  */
@@ -70,7 +69,6 @@ static const char *_cudaGetErrorEnum(cufftResult error) {
   return "<unknown>";
 }
 
-}  // namespace
 namespace cufft {
 
 /*
