@@ -15,7 +15,7 @@ endfunction(include_cuda_code)
 
 add_executable(vector_add vector_add.cpp)
 target_link_libraries(
-  vector_add PRIVATE cudawrappers::cu CUDA::cudart cudawrappers::nvrtc
+  vector_add PRIVATE cudawrappers::cu cudart cudawrappers::nvrtc
 )
 include_cuda_code(vector_add kernels/vector_add_kernel.cu)
 
