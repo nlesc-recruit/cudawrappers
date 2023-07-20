@@ -6,9 +6,6 @@ repos:
   - repo: https://github.com/pocc/pre-commit-hooks
     rev: v1.3.5
     hooks:
-      - id: clang-tidy
-        types_or: ['c++', 'cuda']
-        args: ['-p=build']
       - id: cppcheck
         args:
           - '--project=build/compile_commands.json'
@@ -23,6 +20,5 @@ repos:
 
 ci:
   skip:
-    - clang-tidy
     - cppcheck
     - cmake-lint
