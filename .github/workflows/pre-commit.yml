@@ -55,8 +55,8 @@ jobs:
         with:
           cuda: ${{ env.cuda-version }}
           method: "network"
-          sub-packages: ["nvcc"]
-          linux-localargs: ["--toolkit"]
+          sub-packages: '["nvcc"]'
+          linux-local-args: '["--toolkit"]'
 
       - name: Generate compilation database
         shell: bash -el {0}
