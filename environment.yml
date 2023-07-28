@@ -3,11 +3,11 @@ channels:
   - conda-forge
 dependencies:
   - c-compiler
-  - clang==16.0.6
-  - clang-tools==16.0.6
+  - clang==14.0.0
+  - clang-tools==14.0.0
   - cmake>=3.17
   - cppcheck==2.10.3
-  - cudatoolkit-dev>=10.0
+  - cudatoolkit-dev==12.2.0
   - cxx-compiler
   - doxygen
   - gcovr
@@ -19,6 +19,6 @@ dependencies:
   - pip:
       - pre-commit
       - bump2version==1.0.1
-      - clang-format==16.0.6
+      - clang-format==14.0.0
       - cmakelang==0.6.13
       - flawfinder==2.0.19

@@ -12,9 +12,11 @@ jobs:
         # set tools versions to latest supported by the CI runner,
         # ubuntu 22.04 at the time of writing
         # clang defaults to v14.0.0
-        gcc-version: 12  # = 12.1.0
+        gcc-version: "12"  # = 12.1.0
         # cuda version to install with separate action
         cuda-version: "12.2.0"
+        # version for cmake-lint and cmake-format
+        cmakelang-version: "0.6.13"
     steps:
 
       - name: Show git version
@@ -61,7 +63,7 @@ jobs:
 
       - name: Install pre-commit and related tools
         run: |
-          pip install pre-commit cmake-lint cmake-format
+          pip install pre-commit cmakelang==${{ env.cmakelang-version}}
           sudo apt install cppcheck -y
 
       - name: Show tool versions
