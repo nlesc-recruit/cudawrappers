@@ -56,7 +56,7 @@ jobs:
           cuda: ${{ env.cuda-version }}
           method: "network"
           sub-packages: '["nvcc", "nvrtc-dev", "nvtx"]'
-          non-cuda-sub-packages: '["libcufft-dev"]'
+          non-cuda-sub-packages: '["libcufft-dev", "libcublas-dev"]'
           linux-local-args: '["--toolkit"]'
 
       - name: Generate compilation database
