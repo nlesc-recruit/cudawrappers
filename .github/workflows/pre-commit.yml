@@ -9,10 +9,10 @@ jobs:
     name: run
     runs-on: ubuntu-latest
     env:
-        # gcc and clang are the latest supported by the CI runner,
+        # set tools versions to latest supported by the CI runner,
         # ubuntu 22.04 at the time of writing
+        # clang defaults to v14.0.0
         gcc-version: 12  # = 12.1.0
-        clang-version: 14  # = 14.0.0
         # cuda version to install with separate action
         cuda-version: "12.2.0"
     steps:
@@ -64,6 +64,16 @@ jobs:
           pip install pre-commit
           sudo apt install cppcheck -y
 
+      - name: Show tool versions
+        run: |
+           nvcc --version
+           g++-${{ env.gcc-version}} --version
+           clang-format --version
+           clang-tidy --version
+           cppcheck --version
+           cmake-lint --version
+           cmake-format --version
+
       - name: Generate compilation database
         shell: bash -el {0}
         run: |
@@ -73,6 +83,5 @@ jobs:
         shell: bash -el {0}
         run: |
           git diff --name-only ${{ env.precommit_from_ref }}...${{ env.precommit_to_ref }}
-          clang-format --version
           pre-commit run -a
           #pre-commit run --from-ref ${{ env.precommit_from_ref }} --to-ref ${{ env.precommit_to_ref }}
