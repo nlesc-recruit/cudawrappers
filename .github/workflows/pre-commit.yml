@@ -72,4 +72,5 @@ jobs:
         shell: bash -el {0}
         run: |
           git diff --name-only ${{ env.precommit_from_ref }}...${{ env.precommit_to_ref }}
-          pre-commit run --from-ref ${{ env.precommit_from_ref }} --to-ref ${{ env.precommit_to_ref }}
+          pre-commit run -a
+          #pre-commit run --from-ref ${{ env.precommit_from_ref }} --to-ref ${{ env.precommit_to_ref }}
