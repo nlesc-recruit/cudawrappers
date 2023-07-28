@@ -12,6 +12,7 @@ repos:
           - '--suppress=*:build/*'
           - '--suppress=unusedFunction:*/*'
           - '--suppress=unreadVariable:tests/*'
+          - '--suppress=missingIncludeSystem'
   - repo: https://github.com/cheshirekow/cmake-format-precommit
     rev: v0.6.13
     hooks:
