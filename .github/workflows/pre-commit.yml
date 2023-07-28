@@ -59,9 +59,9 @@ jobs:
           non-cuda-sub-packages: '["libcufft-dev", "libcublas-dev"]'
           linux-local-args: '["--toolkit"]'
 
-      - name: Install pre-commit and cppcheck
+      - name: Install pre-commit and related tools
         run: |
-          pip install pre-commit
+          pip install pre-commit cmake-lint cmake-format
           sudo apt install cppcheck -y
 
       - name: Show tool versions
