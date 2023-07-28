@@ -59,6 +59,10 @@ jobs:
           non-cuda-sub-packages: '["libcufft-dev", "libcublas-dev"]'
           linux-local-args: '["--toolkit"]'
 
+      - name: Install pre-commit
+        run: |
+          pip install pre-commit
+
       - name: Generate compilation database
         shell: bash -el {0}
         run: |
