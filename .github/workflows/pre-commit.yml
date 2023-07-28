@@ -1,5 +1,4 @@
 name: pre-commit
-# conda cache setup based on https://github.com/epassaro/cache-conda-envs
 
 on:
   push:
@@ -43,23 +42,6 @@ jobs:
         run: |
           git checkout ${{ env.precommit_from_ref }}
           git checkout ${{ env.precommit_to_ref }}
-
-      - name: Setup environment with Mamba
-        uses: conda-incubator/setup-miniconda@v2
-        with:
-          mamba-version: "*"
-          channels: conda-forge
-          activate-environment: recruit
-
-      - uses: actions/cache@v2
-        with:
-          path: /usr/share/miniconda/envs/recruit
-          key: conda-${{ hashFiles('environment.yml') }}
-        id: cache
-
-      - name: Update mamba environment if cache is outdated
-        if: steps.cache.outputs.cache-hit != 'true'
-        run: mamba env update -n recruit -f environment.yml
 
       - name: Generate compilation database
         shell: bash -el {0}
