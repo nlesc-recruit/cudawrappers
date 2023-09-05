@@ -1,5 +1,4 @@
 name: pre-commit
-# conda cache setup based on https://github.com/epassaro/cache-conda-envs
 
 on:
   push:
@@ -9,6 +8,15 @@ jobs:
   linting:
     name: run
     runs-on: ubuntu-latest
+    env:
+        # set tools versions to latest supported by the CI runner,
+        # ubuntu 22.04 at the time of writing
+        # clang defaults to v14.0.0
+        gcc-version: "12"  # = 12.1.0
+        # cuda version to install with separate action
+        cuda-version: "12.2.0"
+        # version for cmake-lint and cmake-format
+        cmakelang-version: "0.6.13"
     steps:
 
       - name: Show git version
@@ -44,27 +52,34 @@ jobs:
           git checkout ${{ env.precommit_from_ref }}
           git checkout ${{ env.precommit_to_ref }}
 
-      - name: Setup environment with Mamba
-        uses: conda-incubator/setup-miniconda@v2
+      - name: Install cuda
+        uses: Jimver/cuda-toolkit@v0.2.11
         with:
-          mamba-version: "*"
-          channels: conda-forge
-          activate-environment: recruit
+          cuda: ${{ env.cuda-version }}
+          method: "network"
+          sub-packages: '["nvcc", "nvrtc-dev", "nvtx"]'
+          non-cuda-sub-packages: '["libcufft-dev"]'
+          linux-local-args: '["--toolkit"]'
 
-      - uses: actions/cache@v2
-        with:
-          path: /usr/share/miniconda/envs/recruit
-          key: conda-${{ hashFiles('environment.yml') }}
-        id: cache
+      - name: Install pre-commit and related tools
+        run: |
+          pip install pre-commit cmakelang==${{ env.cmakelang-version}}
+          sudo apt install cppcheck -y
 
-      - name: Update mamba environment if cache is outdated
-        if: steps.cache.outputs.cache-hit != 'true'
-        run: mamba env update -n recruit -f environment.yml
+      - name: Show tool versions
+        run: |
+           echo "nvcc: $(nvcc --version)"
+           echo "g++: $(g++-${{ env.gcc-version}} --version)"
+           echo "clang-format: $(clang-format --version)"
+           echo "clang-tidy: $(clang-tidy --version)"
+           echo "cppcheck: $(cppcheck --version)"
+           echo "cmake-lint: $(cmake-lint --version)"
+           echo "cmake-format: $(cmake-format --version)"
 
       - name: Generate compilation database
         shell: bash -el {0}
         run: |
-          cmake -DCMAKE_CXX_COMPILER=clang++ -DCUDAWRAPPERS_BUILD_TESTING=True -DCUDAWRAPPERS_BUILD_EXAMPLES=True -S . -B build
+          cmake -DCMAKE_CXX_COMPILER=g++-${{ env.gcc-version }} -DCUDAWRAPPERS_BUILD_TESTING=True -DCUDAWRAPPERS_BUILD_EXAMPLES=True -S . -B build
 
       - name: Run pre-commit on all files changed in this branch using project standard configuration
         shell: bash -el {0}
