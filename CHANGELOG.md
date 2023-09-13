@@ -11,7 +11,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ### Changed
 
 ### Removed
-- `getDevice` function of `Context`
+- `getDevice` function of `Context`, use `Device` constructor instead
 
 ## [0.4.0]
 ### Added
