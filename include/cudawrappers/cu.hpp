@@ -246,9 +246,8 @@ class RegisteredMemory : public HostMemory {
       : HostMemory(0) {
     _obj = ptr;
     checkCudaCall(cuMemHostRegister(&_obj, size, flags));
-    manager = std::shared_ptr<void *>(new (void *)(_obj), [](void **ptr) {
-      cuMemHostUnregister(*ptr);
-    });
+    manager = std::shared_ptr<void *>(
+        new (void *)(_obj), [](void **ptr) { cuMemHostUnregister(*ptr); });
   }
 };
 
