@@ -12,25 +12,23 @@ FetchContent_MakeAvailable(Catch2)
 list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/contrib)
 include(Catch)
 
-add_executable(test_cu test_cu.cpp)
-target_link_libraries(test_cu PUBLIC Catch2::Catch2 cudawrappers::cu)
-catch_discover_tests(test_cu)
-
-add_executable(test_nvrtc test_nvrtc.cpp)
-target_link_libraries(
-  test_nvrtc PUBLIC Catch2::Catch2 cudawrappers::cu cudawrappers::nvrtc
-)
-catch_discover_tests(test_nvrtc)
-
-add_executable(test_cufft test_cufft.cpp)
-target_link_libraries(
-  test_cufft PUBLIC Catch2::Catch2 cudawrappers::cu cudawrappers::cufft
-)
-catch_discover_tests(test_cufft)
-
 set(COMPONENTS cu nvrtc cufft)
+
 foreach(component ${COMPONENTS})
+  add_executable(test_${component} test_${component}.cpp)
   target_include_directories(
     test_${component} PRIVATE "${CMAKE_SOURCE_DIR}/include"
   )
+  catch_discover_tests(test_${component})
 endforeach()
+
+set(LINK_LIBRARIES Catch2::Catch2 cudawrappers::cu)
+
+target_link_libraries(test_cu PUBLIC ${LINK_LIBRARIES})
+catch_discover_tests(test_cu)
+
+target_link_libraries(test_nvrtc PUBLIC ${LINK_LIBRARIES} cudawrappers::nvrtc)
+catch_discover_tests(test_nvrtc)
+
+target_link_libraries(test_cufft PUBLIC ${LINK_LIBRARIES} cudawrappers::cufft)
+catch_discover_tests(test_cufft)
