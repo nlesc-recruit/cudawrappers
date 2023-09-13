@@ -42,6 +42,7 @@ find_package(CUDAToolkit ${CUDA_MIN_VERSION} REQUIRED)
 # Configure tests
 if(CUDAWRAPPERS_BUILD_TESTING)
   include(CTest)
+  enable_testing()
 
   # Set up coverage collection
   add_compile_options(--coverage -g -O0)
