@@ -27,3 +27,20 @@ TEST_CASE("Test nvrtc::Program", "[program]") {
     CHECK(ptx.size() > 0);
   }
 }
+
+TEST_CASE("Test nvrtc::Program embedded source", "[program]") {
+  const std::string kernel =
+#include "vector_add_kernel.cu"
+      ;
+  nvrtc::Program program(kernel, "vector_add_kernel.cu");
+
+  SECTION("Test Program.compile") {
+    const std::vector<std::string> options = {"--generate-line-info"};
+    CHECK_NOTHROW(program.compile(options));
+  }
+
+  SECTION("Test Program.getPTX") {
+    const std::string ptx{program.getPTX()};
+    CHECK(ptx.size() > 0);
+  }
+}
