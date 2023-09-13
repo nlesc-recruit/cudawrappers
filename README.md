@@ -78,9 +78,7 @@ This section aims to provide an overview of projects that use this repo's librar
 
 This section provides an overview of similar tools in this space, and how they are different.
 
-### cuda-api-wrappers
-
-url: https://github.com/eyalroz/cuda-api-wrappers
+### [cuda-api-wrappers](https://github.com/eyalroz/cuda-api-wrappers)
 
 - Aims to provide wrappers for the CUDA runtime API
 - Development has slowed a bit recently
@@ -89,15 +87,11 @@ url: https://github.com/eyalroz/cuda-api-wrappers
 
 The project is planning to support more of the Driver API (for fine-grained control of CUDA devices) and NVRTC API (for runtime compilation of kernels); there is a release candidate ([`v0.5.0-rc1`](https://github.com/eyalroz/cuda-api-wrappers/tree/v0.5.0-rc1)). It doesn't provide support for cuFFT and cuBLAS though.
 
-### cuda-wrapper
-
-url: https://github.com/halmd-org/cuda-wrapper
+### [cuda-wrapper](https://github.com/halmd-org/cuda-wrapper)
 
 - Aims to provide a C++ wrapper for the CUDA Driver and Runtime APIs
 
-### CudaPlusPlus
-
-url: https://github.com/apardyl/cudaplusplus
+### [CudaPlusPlus](https://github.com/apardyl/cudaplusplus)
 
 - Aims to provide a C++ wrapper for the CUDA Driver API
 - Project appears inactive
