@@ -9,6 +9,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 - cufft wrappers for 1D and 2D complex-to-complex FFTs
 
 ### Changed
+- The vector_add example has now become a test
 
 ### Removed
 
