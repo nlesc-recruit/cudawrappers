@@ -11,6 +11,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ### Changed
 
 ### Removed
+- `getDevice` function of `Context`
 
 ## [0.4.0]
 ### Added
@@ -26,7 +27,6 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ### Removed
 
 - `Source` class. Use `nvrtc::Program` instead.
-- `getDevice` function of `Context`.
 - Commented out code that was not used (anymore)
 
 ## [0.3.0] - 2022-03-08
