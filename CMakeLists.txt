@@ -24,7 +24,6 @@ option(BUILD_SHARED_LIBS "Create shared libraries" True)
 option(CUDAWRAPPERS_BUILD_TESTING "Build cudawrappers tests"
        ${CUDAWRAPPERS_TESTING_DEFAULT}
 )
-option(CUDAWRAPPERS_BUILD_EXAMPLES "Build cudawrappers examples" False)
 
 # Enable Clang compiler warnings
 if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
@@ -116,11 +115,6 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config.cmake
               ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config-version.cmake
         DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
 )
-
-# Configure examples
-if(CUDAWRAPPERS_BUILD_EXAMPLES)
-  add_subdirectory(examples)
-endif()
 
 # --- auto-ignore build directory
 if(NOT EXISTS ${PROJECT_BINARY_DIR}/.gitignore)

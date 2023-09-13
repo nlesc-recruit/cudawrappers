@@ -79,7 +79,7 @@ jobs:
       - name: Generate compilation database
         shell: bash -el {0}
         run: |
-          cmake -DCMAKE_CXX_COMPILER=g++-${{ env.gcc-version }} -DCUDAWRAPPERS_BUILD_TESTING=True -DCUDAWRAPPERS_BUILD_EXAMPLES=True -S . -B build
+          cmake -DCMAKE_CXX_COMPILER=g++-${{ env.gcc-version }} -DCUDAWRAPPERS_BUILD_TESTING=True -S . -B build
 
       - name: Run pre-commit on all files changed in this branch using project standard configuration
         shell: bash -el {0}
