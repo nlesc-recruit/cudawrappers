@@ -6,20 +6,27 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased]
 
 ### Added
+- cufft wrappers for 1D and 2D complex-to-complex FFTs
 
 ### Changed
 
 ### Removed
 
 ## [0.4.0]
-
 ### Added
 
+- CTest for testing
+- nvtx library
+- bump2version
+
 ### Changed
+
+- Miscellaneous improvements to CMake and CI
 
 ### Removed
 
 - `Source` class. Use `nvrtc::Program` instead.
+- Commented out code that was not used (anymore)
 
 ## [0.3.0] - 2022-03-08
 
