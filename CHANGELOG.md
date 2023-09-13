@@ -6,6 +6,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased]
 
 ### Added
+- cufft wrappers for 1D and 2D complex-to-complex FFTs
 
 ### Changed
 
