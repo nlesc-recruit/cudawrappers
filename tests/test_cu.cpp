@@ -118,4 +118,31 @@ TEST_CASE("Test zeroing cu::DeviceMemory", "[zero]") {
 
     CHECK(static_cast<bool>(memcmp(src, tgt, size)));
   }
+
+  SECTION("Test cu::RegisteredMemory") {
+    const size_t N = 3;
+    const size_t size = N * sizeof(int);
+
+    std::vector<int> data_in(size);
+    std::vector<int> data_out(size);
+
+    for (size_t i = 0; i < N; i++) {
+      data_in[i] = i + 1;
+      data_out[i] = 0;
+    }
+
+    cu::RegisteredMemory src(data_in.data(), size);
+    cu::RegisteredMemory tgt(data_out.data(), size);
+
+    cu::DeviceMemory mem(size);
+    cu::Stream stream;
+
+    // The cu::RegisteredMemory instances are automatically casted
+    // to cu::HostMemory to be compatible with stream::memcpyHtoDAsync
+    stream.memcpyHtoDAsync(mem, src, size);
+    stream.memcpyDtoHAsync(tgt, mem, size);
+    stream.synchronize();
+
+    CHECK(data_in == data_out);
+  }
 }
