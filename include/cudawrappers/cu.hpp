@@ -234,23 +234,18 @@ class HostMemory : public Wrapper<void *> {
     });
   }
 
-  template <typename T>
-  operator T *() {
-    return static_cast<T *>(_obj);
-  }
-};
-
-class RegisteredMemory : public HostMemory {
- public:
-  explicit RegisteredMemory(void *ptr, size_t size, unsigned int flags = 0)
-      : HostMemory(0) {
+  explicit HostMemory(void *ptr, size_t size, unsigned int flags = 0) {
     _obj = ptr;
     checkCudaCall(cuMemHostRegister(&_obj, size, flags));
     manager = std::shared_ptr<void *>(
         new (void *)(_obj), [](void **ptr) { cuMemHostUnregister(*ptr); });
   }
-};
 
+  template <typename T>
+  operator T *() {
+    return static_cast<T *>(_obj);
+  }
+};
 class DeviceMemory : public Wrapper<CUdeviceptr> {
  public:
   explicit DeviceMemory(size_t size) {

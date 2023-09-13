@@ -131,14 +131,12 @@ TEST_CASE("Test zeroing cu::DeviceMemory", "[zero]") {
       data_out[i] = 0;
     }
 
-    cu::RegisteredMemory src(data_in.data(), size);
-    cu::RegisteredMemory tgt(data_out.data(), size);
+    cu::HostMemory src(data_in.data(), size, 0);
+    cu::HostMemory tgt(data_out.data(), size, 0);
 
     cu::DeviceMemory mem(size);
     cu::Stream stream;
 
-    // The cu::RegisteredMemory instances are automatically casted
-    // to cu::HostMemory to be compatible with stream::memcpyHtoDAsync
     stream.memcpyHtoDAsync(mem, src, size);
     stream.memcpyDtoHAsync(tgt, mem, size);
     stream.synchronize();
