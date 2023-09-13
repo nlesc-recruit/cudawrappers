@@ -1,6 +1,7 @@
 #include <fstream>
 #include <iostream>
 
+#define CATCH_CONFIG_MAIN
 #include <catch2/catch.hpp>
 #include <cudawrappers/cufft.hpp>
 

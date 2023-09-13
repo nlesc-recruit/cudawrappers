@@ -12,23 +12,25 @@ FetchContent_MakeAvailable(Catch2)
 list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/contrib)
 include(Catch)
 
-# Compile Catch2
-add_library(tests)
-target_sources(tests PRIVATE main.cpp)
-target_link_libraries(tests PUBLIC Catch2::Catch2)
-set(LINK_cu cudawrappers::cu)
-set(LINK_cufft cudawrappers::cu cudawrappers::cufft)
-set(LINK_nvrtc cudawrappers::nvrtc)
+add_executable(test_cu test_cu.cpp)
+target_link_libraries(test_cu PUBLIC Catch2::Catch2 cudawrappers::cu)
+catch_discover_tests(test_cu)
 
-# Add library tests
+add_executable(test_nvrtc test_nvrtc.cpp)
+target_link_libraries(
+  test_nvrtc PUBLIC Catch2::Catch2 cudawrappers::cu cudawrappers::nvrtc
+)
+catch_discover_tests(test_nvrtc)
+
+add_executable(test_cufft test_cufft.cpp)
+target_link_libraries(
+  test_cufft PUBLIC Catch2::Catch2 cudawrappers::cu cudawrappers::cufft
+)
+catch_discover_tests(test_cufft)
+
 set(COMPONENTS cu nvrtc cufft)
 foreach(component ${COMPONENTS})
-  add_executable(test_${component} test_${component}.cpp)
-  target_link_libraries(test_${component} PUBLIC ${LINK_${component}} tests)
-  catch_discover_tests(test_${component})
-  foreach(test_name ${test_${component}_TESTS})
-    add_test(NAME test_${component}::${test_name} COMMAND test_${component}
-                                                          ${test_name}
-    )
-  endforeach()
+  target_include_directories(
+    test_${component} PRIVATE "${CMAKE_SOURCE_DIR}/include"
+  )
 endforeach()
