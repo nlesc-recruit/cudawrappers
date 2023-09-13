@@ -39,6 +39,9 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS True)
 set(CUDA_MIN_VERSION 10.0)
 find_package(CUDAToolkit ${CUDA_MIN_VERSION} REQUIRED)
 
+# Include CMake helper functions
+include(cmake/helper.cmake)
+
 # Configure tests
 if(CUDAWRAPPERS_BUILD_TESTING)
   include(CTest)
