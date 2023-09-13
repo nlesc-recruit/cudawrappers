@@ -7,7 +7,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 - cufft wrappers for 1D and 2D complex-to-complex FFTs
-- cu::RegisteredMemory
+- cu::HostMemory constuctor for pre-allocated memory
 
 ### Changed
 
