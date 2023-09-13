@@ -9,9 +9,9 @@
 #include <cudawrappers/cu.hpp>
 #include <cudawrappers/nvrtc.hpp>
 
-void check_arrays_equal(const float* a, const float* b, size_t n) {
+void check_arrays_equal(const float *a, const float *b, size_t n) {
   for (size_t i = 0; i < n; i++) {
-    CHECK(a[i] == Approx(b[i]).epsilon(1e-6) );
+    CHECK(a[i] == Approx(b[i]).epsilon(1e-6));
   }
 }
 

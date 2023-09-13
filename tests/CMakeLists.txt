@@ -31,4 +31,6 @@ target_link_libraries(test_nvrtc PUBLIC ${LINK_LIBRARIES} cudawrappers::nvrtc)
 
 target_link_libraries(test_cufft PUBLIC ${LINK_LIBRARIES} cudawrappers::cufft)
 
-target_link_libraries(test_vector_add PUBLIC ${LINK_LIBRARIES} cudawrappers::nvrtc)
+target_link_libraries(
+  test_vector_add PUBLIC ${LINK_LIBRARIES} cudawrappers::nvrtc
+)
