@@ -246,6 +246,7 @@ class HostMemory : public Wrapper<void *> {
     return static_cast<T *>(_obj);
   }
 };
+
 class DeviceMemory : public Wrapper<CUdeviceptr> {
  public:
   explicit DeviceMemory(size_t size) {
