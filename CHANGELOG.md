@@ -13,6 +13,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 - The vector_add example has now become a test
 
 ### Removed
+- `getDevice` function of `Context`, use `Device` constructor instead
 
 ## [0.4.0]
 ### Added

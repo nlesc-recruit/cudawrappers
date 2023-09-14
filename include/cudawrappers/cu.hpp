@@ -188,12 +188,6 @@ class Context : public Wrapper<CUcontext> {
     checkCudaCall(cuCtxSetSharedMemConfig(config));
   }
 
-  static Device getDevice() {
-    CUdevice device{};
-    checkCudaCall(cuCtxGetDevice(&device));
-    return Device(device);  // FIXME: ~Device()
-  }
-
   static size_t getLimit(CUlimit limit) {
     size_t value{};
     checkCudaCall(cuCtxGetLimit(&value, limit));
