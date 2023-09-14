@@ -234,6 +234,13 @@ class HostMemory : public Wrapper<void *> {
     });
   }
 
+  explicit HostMemory(void *ptr, size_t size, unsigned int flags = 0) {
+    _obj = ptr;
+    checkCudaCall(cuMemHostRegister(&_obj, size, flags));
+    manager = std::shared_ptr<void *>(
+        new (void *)(_obj), [](void **ptr) { cuMemHostUnregister(*ptr); });
+  }
+
   template <typename T>
   operator T *() {
     return static_cast<T *>(_obj);
