@@ -28,8 +28,8 @@ void generateSignal(T *in, size_t height, size_t width, size_t patchSize,
 template <typename T>
 void scaleSignal(T *in, T *out, size_t n, float scale) {
   for (size_t i = 0; i < n; i++) {
-    out[i].x = in[i].x / scale;
-    out[i].y = in[i].y / scale;
+    out[i].x = static_cast<float>(in[i].x) / scale;
+    out[i].y = static_cast<float>(in[i].y) / scale;
   }
 }
 
