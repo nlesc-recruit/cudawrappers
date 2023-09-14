@@ -12,11 +12,3 @@ function(include_cuda_code target input_file)
     ${target} PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/${output_subdir}"
   )
 endfunction(include_cuda_code)
-
-add_executable(vector_add vector_add.cpp)
-target_link_libraries(
-  vector_add PRIVATE cudawrappers::cu cudart cudawrappers::nvrtc
-)
-include_cuda_code(vector_add kernels/vector_add_kernel.cu)
-
-add_test(NAME vector_add COMMAND vector_add)

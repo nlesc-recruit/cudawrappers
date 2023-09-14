@@ -10,6 +10,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 - cu::HostMemory constuctor for pre-allocated memory
 
 ### Changed
+- The vector_add example has now become a test
 
 ### Removed
 

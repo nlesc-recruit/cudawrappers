@@ -12,7 +12,7 @@ FetchContent_MakeAvailable(Catch2)
 list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/contrib)
 include(Catch)
 
-set(COMPONENTS cu nvrtc cufft)
+set(COMPONENTS cu nvrtc cufft vector_add)
 
 foreach(component ${COMPONENTS})
   add_executable(test_${component} test_${component}.cpp)
@@ -25,10 +25,12 @@ endforeach()
 set(LINK_LIBRARIES Catch2::Catch2 cudawrappers::cu)
 
 target_link_libraries(test_cu PUBLIC ${LINK_LIBRARIES})
-catch_discover_tests(test_cu)
 
+include_cuda_code(test_nvrtc kernels/vector_add_kernel.cu)
 target_link_libraries(test_nvrtc PUBLIC ${LINK_LIBRARIES} cudawrappers::nvrtc)
-catch_discover_tests(test_nvrtc)
 
 target_link_libraries(test_cufft PUBLIC ${LINK_LIBRARIES} cudawrappers::cufft)
-catch_discover_tests(test_cufft)
+
+target_link_libraries(
+  test_vector_add PUBLIC ${LINK_LIBRARIES} cudawrappers::nvrtc
+)
