@@ -78,4 +78,24 @@ TEST_CASE("Vector add") {
 
     check_arrays_equal(h_c, reference_c.data(), N);
   }
+
+  SECTION("Run kenrel with managed memory") {
+    cu::DeviceMemory d_a(bytesize, CU_MEMORYTYPE_UNIFIED, CU_MEM_ATTACH_HOST);
+    cu::DeviceMemory d_b(bytesize, CU_MEMORYTYPE_UNIFIED, CU_MEM_ATTACH_HOST);
+    cu::DeviceMemory d_c(bytesize, CU_MEMORYTYPE_UNIFIED, CU_MEM_ATTACH_HOST);
+
+    float *h_a = reinterpret_cast<float *>(static_cast<CUdeviceptr>(d_a));
+    float *h_b = reinterpret_cast<float *>(static_cast<CUdeviceptr>(d_b));
+    float *h_c = reinterpret_cast<float *>(static_cast<CUdeviceptr>(d_c));
+    std::vector<float> reference_c(N);
+
+    initialize_arrays(h_a, h_b, h_c, reference_c.data(), N);
+
+    std::vector<const void *> parameters = {d_c.parameter(), d_a.parameter(),
+                                            d_b.parameter(), &N};
+    stream.launchKernel(function, 1, 1, 1, N, 1, 1, 0, parameters);
+    stream.synchronize();
+
+    check_arrays_equal(h_c, reference_c.data(), N);
+  }
 }
