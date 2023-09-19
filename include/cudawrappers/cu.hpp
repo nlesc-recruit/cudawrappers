@@ -441,6 +441,10 @@ class Stream : public Wrapper<CUstream> {
     checkCudaCall(cuMemcpyAsync(dstPtr, srcPtr, size, _obj));
   }
 
+  void memPrefetchAsync(CUdeviceptr devPtr, CUdevice dstDevice, size_t size) {
+    cuMemPrefetchAsync(devPtr, size, dstDevice, _obj);
+  }
+
   void launchKernel(Function &function, unsigned gridX, unsigned gridY,
                     unsigned gridZ, unsigned blockX, unsigned blockY,
                     unsigned blockZ, unsigned sharedMemBytes,
