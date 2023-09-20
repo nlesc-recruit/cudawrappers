@@ -117,10 +117,10 @@ TEST_CASE("Vector add") {
 
       std::vector<const void *> parameters = {d_c.parameter(), d_a.parameter(),
                                               d_b.parameter(), &N};
-      stream.memPrefetchAsync(d_a, device, bytesize);
-      stream.memPrefetchAsync(d_b, device, bytesize);
+      stream.memPrefetchAsync(d_a, bytesize, device);
+      stream.memPrefetchAsync(d_b, bytesize, device);
       stream.launchKernel(function, 1, 1, 1, N, 1, 1, 0, parameters);
-      stream.memPrefetchAsync(d_c, CU_DEVICE_CPU, bytesize);
+      stream.memPrefetchAsync(d_c, bytesize, CU_DEVICE_CPU);
       stream.synchronize();
 
       check_arrays_equal(h_c, reference_c.data(), N);
