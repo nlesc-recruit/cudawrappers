@@ -436,7 +436,8 @@ class Stream : public Wrapper<CUstream> {
     checkCudaCall(cuMemcpyAsync(dstPtr, srcPtr, size, _obj));
   }
 
-  void memPrefetchAsync(CUdeviceptr devPtr, size_t size, CUdevice dstDevice) {
+  void memPrefetchAsync(CUdeviceptr devPtr, size_t size,
+                        CUdevice dstDevice = CU_DEVICE_CPU) {
     checkCudaCall(cuMemPrefetchAsync(devPtr, size, dstDevice, _obj));
   }
 
