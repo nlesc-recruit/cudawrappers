@@ -247,21 +247,16 @@ class DeviceMemory : public Wrapper<CUdeviceptr> {
                         unsigned int flags = 0) {
     if (type == CU_MEMORYTYPE_DEVICE and !flags) {
       checkCudaCall(cuMemAlloc(&_obj, size));
-      manager = std::shared_ptr<CUdeviceptr>(new CUdeviceptr(_obj),
-                                             [](CUdeviceptr *ptr) {
-                                               cuMemFree(*ptr);
-                                               delete ptr;
-                                             });
     } else if (type == CU_MEMORYTYPE_UNIFIED) {
       checkCudaCall(cuMemAllocManaged(&_obj, size, flags));
-      manager = std::shared_ptr<CUdeviceptr>(new CUdeviceptr(_obj),
-                                             [](CUdeviceptr *ptr) {
-                                               cuMemFree(*ptr);
-                                               delete ptr;
-                                             });
     } else {
       throw Error(CUDA_ERROR_INVALID_VALUE);
     }
+    manager = std::shared_ptr<CUdeviceptr>(new CUdeviceptr(_obj),
+                                           [](CUdeviceptr *ptr) {
+                                             cuMemFree(*ptr);
+                                             delete ptr;
+                                           });
   }
 
   explicit DeviceMemory(CUdeviceptr ptr) : Wrapper(ptr) {}
