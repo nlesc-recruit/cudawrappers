@@ -11,6 +11,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Changed
 - The vector_add example has now become a test
+- Added `lib` prefix to shared libraries
 
 ### Removed
 - `getDevice` function of `Context`, use `Device` constructor instead
