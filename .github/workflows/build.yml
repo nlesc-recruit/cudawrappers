@@ -9,10 +9,7 @@ jobs:
     name: run
     runs-on: ubuntu-latest
     env:
-        # set tools versions to latest supported by the CI runner,
-        # ubuntu 22.04 at the time of writing
         gcc-version: "12" 
-        # cuda version to install with separate action
         cuda-version: "12.2.0"
     steps:
 
