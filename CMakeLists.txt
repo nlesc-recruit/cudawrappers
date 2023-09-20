@@ -73,7 +73,7 @@ foreach(component ${COMPONENTS})
                             include/${PROJECT_NAME}/${component}.hpp
   )
   # Add the project name as a prefix to the output libraries
-  set_target_properties(${component} PROPERTIES PREFIX ${PROJECT_NAME}-)
+  set_target_properties(${component} PROPERTIES PREFIX lib${PROJECT_NAME}-)
   # Add includes
   target_include_directories(
     ${component}
