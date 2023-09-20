@@ -1,0 +1,49 @@
+name: build
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  linting:
+    name: run
+    runs-on: ubuntu-latest
+    env:
+        gcc-version: "12" 
+        cuda-version: "12.2.0"
+    steps:
+
+      - name: Check out a copy of the repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Show some relevant env vars
+        run: |
+          echo "GITHUB_BASE_REF = $GITHUB_BASE_REF"
+          echo "GITHUB_HEAD_REF = $GITHUB_HEAD_REF"
+          echo "GITHUB_REF_NAME = $GITHUB_REF_NAME"
+
+      - name: Install cuda
+        uses: Jimver/cuda-toolkit@v0.2.11
+        with:
+          cuda: ${{ env.cuda-version }}
+          method: "network"
+          sub-packages: '["nvcc", "nvrtc-dev", "nvtx"]'
+          non-cuda-sub-packages: '["libcufft-dev"]'
+          linux-local-args: '["--toolkit"]'
+
+      - name: Show tool versions
+        run: |
+           echo "nvcc: $(nvcc --version)"
+           echo "g++: $(g++-${{ env.gcc-version}} --version)"
+
+      - name: Run CMake
+        shell: bash -el {0}
+        run: |
+          cmake -DCMAKE_CXX_COMPILER=g++-${{ env.gcc-version }} -DCUDAWRAPPERS_BUILD_TESTING=True -S . -B build
+
+      - name: Build the code
+        shell: bash -el {0}
+        run: |
+          cd build && make -j
