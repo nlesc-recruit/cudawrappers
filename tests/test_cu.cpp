@@ -143,4 +143,17 @@ TEST_CASE("Test zeroing cu::DeviceMemory", "[zero]") {
 
     CHECK(data_in == data_out);
   }
+
+  SECTION("Test cu::DeviceMemory with CU_MEMORYTYPE_DEVICE as host pointer") {
+    cu::DeviceMemory mem(sizeof(float), CU_MEMORYTYPE_DEVICE, 0);
+    float* ptr;
+    CHECK_THROWS(ptr = mem);
+  }
+
+  SECTION("Test cu::DeviceMemory with CU_MEMORYTYPE_UNIFIED as host pointer") {
+    cu::DeviceMemory mem(sizeof(float), CU_MEMORYTYPE_UNIFIED,
+                         CU_MEM_ATTACH_GLOBAL);
+    float* ptr = mem;
+    CHECK_NOTHROW(ptr[0] = 42.f);
+  }
 }

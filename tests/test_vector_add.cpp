@@ -15,6 +15,15 @@ void check_arrays_equal(const float *a, const float *b, size_t n) {
   }
 }
 
+void initialize_arrays(float *a, float *b, float *c, float *r, int N) {
+  for (int i = 0; i < N; i++) {
+    a[i] = 1.0 + i;
+    b[i] = 2.0 - (N - i);
+    c[i] = 0.0;
+    r[i] = a[i] + b[i];
+  }
+}
+
 TEST_CASE("Vector add") {
   const std::string kernel = R"(
     extern "C" __global__ void vector_add(float *c, float *a, float *b, int n) {
@@ -32,28 +41,7 @@ TEST_CASE("Vector add") {
   cu::Device device(0);
   cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, device);
 
-  cu::HostMemory h_a(bytesize);
-  cu::HostMemory h_b(bytesize);
-  cu::HostMemory h_c(bytesize);
-  std::vector<float> reference_c(N);
-
-  float *a = static_cast<float *>(h_a);
-  float *b = static_cast<float *>(h_b);
-  float *c = static_cast<float *>(h_c);
-  for (int i = 0; i < N; i++) {
-    a[i] = 1.0 + i;
-    b[i] = 2.0 - (N - i);
-    c[i] = 0.0;
-    reference_c[i] = a[i] + b[i];
-  }
-
-  cu::DeviceMemory d_a(bytesize);
-  cu::DeviceMemory d_b(bytesize);
-  cu::DeviceMemory d_c(bytesize);
-
   cu::Stream stream;
-  stream.memcpyHtoDAsync(d_a, a, bytesize);
-  stream.memcpyHtoDAsync(d_b, b, bytesize);
 
   std::vector<std::string> options = {};
   nvrtc::Program program(kernel, "vector_add_kernel.cu");
@@ -68,11 +56,87 @@ TEST_CASE("Vector add") {
   cu::Function function(module, "vector_add");
 
   SECTION("Run kernel") {
+    cu::HostMemory h_a(bytesize);
+    cu::HostMemory h_b(bytesize);
+    cu::HostMemory h_c(bytesize);
+    std::vector<float> reference_c(N);
+
+    initialize_arrays(static_cast<float *>(h_a), static_cast<float *>(h_b),
+                      static_cast<float *>(h_c), reference_c.data(), N);
+
+    cu::DeviceMemory d_a(bytesize);
+    cu::DeviceMemory d_b(bytesize);
+    cu::DeviceMemory d_c(bytesize);
+
+    stream.memcpyHtoDAsync(d_a, h_a, bytesize);
+    stream.memcpyHtoDAsync(d_b, h_b, bytesize);
     std::vector<const void *> parameters = {d_c.parameter(), d_a.parameter(),
                                             d_b.parameter(), &N};
     stream.launchKernel(function, 1, 1, 1, N, 1, 1, 0, parameters);
-    stream.memcpyDtoHAsync(c, d_c, bytesize);
+    stream.memcpyDtoHAsync(h_c, d_c, bytesize);
     stream.synchronize();
-    check_arrays_equal(c, reference_c.data(), N);
+
+    check_arrays_equal(h_c, reference_c.data(), N);
+  }
+
+  SECTION("Run kernel with managed memory") {
+    cu::DeviceMemory d_a(bytesize, CU_MEMORYTYPE_UNIFIED, CU_MEM_ATTACH_HOST);
+    cu::DeviceMemory d_b(bytesize, CU_MEMORYTYPE_UNIFIED, CU_MEM_ATTACH_HOST);
+    cu::DeviceMemory d_c(bytesize, CU_MEMORYTYPE_UNIFIED, CU_MEM_ATTACH_HOST);
+
+    float *h_a = d_a;
+    float *h_b = d_b;
+    float *h_c = d_c;
+    std::vector<float> reference_c(N);
+
+    initialize_arrays(h_a, h_b, h_c, reference_c.data(), N);
+
+    std::vector<const void *> parameters = {d_c.parameter(), d_a.parameter(),
+                                            d_b.parameter(), &N};
+    stream.launchKernel(function, 1, 1, 1, N, 1, 1, 0, parameters);
+    stream.synchronize();
+
+    check_arrays_equal(h_c, reference_c.data(), N);
+  }
+
+  SECTION("Run kernel with managed memory and prefetch") {
+    if (device.getAttribute(CU_DEVICE_ATTRIBUTE_CONCURRENT_MANAGED_ACCESS)) {
+      cu::DeviceMemory d_a(bytesize, CU_MEMORYTYPE_UNIFIED,
+                           CU_MEM_ATTACH_GLOBAL);
+      cu::DeviceMemory d_b(bytesize, CU_MEMORYTYPE_UNIFIED,
+                           CU_MEM_ATTACH_GLOBAL);
+      cu::DeviceMemory d_c(bytesize, CU_MEMORYTYPE_UNIFIED,
+                           CU_MEM_ATTACH_GLOBAL);
+
+      float *h_a = d_a;
+      float *h_b = d_b;
+      float *h_c = d_c;
+      std::vector<float> reference_c(N);
+
+      initialize_arrays(h_a, h_b, h_c, reference_c.data(), N);
+
+      std::vector<const void *> parameters = {d_c.parameter(), d_a.parameter(),
+                                              d_b.parameter(), &N};
+      stream.memPrefetchAsync(d_a, bytesize, device);
+      stream.memPrefetchAsync(d_b, bytesize, device);
+      stream.launchKernel(function, 1, 1, 1, N, 1, 1, 0, parameters);
+      stream.memPrefetchAsync(d_c, bytesize);
+      stream.synchronize();
+
+      check_arrays_equal(h_c, reference_c.data(), N);
+    }
+  }
+
+  SECTION("Pass invalid CUmemorytype to cu::DeviceMemory constructor") {
+    CHECK_THROWS(cu::DeviceMemory(bytesize, CU_MEMORYTYPE_ARRAY));
+    CHECK_THROWS(cu::DeviceMemory(bytesize, CU_MEMORYTYPE_HOST));
+  }
+
+  SECTION("Pass flags with CU_MEMORYTYPE_DEVICE") {
+    CHECK_NOTHROW(cu::DeviceMemory(bytesize, CU_MEMORYTYPE_DEVICE, 0));
+    CHECK_THROWS(
+        cu::DeviceMemory(bytesize, CU_MEMORYTYPE_DEVICE, CU_MEM_ATTACH_GLOBAL));
+    CHECK_THROWS(
+        cu::DeviceMemory(bytesize, CU_MEMORYTYPE_DEVICE, CU_MEM_ATTACH_HOST));
   }
 }

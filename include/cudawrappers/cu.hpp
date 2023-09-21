@@ -243,8 +243,15 @@ class HostMemory : public Wrapper<void *> {
 
 class DeviceMemory : public Wrapper<CUdeviceptr> {
  public:
-  explicit DeviceMemory(size_t size) {
-    checkCudaCall(cuMemAlloc(&_obj, size));
+  explicit DeviceMemory(size_t size, CUmemorytype type = CU_MEMORYTYPE_DEVICE,
+                        unsigned int flags = 0) {
+    if (type == CU_MEMORYTYPE_DEVICE and !flags) {
+      checkCudaCall(cuMemAlloc(&_obj, size));
+    } else if (type == CU_MEMORYTYPE_UNIFIED) {
+      checkCudaCall(cuMemAllocManaged(&_obj, size, flags));
+    } else {
+      throw Error(CUDA_ERROR_INVALID_VALUE);
+    }
     manager = std::shared_ptr<CUdeviceptr>(new CUdeviceptr(_obj),
                                            [](CUdeviceptr *ptr) {
                                              cuMemFree(*ptr);
@@ -266,6 +273,19 @@ class DeviceMemory : public Wrapper<CUdeviceptr> {
       const  // used to construct parameter list for launchKernel();
   {
     return &_obj;
+  }
+
+  template <typename T>
+  operator T *() {
+    bool data;
+    checkCudaCall(
+        cuPointerGetAttribute(&data, CU_POINTER_ATTRIBUTE_IS_MANAGED, _obj));
+    if (data) {
+      return reinterpret_cast<T *>(_obj);
+    } else {
+      throw std::runtime_error(
+          "Cannot return memory of type CU_MEMORYTYPE_DEVICE as pointer.");
+    }
   }
 };
 
@@ -427,6 +447,11 @@ class Stream : public Wrapper<CUstream> {
 
   void memcpyDtoDAsync(CUdeviceptr dstPtr, CUdeviceptr srcPtr, size_t size) {
     checkCudaCall(cuMemcpyAsync(dstPtr, srcPtr, size, _obj));
+  }
+
+  void memPrefetchAsync(CUdeviceptr devPtr, size_t size,
+                        CUdevice dstDevice = CU_DEVICE_CPU) {
+    checkCudaCall(cuMemPrefetchAsync(devPtr, size, dstDevice, _obj));
   }
 
   void launchKernel(Function &function, unsigned gridX, unsigned gridY,
