@@ -277,7 +277,15 @@ class DeviceMemory : public Wrapper<CUdeviceptr> {
 
   template <typename T>
   operator T *() {
-    return reinterpret_cast<T *>(_obj);
+    bool data;
+    checkCudaCall(
+        cuPointerGetAttribute(&data, CU_POINTER_ATTRIBUTE_IS_MANAGED, _obj));
+    if (data) {
+      return reinterpret_cast<T *>(_obj);
+    } else {
+      throw std::runtime_error(
+          "Cannot return memory of type CU_MEMORYTYPE_DEVICE as pointer.");
+    }
   }
 };
 
