@@ -122,50 +122,17 @@ We use the following linters and formatters in this project:
 - [cppcheck](https://cppcheck.sourceforge.io)
 - [flawfinder](https://dwheeler.com/flawfinder/)
 
-You can install these tools on a Debian-based system as follows:
-
-```shell
-# install cppcheck, clang-tidy, clang-format from your package manager
-sudo apt install cppcheck clang-format clang-tidy
-
-# install python3 and pip
-sudo apt install python3 python3-pip
-
-# install flawfinder, cmake-format, cmake-lint from PyPI using pip
-python3 -m pip install flawfinder cmakelang
-```
 
 The formatter `clang-format` will format all source files, and `cmake-format` will format all CMake-related files.
 The linters will check for errors and bugs, but also style-related issues. So run the formatters before running the linters.
 
-To run the formatters and linters, you first need to build the project. After this run:
-
-```sh
-cd build
-make format
-make lint
-```
-
-You can also run the individual tools by calling
-
-```sh
-make <tool_name>
-```
-
-where `<tool_name>` can be any of the following:
-
-- `cmake-format`
-- `cmake-lint`
-- `clang-format`
-- `clang-tidy`
-- `cppcheck`
-- `flawfinder`
+To run the formatters and linters, you first need to build the project and set up pre-commit. See [this](#pre-commit-hook) section for more details.
 
 In addition, you can install VSCode extensions for many of these linters. Here is a short list:
 
 - [VSCode extension for cmake-format](https://marketplace.visualstudio.com/items?itemName=cheshirekow.cmake-format)
 - [VSCode extension clang-tidy](https://marketplace.visualstudio.com/items?itemName=notskm.clang-tidy)
-- [VSCode extension Clang-Format](https://marketplace.visualstudio.com/items?itemName=xaver.clang-format)
+- [VSCode extension clang-format](https://marketplace.visualstudio.com/items?itemName=xaver.clang-format)
 
 ### Linters on Codacy
 
@@ -179,7 +146,7 @@ But if it gets revoked, or for forks, follow the steps in the [Codacy API tokens
 
 After a pull request is created, a Codacy test should appear. Follow the link there or [here](https://app.codacy.com/gh/nlesc-recruit/CUDA-wrappers) for the results.
 
-### pre-commit hooks (optional)
+### pre-commit hook
 
 `pre-commit` is a tool that can automatically run linters, formatters, or any other executables whenever you commit code with `git commit`.
 
@@ -191,6 +158,14 @@ python3 -m pip install --user pre-commit
 ```
 
 For other install options, look [here](https://pre-commit.com/#installation).
+
+You can install formatting and linting tools on a Debian-based system as follows:
+```shell
+# install python3 and pip
+sudo apt install python3 python3-pip
+# install cppcheck, clang-tidy and clang-format
+sudo apt install cppcheck clang-tidy clang-format
+```
 
 Enable the pre-commit hooks defined in `.pre-commit-config.yaml` with:
 
@@ -237,11 +212,9 @@ For example,
 
 ```shell
 pre-commit run clang-format
-pre-commit run clang-tidy
+pre-commit run cppcheck
 pre-commit run cmake-format
 pre-commit run cmake-lint
-pre-commit run cppcheck
-pre-commit run validate-cff
 ```
 
 If you would like to use only some of the checks (for example only those that do not make code changes but only raise warnings), you  can do so by copying the project's default configuration to a file that has `'.user'` in the filename -- it will be gitignored.
@@ -270,6 +243,9 @@ pre-commit run cmake-format
 
 # Run on a named file
 pre-commit run cmake-format --file CMakeLists.txt
+
+# Run on all files
+pre-commit run cmake-format -a
 ```
 
 See [https://pre-commit.com/](https://pre-commit.com/) for more information.
