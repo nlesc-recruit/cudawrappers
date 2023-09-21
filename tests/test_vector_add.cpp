@@ -9,10 +9,13 @@
 #include <cudawrappers/cu.hpp>
 #include <cudawrappers/nvrtc.hpp>
 
-void check_arrays_equal(const float *a, const float *b, size_t n) {
+bool arrays_equal(const float *a, const float *b, size_t n) {
   for (size_t i = 0; i < n; i++) {
-    CHECK(a[i] == Approx(b[i]).epsilon(1e-6));
+    if (a[i] != Approx(b[i]).epsilon(1e-6)) {
+      return false;
+    }
   }
+  return true;
 }
 
 void initialize_arrays(float *a, float *b, float *c, float *r, int N) {
@@ -76,7 +79,7 @@ TEST_CASE("Vector add") {
     stream.memcpyDtoHAsync(h_c, d_c, bytesize);
     stream.synchronize();
 
-    check_arrays_equal(h_c, reference_c.data(), N);
+    CHECK(arrays_equal(h_c, reference_c.data(), N));
   }
 
   SECTION("Run kernel with managed memory") {
@@ -96,7 +99,7 @@ TEST_CASE("Vector add") {
     stream.launchKernel(function, 1, 1, 1, N, 1, 1, 0, parameters);
     stream.synchronize();
 
-    check_arrays_equal(h_c, reference_c.data(), N);
+    CHECK(arrays_equal(h_c, reference_c.data(), N));
   }
 
   SECTION("Run kernel with managed memory and prefetch") {
@@ -123,7 +126,7 @@ TEST_CASE("Vector add") {
       stream.memPrefetchAsync(d_c, bytesize);
       stream.synchronize();
 
-      check_arrays_equal(h_c, reference_c.data(), N);
+      CHECK(arrays_equal(h_c, reference_c.data(), N));
     }
   }
 
