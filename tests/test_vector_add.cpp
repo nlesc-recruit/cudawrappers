@@ -84,9 +84,9 @@ TEST_CASE("Vector add") {
     cu::DeviceMemory d_b(bytesize, CU_MEMORYTYPE_UNIFIED, CU_MEM_ATTACH_HOST);
     cu::DeviceMemory d_c(bytesize, CU_MEMORYTYPE_UNIFIED, CU_MEM_ATTACH_HOST);
 
-    float *h_a = reinterpret_cast<float *>(static_cast<CUdeviceptr>(d_a));
-    float *h_b = reinterpret_cast<float *>(static_cast<CUdeviceptr>(d_b));
-    float *h_c = reinterpret_cast<float *>(static_cast<CUdeviceptr>(d_c));
+    float *h_a = d_a;
+    float *h_b = d_b;
+    float *h_c = d_c;
     std::vector<float> reference_c(N);
 
     initialize_arrays(h_a, h_b, h_c, reference_c.data(), N);
@@ -108,9 +108,9 @@ TEST_CASE("Vector add") {
       cu::DeviceMemory d_c(bytesize, CU_MEMORYTYPE_UNIFIED,
                            CU_MEM_ATTACH_GLOBAL);
 
-      float *h_a = reinterpret_cast<float *>(static_cast<CUdeviceptr>(d_a));
-      float *h_b = reinterpret_cast<float *>(static_cast<CUdeviceptr>(d_b));
-      float *h_c = reinterpret_cast<float *>(static_cast<CUdeviceptr>(d_c));
+      float *h_a = d_a;
+      float *h_b = d_b;
+      float *h_c = d_c;
       std::vector<float> reference_c(N);
 
       initialize_arrays(h_a, h_b, h_c, reference_c.data(), N);

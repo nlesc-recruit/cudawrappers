@@ -274,6 +274,11 @@ class DeviceMemory : public Wrapper<CUdeviceptr> {
   {
     return &_obj;
   }
+
+  template <typename T>
+  operator T *() {
+    return reinterpret_cast<T *>(_obj);
+  }
 };
 
 class Array : public Wrapper<CUarray> {
