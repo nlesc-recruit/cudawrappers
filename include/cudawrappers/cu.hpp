@@ -209,6 +209,20 @@ class Context : public Wrapper<CUcontext> {
     setLimit(limit, value);
   }
 
+  size_t getFreeMemory() const {
+    size_t free;
+    size_t total;
+    checkCudaCall(cuMemGetInfo(&free, &total));
+    return free;
+  }
+
+  size_t getTotalMemory() const {
+    size_t free;
+    size_t total;
+    checkCudaCall(cuMemGetInfo(&free, &total));
+    return total;
+  }
+
   static void synchronize() { checkCudaCall(cuCtxSynchronize()); }
 
  private:
