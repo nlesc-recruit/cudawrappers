@@ -10,6 +10,8 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 - cu::HostMemory constuctor for pre-allocated memory
 - cu::DeviceMemory constructor for managed memory
 - cu::Stream::cuMemPrefetchAsync for pre-fetching of managed memory
+- cu::Stream::memAllocAsync and cu::Stream::memFreeAsync
+- cu::Context::getFreeMemory and cu::Context::getTotalMemory
 
 ### Changed
 - The vector_add example has now become a test
