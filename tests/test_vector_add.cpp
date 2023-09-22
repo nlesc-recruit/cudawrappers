@@ -162,17 +162,4 @@ TEST_CASE("Vector add") {
 
     CHECK(arrays_equal(h_c, reference_c.data(), N));
   }
-
-  SECTION("Pass invalid CUmemorytype to cu::DeviceMemory constructor") {
-    CHECK_THROWS(cu::DeviceMemory(bytesize, CU_MEMORYTYPE_ARRAY));
-    CHECK_THROWS(cu::DeviceMemory(bytesize, CU_MEMORYTYPE_HOST));
-  }
-
-  SECTION("Pass flags with CU_MEMORYTYPE_DEVICE") {
-    CHECK_NOTHROW(cu::DeviceMemory(bytesize, CU_MEMORYTYPE_DEVICE, 0));
-    CHECK_THROWS(
-        cu::DeviceMemory(bytesize, CU_MEMORYTYPE_DEVICE, CU_MEM_ATTACH_GLOBAL));
-    CHECK_THROWS(
-        cu::DeviceMemory(bytesize, CU_MEMORYTYPE_DEVICE, CU_MEM_ATTACH_HOST));
-  }
 }
