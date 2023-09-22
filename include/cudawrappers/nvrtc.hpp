@@ -17,7 +17,7 @@ class Error : public std::exception {
  public:
   explicit Error(nvrtcResult result) : _result(result) {}
 
-  const char *what() const noexcept override;
+  const char *what() const noexcept { return nvrtcGetErrorString(_result); }
 
   operator nvrtcResult() const { return _result; }
 
