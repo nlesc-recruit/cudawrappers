@@ -157,9 +157,9 @@ TEST_CASE("Vector add") {
     stream.synchronize();
 
     if (!device.getAttribute(CU_DEVICE_ATTRIBUTE_INTEGRATED)) {
-      // The following CHECK is disabled since we cannot make sure that the test
-      // is using the GPU exclusively CHECK(memory_free ==
-      // context.getFreeMemory());
+      // The following CHECK is disabled since we cannot make
+      // sure that the test is using the GPU exclusively:
+      // CHECK(memory_free == context.getFreeMemory());
     }
 
     CHECK(arrays_equal(h_c, reference_c.data(), N));
