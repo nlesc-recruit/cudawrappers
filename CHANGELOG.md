@@ -6,6 +6,11 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased]
 
 ### Added
+### Changed
+### Removed
+
+## [0.5.0] - 2023-09-25
+### Added
 - cufft wrappers for 1D and 2D complex-to-complex FFTs
 - cu::HostMemory constuctor for pre-allocated memory
 - cu::DeviceMemory constructor for managed memory
@@ -20,7 +25,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ### Removed
 - `getDevice` function of `Context`, use `Device` constructor instead
 
-## [0.4.0]
+## [0.4.0] - 2023-06-23
 ### Added
 
 - CTest for testing
