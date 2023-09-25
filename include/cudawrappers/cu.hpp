@@ -209,6 +209,20 @@ class Context : public Wrapper<CUcontext> {
     setLimit(limit, value);
   }
 
+  size_t getFreeMemory() const {
+    size_t free;
+    size_t total;
+    checkCudaCall(cuMemGetInfo(&free, &total));
+    return free;
+  }
+
+  size_t getTotalMemory() const {
+    size_t free;
+    size_t total;
+    checkCudaCall(cuMemGetInfo(&free, &total));
+    return total;
+  }
+
   static void synchronize() { checkCudaCall(cuCtxSynchronize()); }
 
  private:
@@ -431,6 +445,16 @@ class Stream : public Wrapper<CUstream> {
   }
 
   explicit Stream(CUstream stream) : Wrapper<CUstream>(stream) {}
+
+  DeviceMemory memAllocAsync(size_t size) {
+    CUdeviceptr ptr;
+    checkCudaCall(cuMemAllocAsync(&ptr, size, _obj));
+    return DeviceMemory(ptr);
+  }
+
+  void memFreeAsync(DeviceMemory &devMem) {
+    checkCudaCall(cuMemFreeAsync(devMem, _obj));
+  }
 
   void memcpyHtoHAsync(void *dstPtr, const void *srcPtr, size_t size) {
     checkCudaCall(cuMemcpyAsync(reinterpret_cast<CUdeviceptr>(dstPtr),

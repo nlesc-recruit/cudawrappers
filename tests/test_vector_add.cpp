@@ -129,4 +129,39 @@ TEST_CASE("Vector add") {
       CHECK(arrays_equal(h_c, reference_c.data(), N));
     }
   }
+
+  SECTION("Run kernel with asynchronously allocated memory") {
+    cu::HostMemory h_a(bytesize);
+    cu::HostMemory h_b(bytesize);
+    cu::HostMemory h_c(bytesize);
+    std::vector<float> reference_c(N);
+
+    initialize_arrays(static_cast<float *>(h_a), static_cast<float *>(h_b),
+                      static_cast<float *>(h_c), reference_c.data(), N);
+
+    const size_t memory_free = context.getFreeMemory();
+
+    cu::DeviceMemory d_a = stream.memAllocAsync(bytesize);
+    cu::DeviceMemory d_b = stream.memAllocAsync(bytesize);
+    cu::DeviceMemory d_c = stream.memAllocAsync(bytesize);
+
+    stream.memcpyHtoDAsync(d_a, h_a, bytesize);
+    stream.memcpyHtoDAsync(d_b, h_b, bytesize);
+    std::vector<const void *> parameters = {d_c.parameter(), d_a.parameter(),
+                                            d_b.parameter(), &N};
+    stream.launchKernel(function, 1, 1, 1, N, 1, 1, 0, parameters);
+    stream.memcpyDtoHAsync(h_c, d_c, bytesize);
+    stream.memFreeAsync(d_a);
+    stream.memFreeAsync(d_b);
+    stream.memFreeAsync(d_c);
+    stream.synchronize();
+
+    if (!device.getAttribute(CU_DEVICE_ATTRIBUTE_INTEGRATED)) {
+      // The following CHECK is disabled since we cannot make
+      // sure that the test is using the GPU exclusively:
+      // CHECK(memory_free == context.getFreeMemory());
+    }
+
+    CHECK(arrays_equal(h_c, reference_c.data(), N));
+  }
 }
