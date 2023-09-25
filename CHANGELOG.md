@@ -20,7 +20,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ### Removed
 - `getDevice` function of `Context`, use `Device` constructor instead
 
-## [0.4.0]
+## [0.4.0] - 2023-06-23
 ### Added
 
 - CTest for testing
