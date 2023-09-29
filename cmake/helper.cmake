@@ -1,7 +1,7 @@
 # Make it possible to embed a source file in a library, and link it to a target.
 # E.g. to link <kernel.cu> into target <example_program>, use
 # target_embed_source(example_program, kernel.cu). This will expose symbols
-# _binary_kernel_cu_start and _binary_ls_kernel_cu_end.
+# _binary_kernel_cu_start and _binary_kernel_cu_end.
 function(target_embed_source target input_file)
   # Strip the path and extension from input_file
   get_filename_component(NAME ${input_file} NAME_WLE)
