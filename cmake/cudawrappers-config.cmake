@@ -16,7 +16,7 @@ else()
   else()
     message(
       FATAL_ERROR
-        "CUDAToolkit not found... use find_package(CUDAToolkit REQUIRED)"
+        "CUDAToolkit not found, use find_package(CUDAToolkit REQUIRED)."
     )
   endif()
 endif()
