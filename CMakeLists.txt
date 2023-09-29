@@ -16,6 +16,8 @@ project(
   LANGUAGES CXX
 )
 
+include(GNUInstallDirs)
+
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_CXX_EXTENSIONS False)
@@ -35,9 +37,6 @@ endif()
 # Export compile commands for use by clang-tidy and cppcheck
 set(CMAKE_EXPORT_COMPILE_COMMANDS True)
 
-set(CUDA_MIN_VERSION 10.0)
-find_package(CUDAToolkit ${CUDA_MIN_VERSION} REQUIRED)
-
 # Include CMake helper functions
 include(cmake/helper.cmake)
 
@@ -52,71 +51,35 @@ if(CUDAWRAPPERS_BUILD_TESTING)
   add_subdirectory(tests)
 endif()
 
-# Define components
-set(COMPONENTS cu cufft nvrtc nvtx)
-set(LINK_cu CUDA::cuda_driver)
-set(LINK_cufft CUDA::cuda_driver CUDA::cufft)
-set(LINK_nvrtc CUDA::cuda_driver CUDA::nvrtc)
-set(LINK_nvtx CUDA::nvToolsExt)
+# Create the component libraries
+include(cmake/cudawrappers-config.cmake)
 
-include(GNUInstallDirs)
-foreach(component ${COMPONENTS})
-  # Create library
-  add_library(${component})
-  # Add a pretend namespace for use cases where the project in not installed
-  add_library(${PROJECT_NAME}::${component} ALIAS ${component})
-  # Add sources
-  target_sources(${component} PRIVATE src/${component}.cpp)
-  # Add headers
-  set_target_properties(
-    ${component} PROPERTIES PUBLIC_HEADER
-                            include/${PROJECT_NAME}/${component}.hpp
-  )
-  # Add the project name as a prefix to the output libraries
-  set_target_properties(${component} PROPERTIES PREFIX lib${PROJECT_NAME}-)
-  # Add includes
-  target_include_directories(
-    ${component}
-    PUBLIC $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
-           $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    PRIVATE ${CUDAToolkit_INCLUDE_DIRS}
-  )
-  # Add links
-  target_link_libraries(${component} PUBLIC ${LINK_${component}})
-  # Install libraries and headers
+if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
+  # Install project cmake targets
+  include(CMakePackageConfigHelpers)
+
+  # Install cmake config file
   install(
-    TARGETS ${component}
-    EXPORT ${component}-config # export component cmake targets
-    COMPONENT ${component}
-    PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}
-  )
-  # Install component cmake targets
-  install(
-    EXPORT ${component}-config
+    EXPORT ${PROJECT_NAME}-config
     NAMESPACE ${PROJECT_NAME}::
+    EXPORT_LINK_INTERFACE_LIBRARIES
     DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
   )
-endforeach()
 
-# Install project cmake targets
-include(CMakePackageConfigHelpers)
+  # Install version file
+  write_basic_package_version_file(
+    ${PROJECT_NAME}-config-version.cmake
+    VERSION ${cudawrappers_VERSION}
+    COMPATIBILITY AnyNewerVersion
+  )
 
-configure_file(
-  cmake/${PROJECT_NAME}-config.cmake.in ${PROJECT_NAME}-config.cmake @ONLY
-)
+  install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config-version.cmake
+          DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
+  )
 
-write_basic_package_version_file(
-  ${PROJECT_NAME}-config-version.cmake
-  VERSION ${cudawrappers_VERSION}
-  COMPATIBILITY AnyNewerVersion
-)
+  # --- auto-ignore build directory
+  if(NOT EXISTS ${PROJECT_BINARY_DIR}/.gitignore)
+    file(WRITE ${PROJECT_BINARY_DIR}/.gitignore "*")
+  endif()
 
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config.cmake
-              ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config-version.cmake
-        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
-)
-
-# --- auto-ignore build directory
-if(NOT EXISTS ${PROJECT_BINARY_DIR}/.gitignore)
-  file(WRITE ${PROJECT_BINARY_DIR}/.gitignore "*")
 endif()

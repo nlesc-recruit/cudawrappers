@@ -18,7 +18,12 @@ class Error : public std::exception {
  public:
   explicit Error(CUresult result) : _result(result) {}
 
-  const char *what() const noexcept override;
+  const char *what() const noexcept {
+    const char *str{};
+    return cuGetErrorString(_result, &str) != CUDA_ERROR_INVALID_VALUE
+               ? str
+               : "unknown error";
+  }
 
   operator CUresult() const { return _result; }
 
@@ -256,54 +261,6 @@ class HostMemory : public Wrapper<void *> {
   }
 };
 
-class DeviceMemory : public Wrapper<CUdeviceptr> {
- public:
-  explicit DeviceMemory(size_t size, CUmemorytype type = CU_MEMORYTYPE_DEVICE,
-                        unsigned int flags = 0) {
-    if (type == CU_MEMORYTYPE_DEVICE and !flags) {
-      checkCudaCall(cuMemAlloc(&_obj, size));
-    } else if (type == CU_MEMORYTYPE_UNIFIED) {
-      checkCudaCall(cuMemAllocManaged(&_obj, size, flags));
-    } else {
-      throw Error(CUDA_ERROR_INVALID_VALUE);
-    }
-    manager = std::shared_ptr<CUdeviceptr>(new CUdeviceptr(_obj),
-                                           [](CUdeviceptr *ptr) {
-                                             cuMemFree(*ptr);
-                                             delete ptr;
-                                           });
-  }
-
-  explicit DeviceMemory(CUdeviceptr ptr) : Wrapper(ptr) {}
-
-  explicit DeviceMemory(const HostMemory &hostMemory) {
-    checkCudaCall(cuMemHostGetDevicePointer(&_obj, hostMemory, 0));
-  }
-
-  void zero(size_t size);
-
-  void zero(size_t size, Stream &stream);
-
-  const void *parameter()
-      const  // used to construct parameter list for launchKernel();
-  {
-    return &_obj;
-  }
-
-  template <typename T>
-  operator T *() {
-    bool data;
-    checkCudaCall(
-        cuPointerGetAttribute(&data, CU_POINTER_ATTRIBUTE_IS_MANAGED, _obj));
-    if (data) {
-      return reinterpret_cast<T *>(_obj);
-    } else {
-      throw std::runtime_error(
-          "Cannot return memory of type CU_MEMORYTYPE_DEVICE as pointer.");
-    }
-  }
-};
-
 class Array : public Wrapper<CUarray> {
  public:
   Array(unsigned width, CUarray_format format, unsigned numChannels) {
@@ -432,6 +389,54 @@ class Event : public Wrapper<CUevent> {
   void synchronize() { checkCudaCall(cuEventSynchronize(_obj)); }
 };
 
+class DeviceMemory : public Wrapper<CUdeviceptr> {
+ public:
+  explicit DeviceMemory(size_t size, CUmemorytype type = CU_MEMORYTYPE_DEVICE,
+                        unsigned int flags = 0) {
+    if (type == CU_MEMORYTYPE_DEVICE and !flags) {
+      checkCudaCall(cuMemAlloc(&_obj, size));
+    } else if (type == CU_MEMORYTYPE_UNIFIED) {
+      checkCudaCall(cuMemAllocManaged(&_obj, size, flags));
+    } else {
+      throw Error(CUDA_ERROR_INVALID_VALUE);
+    }
+    manager = std::shared_ptr<CUdeviceptr>(new CUdeviceptr(_obj),
+                                           [](CUdeviceptr *ptr) {
+                                             cuMemFree(*ptr);
+                                             delete ptr;
+                                           });
+  }
+
+  explicit DeviceMemory(CUdeviceptr ptr) : Wrapper(ptr) {}
+
+  explicit DeviceMemory(const HostMemory &hostMemory) {
+    checkCudaCall(cuMemHostGetDevicePointer(&_obj, hostMemory, 0));
+  }
+
+  void zero(size_t size) { checkCudaCall(cuMemsetD8(_obj, 0, size)); }
+
+  void zero(size_t size, Stream &stream);
+
+  const void *parameter()
+      const  // used to construct parameter list for launchKernel();
+  {
+    return &_obj;
+  }
+
+  template <typename T>
+  operator T *() {
+    bool data;
+    checkCudaCall(
+        cuPointerGetAttribute(&data, CU_POINTER_ATTRIBUTE_IS_MANAGED, _obj));
+    if (data) {
+      return reinterpret_cast<T *>(_obj);
+    } else {
+      throw std::runtime_error(
+          "Cannot return memory of type CU_MEMORYTYPE_DEVICE as pointer.");
+    }
+  }
+};
+
 class Stream : public Wrapper<CUstream> {
   friend class Event;
 
@@ -528,6 +533,10 @@ class Stream : public Wrapper<CUstream> {
     checkCudaCall(cuStreamWriteValue32(_obj, addr, value, flags));
   }
 };
+
+inline void DeviceMemory::zero(size_t size, Stream &stream) {
+  checkCudaCall(cuMemsetD8Async(_obj, 0, size, stream));
+}
 
 inline void Event::record(Stream &stream) {
   checkCudaCall(cuEventRecord(_obj, stream._obj));
