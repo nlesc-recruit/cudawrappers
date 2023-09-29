@@ -7,6 +7,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 ### Changed
+- Replaced `include_cuda_code` helper with `target_embed_source`
 ### Removed
 
 ## [0.5.0] - 2023-09-25
