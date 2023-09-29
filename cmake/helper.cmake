@@ -12,6 +12,7 @@ function(target_embed_source target input_file)
             ${input_file}
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     DEPENDS ${input_file}
+    COMMENT "Creating object file for ${input_file}"
   )
   if(NOT TARGET ${NAME})
     # Create a proper static library for the .o file
