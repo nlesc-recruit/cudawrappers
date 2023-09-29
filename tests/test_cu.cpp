@@ -87,7 +87,7 @@ TEST_CASE("Test zeroing cu::DeviceMemory", "[zero]") {
 
     cu::Stream stream;
     stream.memcpyHtoDAsync(mem, src, size);
-    mem.zero(size, stream);
+    stream.zero(mem, size);
     stream.memcpyDtoHAsync(tgt, mem, size);
     stream.synchronize();
 
