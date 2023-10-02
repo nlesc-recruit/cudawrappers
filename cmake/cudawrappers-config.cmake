@@ -7,7 +7,7 @@ set(CUDA_MIN_VERSION 10.0)
 if(${CUDAWRAPPERS_INSTALLED})
   find_package(CUDAToolkit ${CUDA_MIN_VERSION} REQUIRED)
 else()
-  if($CUDAToolkit_FOUND)
+  if(${CUDAToolkit_FOUND})
     if(${CUDAToolkit_VERSION_MAJOR} LESS ${CUDA_MIN_VERSION})
       message(FATAL_ERROR "Insufficient CUDA version: " ${CUDAToolkit_VERSION}
                           " < " ${CUDA_MIN_VERSION}
