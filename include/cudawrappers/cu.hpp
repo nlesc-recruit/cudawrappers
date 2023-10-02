@@ -415,8 +415,6 @@ class DeviceMemory : public Wrapper<CUdeviceptr> {
 
   void zero(size_t size) { checkCudaCall(cuMemsetD8(_obj, 0, size)); }
 
-  void zero(size_t size, Stream &stream);
-
   const void *parameter()
       const  // used to construct parameter list for launchKernel();
   {
@@ -484,6 +482,10 @@ class Stream : public Wrapper<CUstream> {
     checkCudaCall(cuMemPrefetchAsync(devPtr, size, dstDevice, _obj));
   }
 
+  void zero(CUdeviceptr devPtr, size_t size) {
+    checkCudaCall(cuMemsetD8Async(devPtr, 0, size, _obj));
+  }
+
   void launchKernel(Function &function, unsigned gridX, unsigned gridY,
                     unsigned gridZ, unsigned blockX, unsigned blockY,
                     unsigned blockZ, unsigned sharedMemBytes,
@@ -533,10 +535,6 @@ class Stream : public Wrapper<CUstream> {
     checkCudaCall(cuStreamWriteValue32(_obj, addr, value, flags));
   }
 };
-
-inline void DeviceMemory::zero(size_t size, Stream &stream) {
-  checkCudaCall(cuMemsetD8Async(_obj, 0, size, stream));
-}
 
 inline void Event::record(Stream &stream) {
   checkCudaCall(cuEventRecord(_obj, stream._obj));
