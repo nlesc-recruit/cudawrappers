@@ -62,9 +62,6 @@ You can include the cudawrappers library in your own projects in various ways. W
 1. [cudawrappers-usage-example-git-submodules](https://github.com/nlesc-recruit/cudawrappers-usage-example-git-submodules) Example project that uses the cudawrappers library as a dependency by using git submodules on its source tree.
 1. [cudawrappers-usage-example-locally-installed](https://github.com/nlesc-recruit/cudawrappers-usage-example-locally-installed) Example project that uses the cudawrappers library as a dependency by having it locally installed.
 1. [cudawrappers-usage-example-cmake-pull](https://github.com/nlesc-recruit/cudawrappers-usage-example-cmake-pull) Example project that uses the cudawrappers library as a dependency by having cmake pull it in from github.
-1. there are also examples available in the [examples](examples) directory, they
-can be compiled by providing the flag `-DCUDAWRAPPERS_BUILD_EXAMPLES=ON` to the
-cmake command shown above.
 
 ## Used by
 
