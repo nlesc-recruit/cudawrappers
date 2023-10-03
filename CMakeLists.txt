@@ -51,6 +51,12 @@ if(CUDAWRAPPERS_BUILD_TESTING)
   add_subdirectory(tests)
 endif()
 
+# You can use cudawrappers by installing it, or by including it in your project
+set(CUDAWRAPPERS_INSTALLED ${CMAKE_PROJECT_NAME} STREQUAL cudawrappers)
+
+# Check if the dependencies are satisfied
+include(cmake/cudawrappers-dependencies.cmake)
+
 # Create the component libraries
 include(cmake/cudawrappers-targets.cmake)
 
@@ -85,6 +91,7 @@ if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
     FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config-version.cmake
           ${CMAKE_CURRENT_BINARY_DIR}/cudawrappers-config.cmake
           ${CMAKE_CURRENT_SOURCE_DIR}/cmake/cudawrappers-helper.cmake
+          ${CMAKE_CURRENT_SOURCE_DIR}/cmake/cudawrappers-dependencies.cmake
     DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
   )
 
