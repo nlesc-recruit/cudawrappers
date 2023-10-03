@@ -332,7 +332,7 @@ class Module : public Wrapper<CUmodule> {
     });
   }
 
-  explicit Module(CUmodule &module) : Wrapper(module) {}
+  explicit Module(Module &module) : Wrapper(module) {}
 
   CUdeviceptr getGlobal(const char *name) const {
     CUdeviceptr deviceptr{};
@@ -465,24 +465,28 @@ class Stream : public Wrapper<CUstream> {
                                 _obj));
   }
 
-  void memcpyHtoDAsync(CUdeviceptr devPtr, const void *hostPtr, size_t size) {
+  void memcpyHtoDAsync(DeviceMemory &devPtr, const void *hostPtr, size_t size) {
     checkCudaCall(cuMemcpyHtoDAsync(devPtr, hostPtr, size, _obj));
   }
 
-  void memcpyDtoHAsync(void *hostPtr, CUdeviceptr devPtr, size_t size) {
+  void memcpyDtoHAsync(void *hostPtr, DeviceMemory &devPtr, size_t size) {
     checkCudaCall(cuMemcpyDtoHAsync(hostPtr, devPtr, size, _obj));
   }
 
-  void memcpyDtoDAsync(CUdeviceptr dstPtr, CUdeviceptr srcPtr, size_t size) {
+  void memcpyDtoDAsync(DeviceMemory &dstPtr, DeviceMemory &srcPtr,
+                       size_t size) {
     checkCudaCall(cuMemcpyAsync(dstPtr, srcPtr, size, _obj));
   }
 
-  void memPrefetchAsync(CUdeviceptr devPtr, size_t size,
-                        CUdevice dstDevice = CU_DEVICE_CPU) {
+  void memPrefetchAsync(DeviceMemory &devPtr, size_t size) {
+    checkCudaCall(cuMemPrefetchAsync(devPtr, size, CU_DEVICE_CPU, _obj));
+  }
+
+  void memPrefetchAsync(DeviceMemory &devPtr, size_t size, Device &dstDevice) {
     checkCudaCall(cuMemPrefetchAsync(devPtr, size, dstDevice, _obj));
   }
 
-  void zero(CUdeviceptr devPtr, size_t size) {
+  void zero(DeviceMemory &devPtr, size_t size) {
     checkCudaCall(cuMemsetD8Async(devPtr, 0, size, _obj));
   }
 
