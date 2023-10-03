@@ -10,6 +10,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 - Made the library header only
 - Moved asynchronous `::zero` from `Device` to `Stream`
 - Replaced `include_cuda_code` helper with `target_embed_source`
+- Changed some arguments from native to wrapped type
 ### Removed
 
 ## [0.5.0] - 2023-09-25

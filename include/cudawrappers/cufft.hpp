@@ -107,20 +107,13 @@ class FFT {
 
   ~FFT() { checkCuFFTCall(cufftDestroy(plan_)); }
 
-  void setStream(CUstream stream) {
+  void setStream(cu::Stream &stream) {
     checkCuFFTCall(cufftSetStream(plan_, stream));
   }
 
-  void execute(cu::DeviceMemory &in, cu::DeviceMemory &out,
-               int direction = CUFFT_FORWARD) {
+  void execute(cu::DeviceMemory &in, cu::DeviceMemory &out, int direction) {
     void *in_ptr = reinterpret_cast<void *>(static_cast<CUdeviceptr>(in));
     void *out_ptr = reinterpret_cast<void *>(static_cast<CUdeviceptr>(out));
-    checkCuFFTCall(cufftXtExec(plan_, in_ptr, out_ptr, direction));
-  }
-
-  void execute(CUdeviceptr in, CUdeviceptr out, int direction) {
-    void *in_ptr = reinterpret_cast<void *>(in);
-    void *out_ptr = reinterpret_cast<void *>(out);
     checkCuFFTCall(cufftXtExec(plan_, in_ptr, out_ptr, direction));
   }
 
