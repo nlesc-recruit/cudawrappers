@@ -57,7 +57,7 @@ endforeach()
 # Install the header files and export the configuration
 install(
   TARGETS ${CUDAWRAPPERS_COMPONENTS}
-  EXPORT ${PROJECT_NAME}-config
+  EXPORT ${PROJECT_NAME}-targets
   COMPONENT ${PROJECT_NAME}
   PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}
 )

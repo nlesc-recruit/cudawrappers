@@ -1,0 +1,4 @@
+@PACKAGE_INIT@
+
+include(${PACKAGE_PREFIX_DIR}/${CMAKE_INSTALL_LIBDIR}/cmake/@PROJECT_NAME@/cudawrappers-exported.cmake)
+include(${PACKAGE_PREFIX_DIR}/${CMAKE_INSTALL_LIBDIR}/cmake/@PROJECT_NAME@/cudawrappers-helper.cmake)
