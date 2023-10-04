@@ -38,7 +38,7 @@ endif()
 set(CMAKE_EXPORT_COMPILE_COMMANDS True)
 
 # Include CMake helper functions
-include(cmake/helper.cmake)
+include(cmake/cudawrappers-helper.cmake)
 
 # Configure tests
 if(CUDAWRAPPERS_BUILD_TESTING)
@@ -51,8 +51,14 @@ if(CUDAWRAPPERS_BUILD_TESTING)
   add_subdirectory(tests)
 endif()
 
+# You can use cudawrappers by installing it, or by including it in your project
+set(CUDAWRAPPERS_INSTALLED ${CMAKE_PROJECT_NAME} STREQUAL cudawrappers)
+
+# Check if the dependencies are satisfied
+include(cmake/cudawrappers-dependencies.cmake)
+
 # Create the component libraries
-include(cmake/cudawrappers-config.cmake)
+include(cmake/cudawrappers-targets.cmake)
 
 if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
   # Install project cmake targets
@@ -60,8 +66,9 @@ if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 
   # Install cmake config file
   install(
-    EXPORT ${PROJECT_NAME}-config
+    EXPORT ${PROJECT_NAME}-targets
     NAMESPACE ${PROJECT_NAME}::
+    FILE ${PROJECT_NAME}-exported.cmake
     EXPORT_LINK_INTERFACE_LIBRARIES
     DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
   )
@@ -73,8 +80,19 @@ if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
     COMPATIBILITY AnyNewerVersion
   )
 
-  install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config-version.cmake
-          DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
+  configure_package_config_file(
+    ${CMAKE_CURRENT_SOURCE_DIR}/cmake/${PROJECT_NAME}-config.cmake.in
+    "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config.cmake"
+    INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
+    NO_SET_AND_CHECK_MACRO NO_CHECK_REQUIRED_COMPONENTS_MACRO
+  )
+
+  install(
+    FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config-version.cmake
+          ${CMAKE_CURRENT_BINARY_DIR}/cudawrappers-config.cmake
+          ${CMAKE_CURRENT_SOURCE_DIR}/cmake/cudawrappers-helper.cmake
+          ${CMAKE_CURRENT_SOURCE_DIR}/cmake/cudawrappers-dependencies.cmake
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
   )
 
   # --- auto-ignore build directory
