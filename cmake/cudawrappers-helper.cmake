@@ -3,13 +3,14 @@
 # target_embed_source(example_program, kernel.cu). This will expose symbols
 # _binary_kernel_cu_start and _binary_kernel_cu_end.
 function(target_embed_source target input_file)
+  include(CMakeDetermineSystem)
   # Strip the path and extension from input_file
   get_filename_component(NAME ${input_file} NAME_WLE)
   # Link the input_file into an object file
   add_custom_command(
     OUTPUT ${NAME}.o
-    COMMAND ld ARGS -r -b binary -o ${CMAKE_CURRENT_BINARY_DIR}/${NAME}.o
-            ${input_file}
+    COMMAND ld ARGS -r -b binary -A ${CMAKE_SYSTEM_PROCESSOR} -o
+            ${CMAKE_CURRENT_BINARY_DIR}/${NAME}.o ${input_file}
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     DEPENDS ${input_file}
     COMMENT "Creating object file for ${input_file}"
