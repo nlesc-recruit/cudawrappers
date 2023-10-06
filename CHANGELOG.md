@@ -7,7 +7,14 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 ### Changed
+### Removed
+
+## [0.6.0] - 2023-10-06
+
+### Added
+### Changed
 - Made the library header only
+- Improved CMake configuration
 - Moved asynchronous `::zero` from `Device` to `Stream`
 - Replaced `include_cuda_code` helper with `target_embed_source`
 - Changed some arguments from native to wrapped type
