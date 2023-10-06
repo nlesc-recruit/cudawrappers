@@ -341,7 +341,7 @@ class Module : public Wrapper<CUmodule> {
     });
   }
 
-  explicit Module(Module &module) : Wrapper(module) {}
+  explicit Module(CUmodule &module) : Wrapper(module) {}
 
   CUdeviceptr getGlobal(const char *name) const {
     CUdeviceptr deviceptr{};
