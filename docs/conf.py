@@ -22,7 +22,7 @@ copyright = '2022, cudawrappers developers'
 author = 'cudawrappers developers'
 
 # The full version, including alpha/beta/rc tags
-release = '0.5.0'
+release = '0.6.0'
 
 
 # -- General configuration ---------------------------------------------------
