@@ -90,7 +90,8 @@ class Device : public Wrapper<CUdevice> {
 
   explicit Device(int ordinal) { checkCudaCall(cuDeviceGet(&_obj, ordinal)); }
 
-  struct CUdeviceArg {}; // int and CUdevice are the same type, but we need two constructors
+  struct CUdeviceArg {
+  };  // int and CUdevice are the same type, but we need two constructors
   Device(CUdeviceArg, CUdevice device) : Wrapper(device) {}
 
   int getAttribute(CUdevice_attribute attribute) const {
