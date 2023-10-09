@@ -6,7 +6,9 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased]
 
 ### Added
+- Added `cu::Context::getDevice()`
 ### Changed
+- Fixed the `cu::Module(CUmodule&)` constructor
 ### Removed
 
 ## [0.6.0] - 2023-10-06
