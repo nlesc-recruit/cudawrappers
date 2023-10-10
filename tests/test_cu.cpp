@@ -22,10 +22,15 @@ TEST_CASE("Test cu::Device", "[device]") {
 
 TEST_CASE("Test context::getDevice", "[device]") {
   cu::init();
+
+  SECTION("Test before initialization") {
+    CHECK_THROWS(cu::Context::getCurrent().getDevice());
+  }
+
   cu::Device device(0);
   cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, device);
 
-  SECTION("Test Device.getName") {
+  SECTION("Test after initialization") {
     CHECK(device.getName() == cu::Context::getCurrent().getDevice().getName());
   }
 }
