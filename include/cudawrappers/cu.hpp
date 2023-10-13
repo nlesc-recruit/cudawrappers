@@ -90,6 +90,10 @@ class Device : public Wrapper<CUdevice> {
 
   explicit Device(int ordinal) { checkCudaCall(cuDeviceGet(&_obj, ordinal)); }
 
+  struct CUdeviceArg {
+  };  // int and CUdevice are the same type, but we need two constructors
+  Device(CUdeviceArg, CUdevice device) : Wrapper(device) {}
+
   int getAttribute(CUdevice_attribute attribute) const {
     int value{};
     checkCudaCall(cuDeviceGetAttribute(&value, attribute, _obj));
@@ -192,6 +196,12 @@ class Context : public Wrapper<CUcontext> {
 
   void setSharedMemConfig(CUsharedconfig config) {
     checkCudaCall(cuCtxSetSharedMemConfig(config));
+  }
+
+  static Device getDevice() {
+    CUdevice device;
+    checkCudaCall(cuCtxGetDevice(&device));
+    return Device(Device::CUdeviceArg(), device);
   }
 
   static size_t getLimit(CUlimit limit) {
@@ -332,7 +342,7 @@ class Module : public Wrapper<CUmodule> {
     });
   }
 
-  explicit Module(Module &module) : Wrapper(module) {}
+  explicit Module(CUmodule &module) : Wrapper(module) {}
 
   CUdeviceptr getGlobal(const char *name) const {
     CUdeviceptr deviceptr{};
