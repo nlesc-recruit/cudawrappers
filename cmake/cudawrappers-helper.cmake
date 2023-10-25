@@ -30,8 +30,14 @@ function(target_embed_source target input_file)
   target_link_libraries(${target} PRIVATE ${NAME})
 endfunction()
 
-set(MATHDX_URL "https://developer.download.nvidia.com/compute/mathdx/redist/mathdx/linux-x86_64/nvidia-mathdx-22.11.0-Linux.tar.gz")
+set(MATHDX_URL
+    "https://developer.download.nvidia.com/compute/mathdx/redist/mathdx/linux-x86_64/nvidia-mathdx-22.11.0-Linux.tar.gz"
+)
 function(target_add_cudamathdx target)
-  file(DOWNLOAD ${MATHDX_URL} ${CMAKE_CURRENT_BINARY_DIR}/nvidia-mathdx-linux.tar.gz)
-  target_embed_source(target nvidia-mathdx-linux.tar.gz ${CMAKE_CURRENT_BINARY_DIR})
+  file(DOWNLOAD ${MATHDX_URL}
+       ${CMAKE_CURRENT_BINARY_DIR}/nvidia-mathdx-linux.tar.gz
+  )
+  target_embed_source(
+    target nvidia-mathdx-linux.tar.gz ${CMAKE_CURRENT_BINARY_DIR}
+  )
 endfunction()
