@@ -35,7 +35,7 @@ set(MATHDX_ARCH "linux-x86_64")
 set(MATHDX_BASEURL "https://developer.download.nvidia.com/\
 compute/mathdx/redist/mathdx/${MATHDX_ARCH}"
 )
-set(MATHDX_URL ${MATHDX_BASEURL}/nvidia-mathdx-${MATHDX_VERSION}-Linux.tar.gz ")
+set(MATHDX_URL "${MATHDX_BASEURL}/nvidia-mathdx-${MATHDX_VERSION}-Linux.tar.gz")
 
 # Make it possible to download and embed a NVIDIA mathdx library into a target.
 # E.g. to link the nvidia library to target <example_program>, use
