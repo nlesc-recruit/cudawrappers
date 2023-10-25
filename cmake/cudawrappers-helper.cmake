@@ -6,12 +6,18 @@ function(target_embed_source target input_file)
   include(CMakeDetermineSystem)
   # Strip the path and extension from input_file
   get_filename_component(NAME ${input_file} NAME_WLE)
+
+  set(WORK_DIR ${ARGN})
+
+  if(NOT DEFINED WORK_DIR)
+    set(WORK_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+  endif()
   # Link the input_file into an object file
   add_custom_command(
     OUTPUT ${NAME}.o
     COMMAND ld ARGS -r -b binary -A ${CMAKE_SYSTEM_PROCESSOR} -o
             ${CMAKE_CURRENT_BINARY_DIR}/${NAME}.o ${input_file}
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    WORKING_DIRECTORY ${WORK_DIR}
     DEPENDS ${input_file}
     COMMENT "Creating object file for ${input_file}"
   )
@@ -22,4 +28,10 @@ function(target_embed_source target input_file)
   endif()
   # Link the static library to the target
   target_link_libraries(${target} PRIVATE ${NAME})
+endfunction()
+
+set(MATHDX_URL "https://developer.download.nvidia.com/compute/mathdx/redist/mathdx/linux-x86_64/nvidia-mathdx-22.11.0-Linux.tar.gz")
+function(target_add_cudamathdx target)
+  file(DOWNLOAD ${MATHDX_URL} ${CMAKE_CURRENT_BINARY_DIR}/nvidia-mathdx-linux.tar.gz)
+  target_embed_source(target nvidia-mathdx-linux.tar.gz ${CMAKE_CURRENT_BINARY_DIR})
 endfunction()
