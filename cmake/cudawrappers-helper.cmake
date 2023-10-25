@@ -7,17 +7,17 @@ function(target_embed_source target input_file)
   # Strip the path and extension from input_file
   get_filename_component(NAME ${input_file} NAME_WLE)
 
-  set(WORK_DIR ${ARGN})
+  set(work_dir ${ARGN})
 
-  if(NOT DEFINED WORK_DIR)
-    set(WORK_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+  if(NOT DEFINED work_dir)
+    set(work_dir ${CMAKE_CURRENT_SOURCE_DIR})
   endif()
   # Link the input_file into an object file
   add_custom_command(
     OUTPUT ${NAME}.o
     COMMAND ld ARGS -r -b binary -A ${CMAKE_SYSTEM_PROCESSOR} -o
             ${CMAKE_CURRENT_BINARY_DIR}/${NAME}.o ${input_file}
-    WORKING_DIRECTORY ${WORK_DIR}
+    WORKING_DIRECTORY ${work_dir}
     DEPENDS ${input_file}
     COMMENT "Creating object file for ${input_file}"
   )
@@ -30,10 +30,19 @@ function(target_embed_source target input_file)
   target_link_libraries(${target} PRIVATE ${NAME})
 endfunction()
 
-set(MATHDX_URL
-    "https://developer.download.nvidia.com/compute/mathdx/redist/mathdx/linux-x86_64/nvidia-mathdx-22.11.0-Linux.tar.gz"
+set(MATHDX_VERSION "22.11.0")
+set(MATHDX_ARCH "linux-x86_64")
+set(MATHDX_BASEURL "https://developer.download.nvidia.com/\
+compute/mathdx/redist/mathdx/${MATHDX_ARCH}"
 )
-function(target_add_cudamathdx target)
+set(MATHDX_URL ${MATHDX_BASEURL}/nvidia-mathdx-${MATHDX_VERSION}-Linux.tar.gz ")
+
+# Make it possible to download and embed a NVIDIA mathdx library into a target.
+# E.g. to link the nvidia library to target <example_program>, use
+# target_add_mathdx(example_program). This will expose symbols
+# _binary_nvidia_mathdx_linux_tar_gz_start and
+# _binary__nvidia_mathdx_linux_tar_gz_end.
+function(target_add_mathdx target)
   file(DOWNLOAD ${MATHDX_URL}
        ${CMAKE_CURRENT_BINARY_DIR}/nvidia-mathdx-linux.tar.gz
   )
