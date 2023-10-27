@@ -353,7 +353,7 @@ class Module : public Wrapper<CUmodule> {
 
 class Function : public Wrapper<CUfunction> {
  public:
-  Function(const Module &module, const char *name) {
+  Function(const Module &module, const char *name) : _name(name) {
     checkCudaCall(cuModuleGetFunction(&_obj, module, name));
   }
 
@@ -368,6 +368,11 @@ class Function : public Wrapper<CUfunction> {
   void setCacheConfig(CUfunc_cache config) {
     checkCudaCall(cuFuncSetCacheConfig(_obj, config));
   }
+
+  const char *name() const { return _name; }
+
+ private:
+  const char *_name;
 };
 
 class Event : public Wrapper<CUevent> {
