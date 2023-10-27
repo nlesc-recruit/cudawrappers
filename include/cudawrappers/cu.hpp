@@ -514,6 +514,13 @@ class Stream : public Wrapper<CUstream> {
                                  const_cast<void **>(&parameters[0]), nullptr));
   }
 
+  void launchKernel(Function &function, dim3 grid, dim3 block,
+                    unsigned sharedMemBytes,
+                    const std::vector<const void *> &parameters) {
+    launchKernel(function, grid.x, grid.y, grid.z, block.x, block.y, block.z,
+                 sharedMemBytes, parameters);
+  }
+
 #if CUDART_VERSION >= 9000
   void launchCooperativeKernel(Function &function, unsigned gridX,
                                unsigned gridY, unsigned gridZ, unsigned blockX,
