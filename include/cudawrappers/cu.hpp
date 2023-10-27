@@ -359,7 +359,7 @@ class Function : public Wrapper<CUfunction> {
 
   explicit Function(CUfunction &function) : Wrapper(function) {}
 
-  int getAttribute(CUfunction_attribute attribute) {
+  int getAttribute(CUfunction_attribute attribute) const {
     int value{};
     checkCudaCall(cuFuncGetAttribute(&value, attribute, _obj));
     return value;
