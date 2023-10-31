@@ -4,6 +4,7 @@
 #include <array>
 #include <cstddef>
 #include <exception>
+#include <map>
 #include <memory>
 #include <stdexcept>
 #include <string>
@@ -346,6 +347,25 @@ class Module : public Wrapper<CUmodule> {
       cuModuleUnload(*ptr);
       delete ptr;
     });
+  }
+
+  typedef std::map<CUjit_option, void *> optionmap_t;
+  explicit Module(const void *image, Module::optionmap_t &options) {
+    std::vector<CUjit_option> keys;
+    std::vector<void *> values;
+
+    for (optionmap_t::const_iterator i = options.begin(); i != options.end();
+         ++i) {
+      keys.push_back(i->first);
+      values.push_back(i->second);
+    }
+
+    checkCudaCall(
+        cuModuleLoadDataEx(&_obj, image, options.size(), &keys[0], &values[0]));
+
+    for (size_t i = 0; i < keys.size(); ++i) {
+      options[keys[i]] = values[i];
+    }
   }
 
   explicit Module(CUmodule &module) : Wrapper(module) {}
