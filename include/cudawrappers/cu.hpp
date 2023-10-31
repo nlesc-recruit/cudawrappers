@@ -413,7 +413,8 @@ class Event : public Wrapper<CUevent> {
 class DeviceMemory : public Wrapper<CUdeviceptr> {
  public:
   explicit DeviceMemory(size_t size, CUmemorytype type = CU_MEMORYTYPE_DEVICE,
-                        unsigned int flags = 0) {
+                        unsigned int flags = 0)
+      : _size(size) {
     if (type == CU_MEMORYTYPE_DEVICE and !flags) {
       checkCudaCall(cuMemAlloc(&_obj, size));
     } else if (type == CU_MEMORYTYPE_UNIFIED) {
@@ -454,6 +455,11 @@ class DeviceMemory : public Wrapper<CUdeviceptr> {
           "Cannot return memory of type CU_MEMORYTYPE_DEVICE as pointer.");
     }
   }
+
+  size_t size() const { return _size; }
+
+ private:
+  size_t _size;
 };
 
 class Stream : public Wrapper<CUstream> {
