@@ -10,7 +10,6 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 - Added `cu::Module` constructor with `CUjit_option` map argument
 - Added `DeviceMemory::size`
 - Added `HostMemory::size`
-- Added `Function::launch` with dim3 arguments
 - Added `Function::name`
 
 ### Changed
