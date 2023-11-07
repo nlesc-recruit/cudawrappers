@@ -359,8 +359,8 @@ class Module : public Wrapper<CUmodule> {
       values.push_back(i.second);
     }
 
-    checkCudaCall(
-        cuModuleLoadDataEx(&_obj, image, options.size(), &keys[0], &values[0]));
+    checkCudaCall(cuModuleLoadDataEx(&_obj, image, options.size(), keys.data(),
+                                     values.data()));
 
     for (size_t i = 0; i < keys.size(); ++i) {
       options[keys[i]] = values[i];
