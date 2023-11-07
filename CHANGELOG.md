@@ -7,8 +7,16 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 - Added `cu::Context::getDevice()`
+- Added `cu::Module` constructor with `CUjit_option` map argument
+- Added `DeviceMemory::size`
+- Added `HostMemory::size`
+- Added `Function::launch` with dim3 arguments
+- Added `Function::name`
+
 ### Changed
 - Fixed the `cu::Module(CUmodule&)` constructor
+- Added `Function::getAttribute` is now const
+
 ### Removed
 
 ## [0.6.0] - 2023-10-06
