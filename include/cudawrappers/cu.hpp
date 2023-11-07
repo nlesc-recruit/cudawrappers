@@ -354,10 +354,9 @@ class Module : public Wrapper<CUmodule> {
     std::vector<CUjit_option> keys;
     std::vector<void *> values;
 
-    for (optionmap_t::const_iterator i = options.begin(); i != options.end();
-         ++i) {
-      keys.push_back(i->first);
-      values.push_back(i->second);
+    for (const std::pair<CUjit_option, void *> &i : options) {
+      keys.push_back(i.first);
+      values.push_back(i.second);
     }
 
     checkCudaCall(
