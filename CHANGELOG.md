@@ -16,6 +16,9 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 - Fixed the `cu::Module(CUmodule&)` constructor
 - Added `Function::getAttribute` is now const
 
+### Fixed
+- Fix compatibility with C++20 and C++23
+
 ### Removed
 
 ## [0.6.0] - 2023-10-06
