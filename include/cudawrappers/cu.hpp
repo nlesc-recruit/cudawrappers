@@ -69,17 +69,16 @@ class Wrapper {
   bool operator!=(const Wrapper<T> &other) { return _obj != other._obj; }
 
  protected:
-  Wrapper<T>() = default;
+  Wrapper() = default;
 
-  Wrapper<T>(const Wrapper<T> &other)
-      : _obj(other._obj), manager(other.manager) {}
+  Wrapper(const Wrapper<T> &other) : _obj(other._obj), manager(other.manager) {}
 
-  Wrapper<T>(Wrapper<T> &&other)
+  Wrapper(Wrapper<T> &&other)
       : _obj(other._obj), manager(std::move(other.manager)) {
     other._obj = 0;
   }
 
-  explicit Wrapper<T>(T &obj) : _obj(obj) {}
+  explicit Wrapper(T &obj) : _obj(obj) {}
 
   T _obj{};
   std::shared_ptr<T> manager;
