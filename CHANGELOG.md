@@ -7,10 +7,20 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 - Added `cu::Context::getDevice()`
+- Added `cu::Module` constructor with `CUjit_option` map argument
+- Added `DeviceMemory::size`
+- Added `HostMemory::size`
+- Added `Function::name`
 - Added `cu::Stream::getContext()`
 - Added overloaded versions of `cu::Stream::memcpyDtoHAsync` and `cu::Stream::memcpyDtoHAsync` that take CUdeviceptr as an argument
+
 ### Changed
 - Fixed the `cu::Module(CUmodule&)` constructor
+- Added `Function::getAttribute` is now const
+
+### Fixed
+- Fix compatibility with C++20 and C++23
+
 ### Removed
 
 ## [0.6.0] - 2023-10-06

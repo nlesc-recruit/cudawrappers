@@ -4,6 +4,7 @@
 #include <array>
 #include <cstddef>
 #include <exception>
+#include <map>
 #include <memory>
 #include <stdexcept>
 #include <string>
@@ -68,17 +69,16 @@ class Wrapper {
   bool operator!=(const Wrapper<T> &other) { return _obj != other._obj; }
 
  protected:
-  Wrapper<T>() = default;
+  Wrapper() = default;
 
-  Wrapper<T>(const Wrapper<T> &other)
-      : _obj(other._obj), manager(other.manager) {}
+  Wrapper(const Wrapper<T> &other) : _obj(other._obj), manager(other.manager) {}
 
-  Wrapper<T>(Wrapper<T> &&other)
+  Wrapper(Wrapper<T> &&other)
       : _obj(other._obj), manager(std::move(other.manager)) {
     other._obj = 0;
   }
 
-  explicit Wrapper<T>(T &obj) : _obj(obj) {}
+  explicit Wrapper(T &obj) : _obj(obj) {}
 
   T _obj{};
   std::shared_ptr<T> manager;
@@ -250,7 +250,7 @@ class Context : public Wrapper<CUcontext> {
 
 class HostMemory : public Wrapper<void *> {
  public:
-  explicit HostMemory(size_t size, unsigned int flags = 0) {
+  explicit HostMemory(size_t size, unsigned int flags = 0) : _size(size) {
     checkCudaCall(cuMemHostAlloc(&_obj, size, flags));
     manager = std::shared_ptr<void *>(new (void *)(_obj), [](void **ptr) {
       cuMemFreeHost(*ptr);
@@ -258,7 +258,8 @@ class HostMemory : public Wrapper<void *> {
     });
   }
 
-  explicit HostMemory(void *ptr, size_t size, unsigned int flags = 0) {
+  explicit HostMemory(void *ptr, size_t size, unsigned int flags = 0)
+      : _size(size) {
     _obj = ptr;
     checkCudaCall(cuMemHostRegister(&_obj, size, flags));
     manager = std::shared_ptr<void *>(
@@ -269,6 +270,11 @@ class HostMemory : public Wrapper<void *> {
   operator T *() {
     return static_cast<T *>(_obj);
   }
+
+  size_t size() const { return _size; }
+
+ private:
+  size_t _size;
 };
 
 class Array : public Wrapper<CUarray> {
@@ -342,6 +348,24 @@ class Module : public Wrapper<CUmodule> {
     });
   }
 
+  typedef std::map<CUjit_option, void *> optionmap_t;
+  explicit Module(const void *image, Module::optionmap_t &options) {
+    std::vector<CUjit_option> keys;
+    std::vector<void *> values;
+
+    for (const std::pair<CUjit_option, void *> &i : options) {
+      keys.push_back(i.first);
+      values.push_back(i.second);
+    }
+
+    checkCudaCall(cuModuleLoadDataEx(&_obj, image, options.size(), keys.data(),
+                                     values.data()));
+
+    for (size_t i = 0; i < keys.size(); ++i) {
+      options[keys[i]] = values[i];
+    }
+  }
+
   explicit Module(CUmodule &module) : Wrapper(module) {}
 
   CUdeviceptr getGlobal(const char *name) const {
@@ -353,13 +377,13 @@ class Module : public Wrapper<CUmodule> {
 
 class Function : public Wrapper<CUfunction> {
  public:
-  Function(const Module &module, const char *name) {
+  Function(const Module &module, const char *name) : _name(name) {
     checkCudaCall(cuModuleGetFunction(&_obj, module, name));
   }
 
   explicit Function(CUfunction &function) : Wrapper(function) {}
 
-  int getAttribute(CUfunction_attribute attribute) {
+  int getAttribute(CUfunction_attribute attribute) const {
     int value{};
     checkCudaCall(cuFuncGetAttribute(&value, attribute, _obj));
     return value;
@@ -368,6 +392,11 @@ class Function : public Wrapper<CUfunction> {
   void setCacheConfig(CUfunc_cache config) {
     checkCudaCall(cuFuncSetCacheConfig(_obj, config));
   }
+
+  const char *name() const { return _name; }
+
+ private:
+  const char *_name;
 };
 
 class Event : public Wrapper<CUevent> {
@@ -402,7 +431,8 @@ class Event : public Wrapper<CUevent> {
 class DeviceMemory : public Wrapper<CUdeviceptr> {
  public:
   explicit DeviceMemory(size_t size, CUmemorytype type = CU_MEMORYTYPE_DEVICE,
-                        unsigned int flags = 0) {
+                        unsigned int flags = 0)
+      : _size(size) {
     if (type == CU_MEMORYTYPE_DEVICE and !flags) {
       checkCudaCall(cuMemAlloc(&_obj, size));
     } else if (type == CU_MEMORYTYPE_UNIFIED) {
@@ -443,6 +473,11 @@ class DeviceMemory : public Wrapper<CUdeviceptr> {
           "Cannot return memory of type CU_MEMORYTYPE_DEVICE as pointer.");
     }
   }
+
+  size_t size() const { return _size; }
+
+ private:
+  size_t _size;
 };
 
 class Stream : public Wrapper<CUstream> {
