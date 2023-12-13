@@ -8,7 +8,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 - Added `cu::Context::getDevice()`
 - Added `cu::Stream::getContext()`
-- Added overloaded versions of cu::Stream::memcpyDtoHAsync and cu::Stream::memcpyDtoHAsync that take CUdeviceptr as an argument
+- Added overloaded versions of `cu::Stream::memcpyDtoHAsync` and `cu::Stream::memcpyDtoHAsync` that take CUdeviceptr as an argument
 ### Changed
 - Fixed the `cu::Module(CUmodule&)` constructor
 ### Removed
