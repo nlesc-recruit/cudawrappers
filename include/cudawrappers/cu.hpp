@@ -514,7 +514,15 @@ class Stream : public Wrapper<CUstream> {
     checkCudaCall(cuMemcpyHtoDAsync(devPtr, hostPtr, size, _obj));
   }
 
-  void memcpyDtoHAsync(void *hostPtr, DeviceMemory &devPtr, size_t size) {
+  void memcpyHtoDAsync(CUdeviceptr devPtr, const void *hostPtr, size_t size) {
+    checkCudaCall(cuMemcpyHtoDAsync(devPtr, hostPtr, size, _obj));
+  }
+
+  void memcpyDtoHAsync(void *hostPtr, const DeviceMemory &devPtr, size_t size) {
+    checkCudaCall(cuMemcpyDtoHAsync(hostPtr, devPtr, size, _obj));
+  }
+
+  void memcpyDtoHAsync(void *hostPtr, CUdeviceptr devPtr, size_t size) {
     checkCudaCall(cuMemcpyDtoHAsync(hostPtr, devPtr, size, _obj));
   }
 
@@ -582,6 +590,12 @@ class Stream : public Wrapper<CUstream> {
 
   void writeValue32(CUdeviceptr addr, cuuint32_t value, unsigned flags) {
     checkCudaCall(cuStreamWriteValue32(_obj, addr, value, flags));
+  }
+
+  Context getContext() const {
+    CUcontext context;
+    checkCudaCall(cuStreamGetCtx(_obj, &context));
+    return Context(context);
   }
 };
 
