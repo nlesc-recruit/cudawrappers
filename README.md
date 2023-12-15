@@ -95,8 +95,8 @@ The project is planning to support more of the Driver API (for fine-grained cont
 
 ## Contributing
 
-See [CONTRIBUTING.md](./CONTRIBUTING.md) for a guide on how to contribute.
+See [CONTRIBUTING.md](https://github.com/nlesc-recruit/cudawrappers/blob/main/CONTRIBUTING.md) for a guide on how to contribute.
 
 ## Developer documentation
 
-See [README.dev.md](./README.dev.md) for documentation on setting up your development environment.
+See [README.dev.md](https://github.com/nlesc-recruit/cudawrappers/blob/main/README.dev.md) for documentation on setting up your development environment.
