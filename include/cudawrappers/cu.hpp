@@ -453,6 +453,10 @@ class DeviceMemory : public Wrapper<CUdeviceptr> {
     checkCudaCall(cuMemHostGetDevicePointer(&_obj, hostMemory, 0));
   }
 
+  void zero(size_t size, CUstream stream) {
+    checkCudaCall(cuMemsetD8Async(_obj, 0, size, stream));
+  }
+
   void zero(size_t size) { checkCudaCall(cuMemsetD8(_obj, 0, size)); }
 
   const void *parameter()
