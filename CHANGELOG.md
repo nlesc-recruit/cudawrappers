@@ -15,6 +15,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ### Changed
 - Fixed the `cu::Module(CUmodule&)` constructor
 - Added `Function::getAttribute` is now const
+- The `cu::DeviceMemory` constructor now works with `size == 0`
 
 ### Fixed
 - Fix compatibility with C++20 and C++23
