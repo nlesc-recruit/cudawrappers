@@ -433,7 +433,10 @@ class DeviceMemory : public Wrapper<CUdeviceptr> {
   explicit DeviceMemory(size_t size, CUmemorytype type = CU_MEMORYTYPE_DEVICE,
                         unsigned int flags = 0)
       : _size(size) {
-    if (type == CU_MEMORYTYPE_DEVICE and !flags) {
+    if (size == 0) {
+      _obj = 0;
+      return;
+    } else if (type == CU_MEMORYTYPE_DEVICE && !flags) {
       checkCudaCall(cuMemAlloc(&_obj, size));
     } else if (type == CU_MEMORYTYPE_UNIFIED) {
       checkCudaCall(cuMemAllocManaged(&_obj, size, flags));
