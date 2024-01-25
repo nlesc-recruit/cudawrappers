@@ -1,0 +1,30 @@
+name: markdown-link-check
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+    #- main
+    - add_markdown_link_checker_action
+  pull_request:
+    branches:
+    - main
+    types:
+    - opened
+    - reopened
+    - synchronize
+    - ready_for_review
+
+jobs:
+
+  markdown-link-check:
+    name: Check markdown links
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@main
+    - uses: gaurav-nelson/github-action-markdown-link-check@v1
+      with:
+        check-modified-files-only: 'yes'
+        base-branch: 'main'
+        config-file: '.github/workflows/mlc-config.json'
