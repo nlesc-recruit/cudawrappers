@@ -27,4 +27,3 @@ jobs:
       with:
         check-modified-files-only: 'yes'
         base-branch: 'main'
-        config-file: '.github/workflows/mlc-config.json'
