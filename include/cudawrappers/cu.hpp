@@ -467,7 +467,7 @@ class DeviceMemory : public Wrapper<CUdeviceptr> {
 
   template <typename T>
   operator T *() {
-    bool data;
+    int data;
     checkCudaCall(
         cuPointerGetAttribute(&data, CU_POINTER_ATTRIBUTE_IS_MANAGED, _obj));
     if (data) {
