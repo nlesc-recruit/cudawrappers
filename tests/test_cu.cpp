@@ -187,3 +187,18 @@ TEST_CASE("Test zeroing cu::DeviceMemory", "[zero]") {
         cu::DeviceMemory(size, CU_MEMORYTYPE_DEVICE, CU_MEM_ATTACH_HOST));
   }
 }
+
+TEST_CASE("Test cu::Stream", "[stream]") {
+  cu::init();
+  cu::Device device(0);
+  cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, device);
+  cu::Stream stream;
+
+  SECTION("Test memAllocAsync") {
+    const size_t size = 1024;
+    cu::DeviceMemory mem = stream.memAllocAsync(size);
+    CHECK(mem.size() == size);
+    CHECK_NOTHROW(stream.memFreeAsync(mem));
+    CHECK_NOTHROW(stream.synchronize());
+  }
+}
