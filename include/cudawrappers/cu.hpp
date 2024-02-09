@@ -451,7 +451,7 @@ class DeviceMemory : public Wrapper<CUdeviceptr> {
                                            });
   }
 
-  DeviceMemory(CUdeviceptr ptr) = delete;
+  explicit DeviceMemory(CUdeviceptr ptr) : Wrapper(ptr) {}
 
   explicit DeviceMemory(CUdeviceptr ptr, size_t size)
       : Wrapper(ptr), _size(size) {}
