@@ -451,7 +451,10 @@ class DeviceMemory : public Wrapper<CUdeviceptr> {
                                            });
   }
 
-  explicit DeviceMemory(CUdeviceptr ptr) : Wrapper(ptr) {}
+  DeviceMemory(CUdeviceptr ptr) = delete;
+
+  explicit DeviceMemory(CUdeviceptr ptr, size_t size)
+      : Wrapper(ptr), _size(size) {}
 
   explicit DeviceMemory(const HostMemory &hostMemory) {
     checkCudaCall(cuMemHostGetDevicePointer(&_obj, hostMemory, 0));
@@ -501,7 +504,7 @@ class Stream : public Wrapper<CUstream> {
   DeviceMemory memAllocAsync(size_t size) {
     CUdeviceptr ptr;
     checkCudaCall(cuMemAllocAsync(&ptr, size, _obj));
-    return DeviceMemory(ptr);
+    return DeviceMemory(ptr, size);
   }
 
   void memFreeAsync(DeviceMemory &devMem) {
