@@ -23,6 +23,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 - Fix compatibility with C++20 and C++23
 - Fix `cu::HostMemory` constructor for registered memory
 - Fix `cu::DeviceMemory` operator `T *()` for managed memory
+- Fix `Stream::memAllocAsync` returns `DeviceMemory` with initialized size
 
 ### Removed
 
