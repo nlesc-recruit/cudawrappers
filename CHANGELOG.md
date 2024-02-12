@@ -13,6 +13,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 - Added `Function::name`
 - Added `cu::Stream::getContext()`
 - Added overloaded versions of `cu::Stream::memcpyDtoHAsync` and `cu::Stream::memcpyDtoHAsync` that take CUdeviceptr as an argument
+- Added `Function::setAttribute()`
 
 ### Changed
 - Fixed the `cu::Module(CUmodule&)` constructor

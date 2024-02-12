@@ -390,6 +390,10 @@ class Function : public Wrapper<CUfunction> {
     return value;
   }
 
+  void setAttribute(CUfunction_attribute attribute, int value) {
+    checkCudaCall(cuFuncSetAttribute(_obj, attribute, value));
+  }
+
   void setCacheConfig(CUfunc_cache config) {
     checkCudaCall(cuFuncSetCacheConfig(_obj, config));
   }
