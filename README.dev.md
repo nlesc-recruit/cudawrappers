@@ -131,8 +131,7 @@ To run the formatters and linters, you first need to build the project and set u
 In addition, you can install VSCode extensions for many of these linters. Here is a short list:
 
 - [VSCode extension for cmake-format](https://marketplace.visualstudio.com/items?itemName=cheshirekow.cmake-format)
-- [VSCode extension clang-tidy](https://marketplace.visualstudio.com/items?itemName=notskm.clang-tidy)
-- [VSCode extension clang-format](https://marketplace.visualstudio.com/items?itemName=xaver.clang-format)
+- [VSCode extension clang-tidy and clang-format](https://marketplace.visualstudio.com/items?itemName=caphyon.ClangPowerTools)
 
 ### Linters on Codacy
 
