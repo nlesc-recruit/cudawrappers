@@ -144,7 +144,7 @@ To run `clang-tidy` on Codacy for this project or a fork, you will need to defin
 For the `main` branch and pull requests originating from inside this repo, there is no need to create a new token.
 But if it gets revoked, or for forks, follow the steps in the [Codacy API tokens page](https://docs.codacy.com/codacy-api/api-tokens/) for details on how to create one.
 
-After a pull request is created, a Codacy test should appear. Follow the link there or [here](https://app.codacy.com/gh/nlesc-recruit/CUDA-wrappers) for the results.
+After a pull request is created, a Codacy test should appear. Follow the link there or [here](https://app.codacy.com/gh/nlesc-recruit/cudawrappers) for the results.
 
 ### pre-commit hook
 
