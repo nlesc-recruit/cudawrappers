@@ -131,8 +131,7 @@ To run the formatters and linters, you first need to build the project and set u
 In addition, you can install VSCode extensions for many of these linters. Here is a short list:
 
 - [VSCode extension for cmake-format](https://marketplace.visualstudio.com/items?itemName=cheshirekow.cmake-format)
-- [VSCode extension clang-tidy](https://marketplace.visualstudio.com/items?itemName=notskm.clang-tidy)
-- [VSCode extension clang-format](https://marketplace.visualstudio.com/items?itemName=xaver.clang-format)
+- [VSCode extension clang-tidy and clang-format](https://marketplace.visualstudio.com/items?itemName=caphyon.ClangPowerTools)
 
 ### Linters on Codacy
 
@@ -144,7 +143,7 @@ To run `clang-tidy` on Codacy for this project or a fork, you will need to defin
 For the `main` branch and pull requests originating from inside this repo, there is no need to create a new token.
 But if it gets revoked, or for forks, follow the steps in the [Codacy API tokens page](https://docs.codacy.com/codacy-api/api-tokens/) for details on how to create one.
 
-After a pull request is created, a Codacy test should appear. Follow the link there or [here](https://app.codacy.com/gh/nlesc-recruit/CUDA-wrappers) for the results.
+After a pull request is created, a Codacy test should appear. Follow the link there or [here](https://app.codacy.com/gh/nlesc-recruit/cudawrappers) for the results.
 
 ### pre-commit hook
 
