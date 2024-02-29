@@ -4,8 +4,7 @@ on:
   workflow_dispatch:
   push:
     branches:
-    #- main
-    - add_markdown_link_checker_action
+    - main
   pull_request:
     branches:
     - main
