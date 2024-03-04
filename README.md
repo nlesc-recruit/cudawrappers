@@ -43,7 +43,7 @@ cmake -S . -B build
 make -C build
 ```
 
-This command will create a `build` folder, compile the code and generate the libraries `libcudawrappers-*.so` in the build directory.
+This command will create a `build` directory with a set of headers. Cudawrappers is header only, so no library objects are being built.
 For more details on the building requirements and on testing, check the [developer documentation](README.dev.md).
 
 To install to `~/.local`, use
