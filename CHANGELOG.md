@@ -1,7 +1,7 @@
 # Change Log
 
-All notable changes to this project will be documented in this file.
-This project adheres to [Semantic Versioning](http://semver.org/).
+All notable changes to this project will be documented in this file. This
+project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
@@ -13,7 +13,8 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 - Added `cu::HostMemory::size`
 - Added `cu::Function::name`
 - Added `cu::Stream::getContext()`
-- Added overloaded versions of `cu::Stream::memcpyDtoHAsync` and `cu::Stream::memcpyDtoHAsync` that take `CUdeviceptr` as an argument
+- Added overloaded versions of `cu::Stream::memcpyDtoHAsync` and
+  `cu::Stream::memcpyDtoHAsync` that take `CUdeviceptr` as an argument
 - Added `cu::Function::setAttribute()`
 
 ### Changed
@@ -27,7 +28,8 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 - Fix compatibility with C++20 and C++23
 - Fix `cu::HostMemory` constructor for registered memory
 - Fix `cu::DeviceMemory` operator `T *()` for managed memory
-- Fix `cu::Stream::memAllocAsync` returns `cu::DeviceMemory` with initialized size
+- Fix `cu::Stream::memAllocAsync` returns `cu::DeviceMemory` with initialized
+  size
 
 ## \[0.6.0\] - 2023-10-06
 
@@ -95,7 +97,9 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 
-- Several best practices were implemented, such as citation file, user and developer documentation, linters, formatters, pre-commit hooks, GitHub workflows, badges, and issue and pull request templates.
+- Several best practices were implemented, such as citation file, user and
+  developer documentation, linters, formatters, pre-commit hooks, GitHub
+  workflows, badges, and issue and pull request templates.
 
 ### Changed
 
