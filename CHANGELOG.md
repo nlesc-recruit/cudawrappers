@@ -78,7 +78,7 @@ project adheres to [Semantic Versioning](http://semver.org/).
 - `cu::Source` class. Use `nvrtc::Program` instead.
 - Commented out code that was not used (anymore)
 
-## [0.3.0] - 2022-03-08
+## \[0.3.0\] - 2022-03-08
 
 ### Added
 
@@ -93,7 +93,7 @@ project adheres to [Semantic Versioning](http://semver.org/).
 
 - Moved usage examples to separate repositories
 
-## [0.2.0] - 2022-03-02
+## \[0.2.0\] - 2022-03-02
 
 ### Added
 
@@ -106,13 +106,8 @@ project adheres to [Semantic Versioning](http://semver.org/).
 - The name of the repository and the library are now `cudawrappers`.
 - The folder structure has changed to better separate header and source files.
 
-## [0.1.0] - 2022-02-14
+## \[0.1.0\] - 2022-02-14
 
 ### Added
 
 - First release with existing code.
-
-[0.1.0]: https://github.com/nlesc-recruit/cudawrappers/releases/tag/0.1.0
-[0.2.0]: https://github.com/nlesc-recruit/cudawrappers/compare/0.1.0...0.2.0
-[0.3.0]: https://github.com/nlesc-recruit/cudawrappers/compare/0.2.0...0.3.0
-[unreleased]: https://github.com/nlesc-recruit/cudawrappers/compare/0.3.0...HEAD
