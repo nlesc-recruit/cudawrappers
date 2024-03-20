@@ -1,9 +1,9 @@
 #if !defined CUFFT_H
 #define CUFFT_H
 
-#include <cuda_fp16.h>
-#include <cufft.h>
-#include <cufftXt.h>
+#include <hip/hip_fp16.h>
+#include <hipfft.h>
+#include <hipfftXt.h>
 
 #include <exception>
 
@@ -12,58 +12,58 @@
 /*
  * Error handling helper function, copied from cuda-samples Common/helper_cuda.h
  */
-static const char *_cudaGetErrorEnum(cufftResult error) {
+static const char *_cudaGetErrorEnum(hipfftResult error) {
   switch (error) {
-    case CUFFT_SUCCESS:
-      return "CUFFT_SUCCESS";
+    case HIPFFT_SUCCESS:
+      return "HIPFFT_SUCCESS";
 
-    case CUFFT_INVALID_PLAN:
-      return "CUFFT_INVALID_PLAN";
+    case HIPFFT_INVALID_PLAN:
+      return "HIPFFT_INVALID_PLAN";
 
-    case CUFFT_ALLOC_FAILED:
-      return "CUFFT_ALLOC_FAILED";
+    case HIPFFT_ALLOC_FAILED:
+      return "HIPFFT_ALLOC_FAILED";
 
-    case CUFFT_INVALID_TYPE:
-      return "CUFFT_INVALID_TYPE";
+    case HIPFFT_INVALID_TYPE:
+      return "HIPFFT_INVALID_TYPE";
 
-    case CUFFT_INVALID_VALUE:
-      return "CUFFT_INVALID_VALUE";
+    case HIPFFT_INVALID_VALUE:
+      return "HIPFFT_INVALID_VALUE";
 
-    case CUFFT_INTERNAL_ERROR:
-      return "CUFFT_INTERNAL_ERROR";
+    case HIPFFT_INTERNAL_ERROR:
+      return "HIPFFT_INTERNAL_ERROR";
 
-    case CUFFT_EXEC_FAILED:
-      return "CUFFT_EXEC_FAILED";
+    case HIPFFT_EXEC_FAILED:
+      return "HIPFFT_EXEC_FAILED";
 
-    case CUFFT_SETUP_FAILED:
-      return "CUFFT_SETUP_FAILED";
+    case HIPFFT_SETUP_FAILED:
+      return "HIPFFT_SETUP_FAILED";
 
-    case CUFFT_INVALID_SIZE:
-      return "CUFFT_INVALID_SIZE";
+    case HIPFFT_INVALID_SIZE:
+      return "HIPFFT_INVALID_SIZE";
 
-    case CUFFT_UNALIGNED_DATA:
-      return "CUFFT_UNALIGNED_DATA";
+    case HIPFFT_UNALIGNED_DATA:
+      return "HIPFFT_UNALIGNED_DATA";
 
-    case CUFFT_INCOMPLETE_PARAMETER_LIST:
-      return "CUFFT_INCOMPLETE_PARAMETER_LIST";
+    case HIPFFT_INCOMPLETE_PARAMETER_LIST:
+      return "HIPFFT_INCOMPLETE_PARAMETER_LIST";
 
-    case CUFFT_INVALID_DEVICE:
-      return "CUFFT_INVALID_DEVICE";
+    case HIPFFT_INVALID_DEVICE:
+      return "HIPFFT_INVALID_DEVICE";
 
-    case CUFFT_PARSE_ERROR:
-      return "CUFFT_PARSE_ERROR";
+    case HIPFFT_PARSE_ERROR:
+      return "HIPFFT_PARSE_ERROR";
 
-    case CUFFT_NO_WORKSPACE:
-      return "CUFFT_NO_WORKSPACE";
+    case HIPFFT_NO_WORKSPACE:
+      return "HIPFFT_NO_WORKSPACE";
 
-    case CUFFT_NOT_IMPLEMENTED:
-      return "CUFFT_NOT_IMPLEMENTED";
+    case HIPFFT_NOT_IMPLEMENTED:
+      return "HIPFFT_NOT_IMPLEMENTED";
 
     case CUFFT_LICENSE_ERROR:
       return "CUFFT_LICENSE_ERROR";
 
-    case CUFFT_NOT_SUPPORTED:
-      return "CUFFT_NOT_SUPPORTED";
+    case HIPFFT_NOT_SUPPORTED:
+      return "HIPFFT_NOT_SUPPORTED";
   }
 
   return "<unknown>";
@@ -76,16 +76,16 @@ namespace cufft {
  */
 class Error : public std::exception {
  public:
-  explicit Error(cufftResult result) : result_(result) {}
+  explicit Error(hipfftResult result) : result_(result) {}
 
   const char *what() const noexcept override {
     return _cudaGetErrorEnum(result_);
   }
 
-  operator cufftResult() const { return result_; }
+  operator hipfftResult() const { return result_; }
 
  private:
-  cufftResult result_;
+  hipfftResult result_;
 };
 
 /*
@@ -105,35 +105,35 @@ class FFT {
   }
   FFT(FFT &&other) noexcept { *this = std::move(other); }
 
-  ~FFT() { checkCuFFTCall(cufftDestroy(plan_)); }
+  ~FFT() { checkCuFFTCall(hipfftDestroy(plan_)); }
 
   void setStream(cu::Stream &stream) {
-    checkCuFFTCall(cufftSetStream(plan_, stream));
+    checkCuFFTCall(hipfftSetStream(plan_, stream));
   }
 
   void execute(cu::DeviceMemory &in, cu::DeviceMemory &out, int direction) {
-    void *in_ptr = reinterpret_cast<void *>(static_cast<CUdeviceptr>(in));
-    void *out_ptr = reinterpret_cast<void *>(static_cast<CUdeviceptr>(out));
+    void *in_ptr = reinterpret_cast<void *>(static_cast<hipDeviceptr_t>(in));
+    void *out_ptr = reinterpret_cast<void *>(static_cast<hipDeviceptr_t>(out));
     checkCuFFTCall(cufftXtExec(plan_, in_ptr, out_ptr, direction));
   }
 
  protected:
-  void checkCuFFTCall(cufftResult result) {
-    if (result != CUFFT_SUCCESS) {
+  void checkCuFFTCall(hipfftResult result) {
+    if (result != HIPFFT_SUCCESS) {
       throw Error(result);
     }
   }
 
-  cufftHandle *plan() { return &plan_; }
+  hipfftHandle *plan() { return &plan_; }
 
  private:
-  cufftHandle plan_{};
+  hipfftHandle plan_{};
 };
 
 /*
  * FFT1D
  */
-template <cudaDataType_t T>
+template <hipblasDatatype_t T>
 class FFT1D : public FFT {
  public:
   FFT1D(int nx) = delete;
@@ -141,17 +141,17 @@ class FFT1D : public FFT {
 };
 
 template <>
-FFT1D<CUDA_C_32F>::FFT1D(int nx, int batch) {
-  checkCuFFTCall(cufftCreate(plan()));
-  checkCuFFTCall(cufftPlan1d(plan(), nx, CUFFT_C2C, batch));
+FFT1D<HIPBLAS_C_32F>::FFT1D(int nx, int batch) {
+  checkCuFFTCall(hipfftCreate(plan()));
+  checkCuFFTCall(hipfftPlan1d(plan(), nx, HIPFFT_C2C, batch));
 }
 
 template <>
-FFT1D<CUDA_C_32F>::FFT1D(int nx) : FFT1D(nx, 1) {}
+FFT1D<HIPBLAS_C_32F>::FFT1D(int nx) : FFT1D(nx, 1) {}
 
 template <>
-FFT1D<CUDA_C_16F>::FFT1D(int nx, int batch) {
-  checkCuFFTCall(cufftCreate(plan()));
+FFT1D<HIPBLAS_C_16F>::FFT1D(int nx, int batch) {
+  checkCuFFTCall(hipfftCreate(plan()));
   const int rank = 1;
   size_t ws = 0;
   std::array<long long, 1> n{nx};
@@ -160,17 +160,17 @@ FFT1D<CUDA_C_16F>::FFT1D(int nx, int batch) {
   int istride = 1;
   int ostride = 1;
   checkCuFFTCall(cufftXtMakePlanMany(*plan(), rank, n.data(), nullptr, istride,
-                                     idist, CUDA_C_16F, nullptr, ostride, odist,
-                                     CUDA_C_16F, batch, &ws, CUDA_C_16F));
+                                     idist, HIPBLAS_C_16F, nullptr, ostride, odist,
+                                     HIPBLAS_C_16F, batch, &ws, HIPBLAS_C_16F));
 }
 
 template <>
-FFT1D<CUDA_C_16F>::FFT1D(int nx) : FFT1D(nx, 1) {}
+FFT1D<HIPBLAS_C_16F>::FFT1D(int nx) : FFT1D(nx, 1) {}
 
 /*
  * FFT2D
  */
-template <cudaDataType_t T>
+template <hipblasDatatype_t T>
 class FFT2D : public FFT {
  public:
   FFT2D(int nx, int ny) = delete;
@@ -178,22 +178,22 @@ class FFT2D : public FFT {
 };
 
 template <>
-FFT2D<CUDA_C_32F>::FFT2D(int nx, int ny) {
-  checkCuFFTCall(cufftCreate(plan()));
-  checkCuFFTCall(cufftPlan2d(plan(), nx, ny, CUFFT_C2C));
+FFT2D<HIPBLAS_C_32F>::FFT2D(int nx, int ny) {
+  checkCuFFTCall(hipfftCreate(plan()));
+  checkCuFFTCall(hipfftPlan2d(plan(), nx, ny, HIPFFT_C2C));
 }
 
 template <>
-FFT2D<CUDA_C_32F>::FFT2D(int nx, int ny, int stride, int dist, int batch) {
-  checkCuFFTCall(cufftCreate(plan()));
+FFT2D<HIPBLAS_C_32F>::FFT2D(int nx, int ny, int stride, int dist, int batch) {
+  checkCuFFTCall(hipfftCreate(plan()));
   std::array<int, 2> n{nx, ny};
-  checkCuFFTCall(cufftPlanMany(plan(), 2, n.data(), n.data(), stride, dist,
-                               n.data(), stride, dist, CUFFT_C2C, batch));
+  checkCuFFTCall(hipfftPlanMany(plan(), 2, n.data(), n.data(), stride, dist,
+                               n.data(), stride, dist, HIPFFT_C2C, batch));
 }
 
 template <>
-FFT2D<CUDA_C_16F>::FFT2D(int nx, int ny, int stride, int dist, int batch) {
-  checkCuFFTCall(cufftCreate(plan()));
+FFT2D<HIPBLAS_C_16F>::FFT2D(int nx, int ny, int stride, int dist, int batch) {
+  checkCuFFTCall(hipfftCreate(plan()));
   const int rank = 2;
   size_t ws = 0;
   std::array<long long, 2> n{nx, ny};
@@ -202,12 +202,12 @@ FFT2D<CUDA_C_16F>::FFT2D(int nx, int ny, int stride, int dist, int batch) {
   long long int idist = dist;
   long long int odist = dist;
   checkCuFFTCall(cufftXtMakePlanMany(*plan(), rank, n.data(), nullptr, istride,
-                                     idist, CUDA_C_16F, nullptr, ostride, odist,
-                                     CUDA_C_16F, batch, &ws, CUDA_C_16F));
+                                     idist, HIPBLAS_C_16F, nullptr, ostride, odist,
+                                     HIPBLAS_C_16F, batch, &ws, HIPBLAS_C_16F));
 }
 
 template <>
-FFT2D<CUDA_C_16F>::FFT2D(int nx, int ny) : FFT2D(nx, ny, 1, nx * ny, 1) {}
+FFT2D<HIPBLAS_C_16F>::FFT2D(int nx, int ny) : FFT2D(nx, ny, 1, nx * ny, 1) {}
 
 }  // namespace cufft
 

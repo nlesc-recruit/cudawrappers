@@ -12,24 +12,24 @@
 #include <string>
 #include <vector>
 
-#include <cuda.h>
-#include <nvrtc.h>
+#include <hip/hip_runtime.h>
+#include <hip/hiprtc.h>
 
 namespace nvrtc {
 class Error : public std::exception {
  public:
-  explicit Error(nvrtcResult result) : _result(result) {}
+  explicit Error(hiprtcResult result) : _result(result) {}
 
-  const char *what() const noexcept { return nvrtcGetErrorString(_result); }
+  const char *what() const noexcept { return hiprtcGetErrorString(_result); }
 
-  operator nvrtcResult() const { return _result; }
+  operator hiprtcResult() const { return _result; }
 
  private:
-  nvrtcResult _result;
+  hiprtcResult _result;
 };
 
-inline void checkNvrtcCall(nvrtcResult result) {
-  if (result != NVRTC_SUCCESS) throw Error(result);
+inline void checkNvrtcCall(hiprtcResult result) {
+  if (result != HIPRTC_SUCCESS) throw Error(result);
 }
 
 inline std::string findIncludePath() {
@@ -72,7 +72,7 @@ class Program {
         std::back_inserter(c_includeNames),
         [](const std::string &includeName) { return includeName.c_str(); });
 
-    checkNvrtcCall(nvrtcCreateProgram(&program, src.c_str(), name.c_str(),
+    checkNvrtcCall(hiprtcCreateProgram(&program, src.c_str(), name.c_str(),
                                       static_cast<int>(c_headers.size()),
                                       c_headers.data(), c_includeNames.data()));
   }
@@ -84,18 +84,18 @@ class Program {
                                "' in cudawrappers::nvrtc");
     }
     std::string source(std::istreambuf_iterator<char>{ifs}, {});
-    checkNvrtcCall(nvrtcCreateProgram(&program, source.c_str(),
+    checkNvrtcCall(hiprtcCreateProgram(&program, source.c_str(),
                                       filename.c_str(), 0, nullptr, nullptr));
   }
 
-  ~Program() { checkNvrtcCall(nvrtcDestroyProgram(&program)); }
+  ~Program() { checkNvrtcCall(hiprtcDestroyProgram(&program)); }
 
   void compile(const std::vector<std::string> &options) {
     std::vector<const char *> c_options;
     std::transform(options.begin(), options.end(),
                    std::back_inserter(c_options),
                    [](const std::string &option) { return option.c_str(); });
-    checkNvrtcCall(nvrtcCompileProgram(
+    checkNvrtcCall(hiprtcCompileProgram(
         program, static_cast<int>(c_options.size()), c_options.data()));
   }
 
@@ -103,9 +103,9 @@ class Program {
     size_t size{};
     std::string ptx;
 
-    checkNvrtcCall(nvrtcGetPTXSize(program, &size));
+    checkNvrtcCall(hiprtcGetCodeSize(program, &size));
     ptx.resize(size);
-    checkNvrtcCall(nvrtcGetPTX(program, &ptx[0]));
+    checkNvrtcCall(hiprtcGetCode(program, &ptx[0]));
     return ptx;
   }
 
@@ -114,9 +114,9 @@ class Program {
     size_t size{};
     std::vector<char> cubin;
 
-    checkNvrtcCall(nvrtcGetCUBINSize(program, &size));
+    checkNvrtcCall(hiprtcGetBitcodeSize(program, &size));
     cubin.resize(size);
-    checkNvrtcCall(nvrtcGetCUBIN(program, &cubin[0]));
+    checkNvrtcCall(hiprtcGetBitcode(program, &cubin[0]));
     return cubin;
   }
 #endif
@@ -125,14 +125,14 @@ class Program {
     size_t size{};
     std::string log;
 
-    checkNvrtcCall(nvrtcGetProgramLogSize(program, &size));
+    checkNvrtcCall(hiprtcGetProgramLogSize(program, &size));
     log.resize(size);
-    checkNvrtcCall(nvrtcGetProgramLog(program, &log[0]));
+    checkNvrtcCall(hiprtcGetProgramLog(program, &log[0]));
     return log;
   }
 
  private:
-  nvrtcProgram program{};
+  hiprtcProgram program{};
 };
 }  // namespace nvrtc
 
