@@ -18,6 +18,9 @@ project(
 
 include(GNUInstallDirs)
 
+enable_language(HIP)
+set(CMAKE_HIP_COMPILER_ENV_VAR "HIPCXX")
+
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_CXX_EXTENSIONS False)
