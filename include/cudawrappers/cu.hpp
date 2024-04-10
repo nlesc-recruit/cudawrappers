@@ -394,6 +394,14 @@ class Function : public Wrapper<CUfunction> {
     checkCudaCall(cuFuncSetAttribute(_obj, attribute, value));
   }
 
+  int occupancyMaxActiveBlocksPerMultiprocessor(int blockSize,
+                                                size_t dynamicSMemSize) {
+    int numBlocks;
+    checkCudaCall(cuOccupancyMaxActiveBlocksPerMultiprocessor(
+        &numBlocks, _obj, blockSize, dynamicSMemSize));
+    return numBlocks;
+  }
+
   void setCacheConfig(CUfunc_cache config) {
     checkCudaCall(cuFuncSetCacheConfig(_obj, config));
   }
