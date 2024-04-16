@@ -3,13 +3,13 @@
 # '#include "helper.h"` will lead to `helper.h` being inlined.
 function(inline_local_includes input_file output_file)
   file(READ ${input_file} input_file_contents)
-  set(INCLUDE_REGEX "#include[ \t]*\"([^\"]+)\"")
-  string(REGEX MATCHALL ${INCLUDE_REGEX} includes ${input_file_contents})
-  string(REGEX REPLACE ${INCLUDE_REGEX} "" input_file_contents
+  set(include_regex "#include[ \t]*\"([^\"]+)\"")
+  string(REGEX MATCHALL ${include_regex} includes ${input_file_contents})
+  string(REGEX REPLACE ${include_regex} "" input_file_contents
                        "${input_file_contents}"
   )
   foreach(include ${includes})
-    string(REGEX REPLACE ${INCLUDE_REGEX} "\\1" include ${include})
+    string(REGEX REPLACE ${include_regex} "\\1" include ${include})
     file(GLOB_RECURSE INCLUDE_PATH "${CMAKE_SOURCE_DIR}/*/${include}")
     file(READ ${INCLUDE_PATH} include_contents)
     string(APPEND processed_file_contents "${include_contents}\n\n")
@@ -27,9 +27,9 @@ function(target_embed_source target input_file)
   # Strip the path and extension from input_file
   get_filename_component(NAME ${input_file} NAME_WLE)
   # Make a copy of the input file in the binary dir with inlined header files
-  set(INPUT_FILE_INLINED "${CMAKE_BINARY_DIR}/${input_file}")
+  set(input_file_inlined "${CMAKE_BINARY_DIR}/${input_file}")
   inline_local_includes(
-    "${CMAKE_CURRENT_SOURCE_DIR}/${input_file}" ${INPUT_FILE_INLINED}
+    "${CMAKE_CURRENT_SOURCE_DIR}/${input_file}" ${input_file_inlined}
   )
   # Link the input_file into an object file
   add_custom_command(
@@ -37,7 +37,7 @@ function(target_embed_source target input_file)
     COMMAND ld ARGS -r -b binary -A ${CMAKE_SYSTEM_PROCESSOR} -o
             ${CMAKE_CURRENT_BINARY_DIR}/${NAME}.o ${input_file}
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-    DEPENDS ${input_file} ${INPUT_FILE_INLINED}
+    DEPENDS ${input_file} ${input_file_inlined}
     COMMENT "Creating object file for ${input_file}"
   )
   if(NOT TARGET ${NAME})
