@@ -26,11 +26,11 @@ function(target_embed_source target input_file)
   include(CMakeDetermineSystem)
   # Strip the path and extension from input_file
   get_filename_component(NAME ${input_file} NAME_WLE)
+  # Get absolute path for input file
+  get_filename_component(input_file_absolute "${input_file}" ABSOLUTE)
   # Make a copy of the input file in the binary dir with inlined header files
   set(input_file_inlined "${CMAKE_BINARY_DIR}/${input_file}")
-  inline_local_includes(
-    "${CMAKE_CURRENT_SOURCE_DIR}/${input_file}" ${input_file_inlined}
-  )
+  inline_local_includes("${input_file_absolute}" ${input_file_inlined})
   # Link the input_file into an object file
   add_custom_command(
     OUTPUT ${NAME}.o
