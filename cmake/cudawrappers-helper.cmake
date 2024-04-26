@@ -31,10 +31,10 @@ function(target_embed_source target input_file)
   # Get absolute path for input file
   get_filename_component(input_file_absolute "${input_file}" ABSOLUTE)
   message("target_embed_source input_file_absolute: " ${input_file_absolute})
-  # Get absolute path for input file
-  # Make a copy of the input file in the binary dir with inlined header files
-  string(REPLACE "${CMAKE_SOURCE_DIR}" "${CMAKE_BINARY_DIR}" input_file_inlined
-                 ${input_file_absolute}
+  # Get absolute path for input file Make a copy of the input file in the binary
+  # dir with inlined header files
+  string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_BINARY_DIR}"
+                 input_file_inlined ${input_file_absolute}
   )
   message("target_embed_source input_file_inlined: " ${input_file_inlined})
   inline_local_includes("${input_file_absolute}" ${input_file_inlined})
