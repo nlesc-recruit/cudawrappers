@@ -23,15 +23,20 @@ endfunction()
 # target_embed_source(example_program, kernel.cu). This will expose symbols
 # _binary_kernel_cu_start and _binary_kernel_cu_end.
 function(target_embed_source target input_file)
+  message("target_embed_source input_file: " ${input_file})
   include(CMakeDetermineSystem)
   # Strip the path and extension from input_file
   get_filename_component(NAME ${input_file} NAME_WLE)
+  message("target_embed_source NAME: " ${NAME})
   # Get absolute path for input file
   get_filename_component(input_file_absolute "${input_file}" ABSOLUTE)
+  message("target_embed_source input_file_absolute: " ${input_file_absolute})
+  # Get absolute path for input file
   # Make a copy of the input file in the binary dir with inlined header files
   string(REPLACE "${CMAKE_SOURCE_DIR}" "${CMAKE_BINARY_DIR}" input_file_inlined
                  ${input_file_absolute}
   )
+  message("target_embed_source input_file_inlined: " ${input_file_inlined})
   inline_local_includes("${input_file_absolute}" ${input_file_inlined})
   # Link the input_file into an object file
   add_custom_command(
