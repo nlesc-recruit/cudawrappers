@@ -15,6 +15,8 @@
 #include <hip/hip_runtime.h>
 #include <hip/hip_runtime_api.h>
 
+typedef uint32_t cuuint32_t;
+
 namespace cu {
 class Error : public std::exception {
  public:
@@ -46,7 +48,8 @@ inline int driverGetVersion() {
 }
 
 inline void memcpyHtoD(hipDeviceptr_t dst, const void *src, size_t size) {
-  checkCudaCall(hipMemcpyHtoD(dst, src, size));
+  // const_cast is a temp fix for https://github.com/ROCm/ROCm/issues/2977
+  checkCudaCall(hipMemcpyHtoD(dst, const_cast<void *>(src), size));
 }
 
 inline void memcpyDtoH(void *dst, hipDeviceptr_t src, size_t size) {
@@ -186,11 +189,18 @@ class Context : public Wrapper<hipCtx_t> {
   explicit Context(hipCtx_t context)
       : Wrapper<hipCtx_t>(context), _primaryContext(false) {}
 
+//  unsigned getApiVersion() const {
+//    unsigned version{};
+//    checkCudaCall(hipCtxGetApiVersion(_obj, &version));
+//    return version;
+//  }
+
+  // Fix of cudawrappers by loostrum for HIP.
   unsigned getApiVersion() const {
-    unsigned version{};
+    int version{};
     checkCudaCall(hipCtxGetApiVersion(_obj, &version));
-    return version;
-  }
+    return static_cast<unsigned>(version);
+  }  
 
   static hipFuncCache_t getCacheConfig() {
     hipFuncCache_t config{};
@@ -414,8 +424,8 @@ class Function : public Wrapper<hipFunction_t> {
     return value;
   }
 
-  void setAttribute(hipFunction_attribute attribute, int value) {
-    checkCudaCall(cuFuncSetAttribute(_obj, attribute, value));
+  void setAttribute(hipFuncAttribute attribute, int value) {
+    checkCudaCall(hipFuncSetAttribute(_obj, attribute, value));
   }
 
   int occupancyMaxActiveBlocksPerMultiprocessor(int blockSize,
@@ -424,6 +434,8 @@ class Function : public Wrapper<hipFunction_t> {
     checkCudaCall(cuOccupancyMaxActiveBlocksPerMultiprocessor(
         &numBlocks, _obj, blockSize, dynamicSMemSize));
     return numBlocks;
+  void setCacheConfig(hipFuncCache_t config) {
+    checkCudaCall(hipFuncSetCacheConfig(_obj, config));
   }
 
   const char *name() const { return _name; }
@@ -544,17 +556,17 @@ class Stream : public Wrapper<hipStream_t> {
   }
 
   void memcpyHtoHAsync(void *dstPtr, const void *srcPtr, size_t size) {
-    checkCudaCall(cuMemcpyAsync(reinterpret_cast<hipDeviceptr_t>(dstPtr),
-                                reinterpret_cast<hipDeviceptr_t>(srcPtr), size,
+    checkCudaCall(hipMemcpyAsync(reinterpret_cast<hipDeviceptr_t>(dstPtr),
+                                 reinterpret_cast<hipDeviceptr_t>(const_cast<void *>(srcPtr)), size,
                                 _obj));
   }
 
   void memcpyHtoDAsync(DeviceMemory &devPtr, const void *hostPtr, size_t size) {
-    checkCudaCall(hipMemcpyHtoDAsync(devPtr, hostPtr, size, _obj));
+    checkCudaCall(hipMemcpyHtoDAsync(devPtr, const_cast<void *>(hostPtr), size, _obj));
   }
 
   void memcpyHtoDAsync(hipDeviceptr_t devPtr, const void *hostPtr, size_t size) {
-    checkCudaCall(hipMemcpyHtoDAsync(devPtr, hostPtr, size, _obj));
+    checkCudaCall(hipMemcpyHtoDAsync(devPtr, const_cast<void *>(hostPtr), size, _obj));
   }
 
   void memcpyDtoHAsync(void *hostPtr, const DeviceMemory &devPtr, size_t size) {
@@ -567,7 +579,7 @@ class Stream : public Wrapper<hipStream_t> {
 
   void memcpyDtoDAsync(DeviceMemory &dstPtr, DeviceMemory &srcPtr,
                        size_t size) {
-    checkCudaCall(cuMemcpyAsync(dstPtr, srcPtr, size, _obj));
+    checkCudaCall(hipMemcpyAsync(dstPtr, srcPtr, size, _obj));
   }
 
   void memPrefetchAsync(DeviceMemory &devPtr, size_t size) {
@@ -618,10 +630,10 @@ class Stream : public Wrapper<hipStream_t> {
 
   void record(Event &event) { checkCudaCall(hipEventRecord(event, _obj)); }
 
-  void batchMemOp(unsigned count, CUstreamBatchMemOpParams *paramArray,
-                  unsigned flags) {
-    checkCudaCall(cuStreamBatchMemOp(_obj, count, paramArray, flags));
-  }
+  // void batchMemOp(unsigned count, CUstreamBatchMemOpParams *paramArray,
+  //                 unsigned flags) {
+  //   checkCudaCall(cuStreamBatchMemOp(_obj, count, paramArray, flags));
+  // }
 
   void waitValue32(hipDeviceptr_t addr, cuuint32_t value, unsigned flags) const {
     checkCudaCall(hipStreamWaitValue32(_obj, addr, value, flags));
@@ -631,11 +643,11 @@ class Stream : public Wrapper<hipStream_t> {
     checkCudaCall(hipStreamWriteValue32(_obj, addr, value, flags));
   }
 
-  Context getContext() const {
-    hipCtx_t context;
-    checkCudaCall(cuStreamGetCtx(_obj, &context));
-    return Context(context);
-  }
+//  Context getContext() const {
+//    hipCtx_t context;
+//    checkCudaCall(cuStreamGetCtx(_obj, &context));
+//    return Context(context);
+//  }
 };
 
 inline void Event::record(Stream &stream) {
