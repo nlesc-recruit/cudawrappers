@@ -4,6 +4,7 @@
 #include <array>
 #include <cstddef>
 #include <exception>
+#include <iomanip>
 #include <map>
 #include <memory>
 #include <stdexcept>
