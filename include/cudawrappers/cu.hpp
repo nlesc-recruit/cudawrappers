@@ -194,10 +194,6 @@ class Context : public Wrapper<CUcontext> {
     return Context(context);
   }
 
-  void setSharedMemConfig(CUsharedconfig config) {
-    checkCudaCall(cuCtxSetSharedMemConfig(config));
-  }
-
   static Device getDevice() {
     CUdevice device;
     checkCudaCall(cuCtxGetDevice(&device));
