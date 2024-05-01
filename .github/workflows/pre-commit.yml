@@ -57,7 +57,7 @@ jobs:
         with:
           cuda: ${{ env.cuda-version }}
           method: "network"
-          sub-packages: '["nvcc", "nvml-dev" "nvrtc-dev", "nvtx"]'
+          sub-packages: '["nvcc", "nvml-dev", "nvrtc-dev", "nvtx"]'
           non-cuda-sub-packages: '["libcufft-dev"]'
           linux-local-args: '["--toolkit"]'
 
