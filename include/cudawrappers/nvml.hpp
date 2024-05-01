@@ -24,20 +24,23 @@ inline void checkNvmlCall(nvmlReturn_t result) {
   if (result != NVML_SUCCESS) throw Error(result);
 }
 
+class Context {
+ public:
+  Context() { checkNvmlCall(nvmlInit()); }
+
+  ~Context() { checkNvmlCall(nvmlShutdown()); }
+};
+
 class Device {
  public:
-  Device(int index) {
-    checkNvmlCall(nvmlInit());
+  Device(Context& context, int index) {
     checkNvmlCall(nvmlDeviceGetHandleByIndex(index, &device_));
   }
 
-  Device(cu::Device& device) {
-    checkNvmlCall(nvmlInit());
+  Device(Context& context, cu::Device& device) {
     const std::string uuid = device.getUuid();
     nvmlDeviceGetHandleByUUID(uuid.c_str(), &device_);
   }
-
-  ~Device() { checkNvmlCall(nvmlShutdown()); }
 
   void getFieldValues(int valuesCount, nvmlFieldValue_t* values) {
     checkNvmlCall(nvmlDeviceGetFieldValues(device_, valuesCount, values));
