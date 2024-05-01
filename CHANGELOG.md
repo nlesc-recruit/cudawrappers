@@ -13,6 +13,10 @@ project adheres to [Semantic Versioning](http://semver.org/).
 
 - `target_embed_source` will now automatically inline local header files
 
+### Removed
+
+- Removed deprecated `cu::Context::setSharedMemConfig`
+
 ## \[0.7.0\] - 2024-03-08
 
 ### Added
