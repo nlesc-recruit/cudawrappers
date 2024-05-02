@@ -27,18 +27,17 @@ function(target_embed_source target input_file)
   # Strip the path and extension from input_file
   get_filename_component(NAME ${input_file} NAME_WLE)
   # Get absolute path for input file
-  get_filename_component(input_file_absolute "${input_file}" ABSOLUTE)
-  # Get absolute path for input file Make a copy of the input file in the binary
-  # dir with inlined header files
-  string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_BINARY_DIR}"
-                 input_file_inlined ${input_file_absolute}
+  get_filename_component(input_file_absolute ${input_file} ABSOLUTE)
+  # Make a copy of the input file in the binary dir with inlined header files
+  string(REPLACE "${CMAKE_SOURCE_DIR}" "${CMAKE_BINARY_DIR}" input_file_inlined
+                 ${input_file_absolute}
   )
-  inline_local_includes("${input_file_absolute}" ${input_file_inlined})
+  inline_local_includes(${input_file_absolute} ${input_file_inlined})
   # Link the input_file into an object file
   add_custom_command(
     OUTPUT ${NAME}.o
     COMMAND ld ARGS -r -b binary -A ${CMAKE_SYSTEM_PROCESSOR} -o
-            ${CMAKE_CURRENT_BINARY_DIR}/${NAME}.o ${input_file}
+            "${CMAKE_CURRENT_BINARY_DIR}/${NAME}.o" ${input_file}
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
     DEPENDS ${input_file} ${input_file_inlined}
     COMMENT "Creating object file for ${input_file}"
