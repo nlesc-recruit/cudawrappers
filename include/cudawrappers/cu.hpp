@@ -4,6 +4,7 @@
 #include <array>
 #include <cstddef>
 #include <exception>
+#include <iomanip>
 #include <map>
 #include <memory>
 #include <stdexcept>
@@ -116,6 +117,29 @@ class Device : public Wrapper<CUdevice> {
     std::array<char, max_device_name_length> name{};
     checkCudaCall(cuDeviceGetName(name.data(), name.size(), _obj));
     return {name.data()};
+  }
+
+  std::string getUuid() const {
+    CUuuid uuid;
+    checkCudaCall(cuDeviceGetUuid(&uuid, _obj));
+
+    // Convert a CUuuid to CUDA's string representation.
+    // The CUuuid contains an array of 16 bytes, the UUID has
+    // the form 'GPU-XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXX', with every
+    // X being an alphanumeric character.
+    std::stringstream result;
+    result << "GPU";
+
+    for (int i = 0; i < 16; ++i) {
+      if (i == 0 || i == 4 || i == 6 || i == 8 || i == 10) {
+        result << "-";
+      }
+      result << std::hex << std::setfill('0') << std::setw(2)
+             << static_cast<unsigned>(
+                    static_cast<unsigned char>(uuid.bytes[i]));
+    }
+
+    return result.str();
   }
 
   size_t totalMem() const {
