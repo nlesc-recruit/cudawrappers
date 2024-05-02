@@ -34,7 +34,7 @@ function(target_embed_source target input_file)
   )
   inline_local_includes(${input_file_absolute} ${input_file_inlined})
   # Link the input_file into an object file
-  string(REPLACE "${CMAKE_BINARY_DIR}/" input_file_inlined_relative
+  string(REPLACE "${CMAKE_BINARY_DIR}/" "" input_file_inlined_relative
                  ${input_file_inlined}
   )
   add_custom_command(
