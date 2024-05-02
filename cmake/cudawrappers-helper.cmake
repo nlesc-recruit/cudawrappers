@@ -34,10 +34,14 @@ function(target_embed_source target input_file)
   )
   inline_local_includes(${input_file_absolute} ${input_file_inlined})
   # Link the input_file into an object file
+  string(REPLACE "${CMAKE_BINARY_DIR}/" input_file_inlined_relative
+                 ${input_file_inlined}
+  )
   add_custom_command(
     OUTPUT ${NAME}.o
-    COMMAND ld ARGS -r -b binary -A ${CMAKE_SYSTEM_PROCESSOR} -o
-            "${CMAKE_CURRENT_BINARY_DIR}/${NAME}.o" ${input_file}
+    COMMAND
+      ld ARGS -r -b binary -A ${CMAKE_SYSTEM_PROCESSOR} -o
+      "${CMAKE_CURRENT_BINARY_DIR}/${NAME}.o" ${input_file_inlined_relative}
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
     DEPENDS ${input_file} ${input_file_inlined}
     COMMENT "Creating object file for ${input_file}"
