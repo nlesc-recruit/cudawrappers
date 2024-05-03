@@ -9,7 +9,7 @@ repos:
       - id: cppcheck
         args:
           - '--project=build/compile_commands.json'
-          - '--suppress=*:build/*'
+          - '--suppress=*:*/build/*'
           - '--suppress=unusedFunction:*/*'
           - '--suppress=unreadVariable:tests/*'
           - '--suppress=missingIncludeSystem'
