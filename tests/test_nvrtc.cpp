@@ -28,12 +28,12 @@ TEST_CASE("Test nvrtc::Program", "[program]") {
   }
 }
 
-extern const char _binary_kernels_vector_add_kernel_cu_start,
-    _binary_kernels_vector_add_kernel_cu_end;
+extern const char _binary_tests_kernels_vector_add_kernel_cu_start,
+    _binary_tests_kernels_vector_add_kernel_cu_end;
 
 TEST_CASE("Test nvrtc::Program embedded source", "[program]") {
-  const std::string kernel(&_binary_kernels_vector_add_kernel_cu_start,
-                           &_binary_kernels_vector_add_kernel_cu_end);
+  const std::string kernel(&_binary_tests_kernels_vector_add_kernel_cu_start,
+                           &_binary_tests_kernels_vector_add_kernel_cu_end);
   nvrtc::Program program(kernel, "vector_add_kernel.cu");
 
   SECTION("Test Program.compile") {
