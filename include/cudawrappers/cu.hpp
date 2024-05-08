@@ -559,7 +559,7 @@ class Stream : public Wrapper<hipStream_t> {
 
   void memcpyDtoDAsync(DeviceMemory &dstPtr, DeviceMemory &srcPtr,
                        size_t size) {
-    checkCudaCall(hipMemcpyAsync(dstPtr, srcPtr, size, _obj));
+    checkCudaCall(hipMemcpyAsync(dstPtr, srcPtr, size, hipMemcpyDefault, _obj));
   }
 
   void memPrefetchAsync(DeviceMemory &devPtr, size_t size) {
