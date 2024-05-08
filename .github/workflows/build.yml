@@ -7,7 +7,7 @@ on:
 jobs:
   linting:
     name: run
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     env:
         gcc-version: "12" 
         cuda-version: "12.2.0"
@@ -24,9 +24,8 @@ jobs:
           echo "GITHUB_HEAD_REF = $GITHUB_HEAD_REF"
           echo "GITHUB_REF_NAME = $GITHUB_REF_NAME"
 
-      - name: Install HIP
-        uses: Cyberhan123/rocm-toolkit@v0.1.0
-        id: rocm-toolkit
+      - name: rocm-setup
+        uses: neoblizz/rocm-setup@v0.1.0-beta
         with:
           rocm: '6.1.0'
 
