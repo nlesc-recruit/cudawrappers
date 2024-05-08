@@ -1,6 +1,9 @@
 #if !defined CU_WRAPPER_H
 #define CU_WRAPPER_H
 
+#include <hip/hip_runtime.h>
+#include <hip/hip_runtime_api.h>
+
 #include <array>
 #include <cstddef>
 #include <exception>
@@ -12,10 +15,9 @@
 #include <utility>
 #include <vector>
 
-#include <hip/hip_runtime.h>
-#include <hip/hip_runtime_api.h>
-
+#ifdef __HIP__
 typedef uint32_t cuuint32_t;
+#endif
 
 namespace cu {
 class Error : public std::exception {
@@ -179,28 +181,27 @@ class Context : public Wrapper<hipCtx_t> {
 
   Context(int flags, Device &device) : _primaryContext(false) {
     checkCudaCall(hipCtxCreate(&_obj, flags, device));
-    manager =
-        std::shared_ptr<hipCtx_t>(new hipCtx_t(_obj), [](hipCtx_t *ptr) {
-          if (*ptr) hipCtxDestroy(*ptr);
-          delete ptr;
-        });
+    manager = std::shared_ptr<hipCtx_t>(new hipCtx_t(_obj), [](hipCtx_t *ptr) {
+      if (*ptr) hipCtxDestroy(*ptr);
+      delete ptr;
+    });
   }
 
   explicit Context(hipCtx_t context)
       : Wrapper<hipCtx_t>(context), _primaryContext(false) {}
 
-//  unsigned getApiVersion() const {
-//    unsigned version{};
-//    checkCudaCall(hipCtxGetApiVersion(_obj, &version));
-//    return version;
-//  }
+  //  unsigned getApiVersion() const {
+  //    unsigned version{};
+  //    checkCudaCall(hipCtxGetApiVersion(_obj, &version));
+  //    return version;
+  //  }
 
   // Fix of cudawrappers by loostrum for HIP.
   unsigned getApiVersion() const {
     int version{};
     checkCudaCall(hipCtxGetApiVersion(_obj, &version));
     return static_cast<unsigned>(version);
-  }  
+  }
 
   static hipFuncCache_t getCacheConfig() {
     hipFuncCache_t config{};
@@ -351,10 +352,11 @@ class Array : public Wrapper<hipArray_t> {
   }
 
   void createManager() {
-    manager = std::shared_ptr<hipArray_t>(new hipArray_t(_obj), [](hipArray_t *ptr) {
-      hipArrayDestroy(*ptr);
-      delete ptr;
-    });
+    manager =
+        std::shared_ptr<hipArray_t>(new hipArray_t(_obj), [](hipArray_t *ptr) {
+          hipArrayDestroy(*ptr);
+          delete ptr;
+        });
   }
 };
 
@@ -369,18 +371,20 @@ class Module : public Wrapper<hipModule_t> {
 #else
     checkCudaCall(hipModuleLoad(&_obj, file_name));
 #endif
-    manager = std::shared_ptr<hipModule_t>(new hipModule_t(_obj), [](hipModule_t *ptr) {
-      hipModuleUnload(*ptr);
-      delete ptr;
-    });
+    manager = std::shared_ptr<hipModule_t>(new hipModule_t(_obj),
+                                           [](hipModule_t *ptr) {
+                                             hipModuleUnload(*ptr);
+                                             delete ptr;
+                                           });
   }
 
   explicit Module(const void *data) {
     checkCudaCall(hipModuleLoadData(&_obj, data));
-    manager = std::shared_ptr<hipModule_t>(new hipModule_t(_obj), [](hipModule_t *ptr) {
-      hipModuleUnload(*ptr);
-      delete ptr;
-    });
+    manager = std::shared_ptr<hipModule_t>(new hipModule_t(_obj),
+                                           [](hipModule_t *ptr) {
+                                             hipModuleUnload(*ptr);
+                                             delete ptr;
+                                           });
   }
 
   typedef std::map<hipJitOption, void *> optionmap_t;
@@ -394,7 +398,7 @@ class Module : public Wrapper<hipModule_t> {
     }
 
     checkCudaCall(hipModuleLoadDataEx(&_obj, image, options.size(), keys.data(),
-                                     values.data()));
+                                      values.data()));
 
     for (size_t i = 0; i < keys.size(); ++i) {
       options[keys[i]] = values[i];
@@ -448,10 +452,11 @@ class Event : public Wrapper<hipEvent_t> {
  public:
   explicit Event(unsigned int flags = hipEventDefault) {
     checkCudaCall(hipEventCreateWithFlags(&_obj, flags));
-    manager = std::shared_ptr<hipEvent_t>(new hipEvent_t(_obj), [](hipEvent_t *ptr) {
-      hipEventDestroy(*ptr);
-      delete ptr;
-    });
+    manager =
+        std::shared_ptr<hipEvent_t>(new hipEvent_t(_obj), [](hipEvent_t *ptr) {
+          hipEventDestroy(*ptr);
+          delete ptr;
+        });
   }
 
   explicit Event(hipEvent_t &event) : Wrapper(event) {}
@@ -489,10 +494,10 @@ class DeviceMemory : public Wrapper<hipDeviceptr_t> {
       throw Error(hipErrorInvalidValue);
     }
     manager = std::shared_ptr<hipDeviceptr_t>(new hipDeviceptr_t(_obj),
-                                           [](hipDeviceptr_t *ptr) {
-                                             hipFree(*ptr);
-                                             delete ptr;
-                                           });
+                                              [](hipDeviceptr_t *ptr) {
+                                                hipFree(*ptr);
+                                                delete ptr;
+                                              });
   }
 
   explicit DeviceMemory(hipDeviceptr_t ptr) : Wrapper(ptr) {}
@@ -537,10 +542,11 @@ class Stream : public Wrapper<hipStream_t> {
  public:
   explicit Stream(unsigned int flags = hipStreamDefault) {
     checkCudaCall(hipStreamCreateWithFlags(&_obj, flags));
-    manager = std::shared_ptr<hipStream_t>(new hipStream_t(_obj), [](hipStream_t *ptr) {
-      hipStreamDestroy(*ptr);
-      delete ptr;
-    });
+    manager = std::shared_ptr<hipStream_t>(new hipStream_t(_obj),
+                                           [](hipStream_t *ptr) {
+                                             hipStreamDestroy(*ptr);
+                                             delete ptr;
+                                           });
   }
 
   explicit Stream(hipStream_t stream) : Wrapper<hipStream_t>(stream) {}
@@ -556,17 +562,21 @@ class Stream : public Wrapper<hipStream_t> {
   }
 
   void memcpyHtoHAsync(void *dstPtr, const void *srcPtr, size_t size) {
-    checkCudaCall(hipMemcpyAsync(reinterpret_cast<hipDeviceptr_t>(dstPtr),
-                                 reinterpret_cast<hipDeviceptr_t>(const_cast<void *>(srcPtr)), size,
-                                _obj));
+    checkCudaCall(hipMemcpyAsync(
+        reinterpret_cast<hipDeviceptr_t>(dstPtr),
+        reinterpret_cast<hipDeviceptr_t>(const_cast<void *>(srcPtr)), size,
+        hipMemcpyDefault, _obj));
   }
 
   void memcpyHtoDAsync(DeviceMemory &devPtr, const void *hostPtr, size_t size) {
-    checkCudaCall(hipMemcpyHtoDAsync(devPtr, const_cast<void *>(hostPtr), size, _obj));
+    checkCudaCall(
+        hipMemcpyHtoDAsync(devPtr, const_cast<void *>(hostPtr), size, _obj));
   }
 
-  void memcpyHtoDAsync(hipDeviceptr_t devPtr, const void *hostPtr, size_t size) {
-    checkCudaCall(hipMemcpyHtoDAsync(devPtr, const_cast<void *>(hostPtr), size, _obj));
+  void memcpyHtoDAsync(hipDeviceptr_t devPtr, const void *hostPtr,
+                       size_t size) {
+    checkCudaCall(
+        hipMemcpyHtoDAsync(devPtr, const_cast<void *>(hostPtr), size, _obj));
   }
 
   void memcpyDtoHAsync(void *hostPtr, const DeviceMemory &devPtr, size_t size) {
@@ -598,9 +608,9 @@ class Stream : public Wrapper<hipStream_t> {
                     unsigned gridZ, unsigned blockX, unsigned blockY,
                     unsigned blockZ, unsigned sharedMemBytes,
                     const std::vector<const void *> &parameters) {
-    checkCudaCall(hipModuleLaunchKernel(function, gridX, gridY, gridZ, blockX, blockY,
-                                 blockZ, sharedMemBytes, _obj,
-                                 const_cast<void **>(&parameters[0]), nullptr));
+    checkCudaCall(hipModuleLaunchKernel(
+        function, gridX, gridY, gridZ, blockX, blockY, blockZ, sharedMemBytes,
+        _obj, const_cast<void **>(&parameters[0]), nullptr));
   }
 
 #if CUDART_VERSION >= 9000
@@ -616,7 +626,8 @@ class Stream : public Wrapper<hipStream_t> {
 #endif
 
   void query() {
-    checkCudaCall(hipStreamQuery(_obj));  // unsuccessful result throws cu::Error
+    checkCudaCall(
+        hipStreamQuery(_obj));  // unsuccessful result throws cu::Error
   }
 
   void synchronize() { checkCudaCall(hipStreamSynchronize(_obj)); }
@@ -635,7 +646,8 @@ class Stream : public Wrapper<hipStream_t> {
   //   checkCudaCall(cuStreamBatchMemOp(_obj, count, paramArray, flags));
   // }
 
-  void waitValue32(hipDeviceptr_t addr, cuuint32_t value, unsigned flags) const {
+  void waitValue32(hipDeviceptr_t addr, cuuint32_t value,
+                   unsigned flags) const {
     checkCudaCall(hipStreamWaitValue32(_obj, addr, value, flags));
   }
 
@@ -643,11 +655,11 @@ class Stream : public Wrapper<hipStream_t> {
     checkCudaCall(hipStreamWriteValue32(_obj, addr, value, flags));
   }
 
-//  Context getContext() const {
-//    hipCtx_t context;
-//    checkCudaCall(cuStreamGetCtx(_obj, &context));
-//    return Context(context);
-//  }
+  //  Context getContext() const {
+  //    hipCtx_t context;
+  //    checkCudaCall(cuStreamGetCtx(_obj, &context));
+  //    return Context(context);
+  //  }
 };
 
 inline void Event::record(Stream &stream) {
