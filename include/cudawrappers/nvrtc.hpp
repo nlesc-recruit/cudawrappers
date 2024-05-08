@@ -1,5 +1,8 @@
 #if !defined NVRTC_H
 #define NVRTC_H
+#include <hip/hip_runtime.h>
+#include <hip/hiprtc.h>
+
 #include <algorithm>
 #include <cstddef>
 #include <exception>
@@ -8,9 +11,6 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
-
-#include <hip/hip_runtime.h>
-#include <hip/hiprtc.h>
 
 namespace nvrtc {
 class Error : public std::exception {
@@ -46,9 +46,9 @@ class Program {
         std::back_inserter(c_includeNames),
         [](const std::string &includeName) { return includeName.c_str(); });
 
-    checkNvrtcCall(hiprtcCreateProgram(&program, src.c_str(), name.c_str(),
-                                      static_cast<int>(c_headers.size()),
-                                      c_headers.data(), c_includeNames.data()));
+    checkNvrtcCall(hiprtcCreateProgram(
+        &program, src.c_str(), name.c_str(), static_cast<int>(c_headers.size()),
+        c_headers.data(), c_includeNames.data()));
   }
 
   explicit Program(const std::string &filename) {
@@ -59,7 +59,7 @@ class Program {
     }
     std::string source(std::istreambuf_iterator<char>{ifs}, {});
     checkNvrtcCall(hiprtcCreateProgram(&program, source.c_str(),
-                                      filename.c_str(), 0, nullptr, nullptr));
+                                       filename.c_str(), 0, nullptr, nullptr));
   }
 
   ~Program() { checkNvrtcCall(hiprtcDestroyProgram(&program)); }
