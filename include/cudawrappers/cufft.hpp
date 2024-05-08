@@ -159,9 +159,9 @@ FFT1D<HIPBLAS_C_16F>::FFT1D(int nx, int batch) {
   long long int odist = 1;
   int istride = 1;
   int ostride = 1;
-  checkCuFFTCall(cufftXtMakePlanMany(*plan(), rank, n.data(), nullptr, istride,
-                                     idist, HIPBLAS_C_16F, nullptr, ostride, odist,
-                                     HIPBLAS_C_16F, batch, &ws, HIPBLAS_C_16F));
+  checkCuFFTCall(cufftXtMakePlanMany(
+      *plan(), rank, n.data(), nullptr, istride, idist, HIPBLAS_C_16F, nullptr,
+      ostride, odist, HIPBLAS_C_16F, batch, &ws, HIPBLAS_C_16F));
 }
 
 template <>
@@ -188,7 +188,7 @@ FFT2D<HIPBLAS_C_32F>::FFT2D(int nx, int ny, int stride, int dist, int batch) {
   checkCuFFTCall(hipfftCreate(plan()));
   std::array<int, 2> n{nx, ny};
   checkCuFFTCall(hipfftPlanMany(plan(), 2, n.data(), n.data(), stride, dist,
-                               n.data(), stride, dist, HIPFFT_C2C, batch));
+                                n.data(), stride, dist, HIPFFT_C2C, batch));
 }
 
 template <>
@@ -201,9 +201,9 @@ FFT2D<HIPBLAS_C_16F>::FFT2D(int nx, int ny, int stride, int dist, int batch) {
   int ostride = stride;
   long long int idist = dist;
   long long int odist = dist;
-  checkCuFFTCall(cufftXtMakePlanMany(*plan(), rank, n.data(), nullptr, istride,
-                                     idist, HIPBLAS_C_16F, nullptr, ostride, odist,
-                                     HIPBLAS_C_16F, batch, &ws, HIPBLAS_C_16F));
+  checkCuFFTCall(cufftXtMakePlanMany(
+      *plan(), rank, n.data(), nullptr, istride, idist, HIPBLAS_C_16F, nullptr,
+      ostride, odist, HIPBLAS_C_16F, batch, &ws, HIPBLAS_C_16F));
 }
 
 template <>
