@@ -15,6 +15,7 @@ include(Catch)
 set(COMPONENTS cu nvml nvrtc cufft vector_add)
 
 foreach(component ${COMPONENTS})
+  set_source_files_properties(test_${component}.cpp PROPERTIES LANGUAGE HIP)
   add_executable(test_${component} test_${component}.cpp)
   target_include_directories(
     test_${component} PRIVATE "${CMAKE_SOURCE_DIR}/include"
