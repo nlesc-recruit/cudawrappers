@@ -24,14 +24,11 @@ jobs:
           echo "GITHUB_HEAD_REF = $GITHUB_HEAD_REF"
           echo "GITHUB_REF_NAME = $GITHUB_REF_NAME"
 
-      - name: Install cuda
-        uses: Jimver/cuda-toolkit@v0.2.11
+      - name: Install HIP
+        uses: Cyberhan123/rocm-toolkit@v0.1.0
+        id: rocm-toolkit
         with:
-          cuda: ${{ env.cuda-version }}
-          method: "network"
-          sub-packages: '["nvcc", "nvrtc-dev", "nvtx"]'
-          non-cuda-sub-packages: '["libcufft-dev"]'
-          linux-local-args: '["--toolkit"]'
+          rocm: '6.1.0'
 
       - name: Show tool versions
         run: |
