@@ -46,3 +46,8 @@ TEST_CASE("Test nvrtc::Program embedded source", "[program]") {
     CHECK(ptx.size() > 0);
   }
 }
+
+TEST_CASE("Test nvrtc::findIncludePath", "[helper]") {
+  const std::string path = nvrtc::findIncludePath();
+  CHECK(path.find("include") != std::string::npos);
+}

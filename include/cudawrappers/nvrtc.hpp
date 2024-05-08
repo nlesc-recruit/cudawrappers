@@ -1,5 +1,8 @@
 #if !defined NVRTC_H
 #define NVRTC_H
+#include <link.h>
+#include <sys/stat.h>
+
 #include <algorithm>
 #include <cstddef>
 #include <exception>
@@ -27,6 +30,29 @@ class Error : public std::exception {
 
 inline void checkNvrtcCall(nvrtcResult result) {
   if (result != NVRTC_SUCCESS) throw Error(result);
+}
+
+std::string findIncludePath() {
+  std::string path;
+
+  if (dl_iterate_phdr(
+          [](struct dl_phdr_info *info, size_t, void *arg) -> int {
+            std::string &path = *static_cast<std::string *>(arg);
+            path = info->dlpi_name;
+            return path.find("libnvrtc.so") != std::string::npos;
+          },
+          &path))
+    for (size_t pos; (pos = path.find_last_of("/")) != std::string::npos;) {
+      path.erase(pos);  // remove last part of path
+
+      struct stat buffer;
+      const std::string filename = path + "/include/cuda.h";
+      if (stat(filename.c_str(), &buffer) == 0) {
+        return path + "/include";
+      }
+    }
+
+  throw std::runtime_error("Could not find NVRTC include path");
 }
 
 class Program {
