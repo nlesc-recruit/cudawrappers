@@ -10,6 +10,12 @@ set(CUDAWRAPPERS_COMPONENTS cu cufft nvrtc nvtx)
 # set(LINK_nvrtc CUDA::cuda_driver CUDA::nvrtc)
 # set(LINK_nvtx CUDA::nvToolsExt)
 # 
+
+set(LINK_cu hip::host)
+set(LINK_cufft hip::host hip::hipfft)
+set(LINK_nvrtc hip::host)
+set(LINK_nvtx hip::host)
+
 foreach(component ${CUDAWRAPPERS_COMPONENTS})
   add_library(${component} INTERFACE)
   # cudawrappers exposes targets like, cudawrappers::cu, so an alias is created

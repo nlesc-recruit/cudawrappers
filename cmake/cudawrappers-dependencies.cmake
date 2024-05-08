@@ -17,3 +17,6 @@
 #     )
 #   endif()
 # endif()
+
+find_package(hip REQUIRED)
+find_package(hipfft REQUIRED)
