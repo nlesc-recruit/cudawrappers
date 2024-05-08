@@ -2,8 +2,8 @@
 #define CUFFT_H
 
 #include <hip/hip_fp16.h>
-#include <hipfft.h>
-#include <hipfftXt.h>
+#include <hipfft/hipfft.h>
+#include <hipfft/hipfftXt.h>
 
 #include <exception>
 
@@ -59,9 +59,6 @@ static const char *_cudaGetErrorEnum(hipfftResult error) {
     case HIPFFT_NOT_IMPLEMENTED:
       return "HIPFFT_NOT_IMPLEMENTED";
 
-    case CUFFT_LICENSE_ERROR:
-      return "CUFFT_LICENSE_ERROR";
-
     case HIPFFT_NOT_SUPPORTED:
       return "HIPFFT_NOT_SUPPORTED";
   }
@@ -114,7 +111,7 @@ class FFT {
   void execute(cu::DeviceMemory &in, cu::DeviceMemory &out, int direction) {
     void *in_ptr = reinterpret_cast<void *>(static_cast<hipDeviceptr_t>(in));
     void *out_ptr = reinterpret_cast<void *>(static_cast<hipDeviceptr_t>(out));
-    checkCuFFTCall(cufftXtExec(plan_, in_ptr, out_ptr, direction));
+    checkCuFFTCall(hipfftXtExec(plan_, in_ptr, out_ptr, direction));
   }
 
  protected:
@@ -133,7 +130,7 @@ class FFT {
 /*
  * FFT1D
  */
-template <hipblasDatatype_t T>
+template <hipDataType T>
 class FFT1D : public FFT {
  public:
   FFT1D(int nx) = delete;
@@ -141,16 +138,16 @@ class FFT1D : public FFT {
 };
 
 template <>
-FFT1D<HIPBLAS_C_32F>::FFT1D(int nx, int batch) {
+ FFT1D<HIP_C_32F>::FFT1D(int nx, int batch) {
   checkCuFFTCall(hipfftCreate(plan()));
   checkCuFFTCall(hipfftPlan1d(plan(), nx, HIPFFT_C2C, batch));
 }
 
 template <>
-FFT1D<HIPBLAS_C_32F>::FFT1D(int nx) : FFT1D(nx, 1) {}
+  FFT1D<HIP_C_32F>::FFT1D(int nx) : FFT1D(nx, 1) {}
 
 template <>
-FFT1D<HIPBLAS_C_16F>::FFT1D(int nx, int batch) {
+  FFT1D<HIP_C_16F>::FFT1D(int nx, int batch) {
   checkCuFFTCall(hipfftCreate(plan()));
   const int rank = 1;
   size_t ws = 0;
@@ -159,18 +156,18 @@ FFT1D<HIPBLAS_C_16F>::FFT1D(int nx, int batch) {
   long long int odist = 1;
   int istride = 1;
   int ostride = 1;
-  checkCuFFTCall(cufftXtMakePlanMany(
-      *plan(), rank, n.data(), nullptr, istride, idist, HIPBLAS_C_16F, nullptr,
-      ostride, odist, HIPBLAS_C_16F, batch, &ws, HIPBLAS_C_16F));
+  checkCuFFTCall(hipfftXtMakePlanMany(
+      *plan(), rank, n.data(), nullptr, istride, idist, HIP_C_16F, nullptr,
+      ostride, odist, HIP_C_16F, batch, &ws, HIP_C_16F));
 }
 
 template <>
-FFT1D<HIPBLAS_C_16F>::FFT1D(int nx) : FFT1D(nx, 1) {}
+ FFT1D<HIP_C_16F>::FFT1D(int nx) : FFT1D(nx, 1) {}
 
 /*
  * FFT2D
  */
-template <hipblasDatatype_t T>
+template <hipDataType T>
 class FFT2D : public FFT {
  public:
   FFT2D(int nx, int ny) = delete;
@@ -178,13 +175,13 @@ class FFT2D : public FFT {
 };
 
 template <>
-FFT2D<HIPBLAS_C_32F>::FFT2D(int nx, int ny) {
+ FFT2D<HIP_C_32F>::FFT2D(int nx, int ny) {
   checkCuFFTCall(hipfftCreate(plan()));
   checkCuFFTCall(hipfftPlan2d(plan(), nx, ny, HIPFFT_C2C));
 }
 
 template <>
-FFT2D<HIPBLAS_C_32F>::FFT2D(int nx, int ny, int stride, int dist, int batch) {
+ FFT2D<HIP_C_32F>::FFT2D(int nx, int ny, int stride, int dist, int batch) {
   checkCuFFTCall(hipfftCreate(plan()));
   std::array<int, 2> n{nx, ny};
   checkCuFFTCall(hipfftPlanMany(plan(), 2, n.data(), n.data(), stride, dist,
@@ -192,7 +189,7 @@ FFT2D<HIPBLAS_C_32F>::FFT2D(int nx, int ny, int stride, int dist, int batch) {
 }
 
 template <>
-FFT2D<HIPBLAS_C_16F>::FFT2D(int nx, int ny, int stride, int dist, int batch) {
+ FFT2D<HIP_C_16F>::FFT2D(int nx, int ny, int stride, int dist, int batch) {
   checkCuFFTCall(hipfftCreate(plan()));
   const int rank = 2;
   size_t ws = 0;
@@ -201,13 +198,13 @@ FFT2D<HIPBLAS_C_16F>::FFT2D(int nx, int ny, int stride, int dist, int batch) {
   int ostride = stride;
   long long int idist = dist;
   long long int odist = dist;
-  checkCuFFTCall(cufftXtMakePlanMany(
-      *plan(), rank, n.data(), nullptr, istride, idist, HIPBLAS_C_16F, nullptr,
-      ostride, odist, HIPBLAS_C_16F, batch, &ws, HIPBLAS_C_16F));
+  checkCuFFTCall(hipfftXtMakePlanMany(
+      *plan(), rank, n.data(), nullptr, istride, idist, HIP_C_16F, nullptr,
+      ostride, odist, HIP_C_16F, batch, &ws, HIP_C_16F));
 }
 
 template <>
-FFT2D<HIPBLAS_C_16F>::FFT2D(int nx, int ny) : FFT2D(nx, ny, 1, nx * ny, 1) {}
+ FFT2D<HIP_C_16F>::FFT2D(int nx, int ny) : FFT2D(nx, ny, 1, nx * ny, 1) {}
 
 }  // namespace cufft
 
