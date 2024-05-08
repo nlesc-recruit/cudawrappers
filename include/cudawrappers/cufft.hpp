@@ -133,8 +133,8 @@ class FFT {
 template <hipDataType T>
 class FFT1D : public FFT {
  public:
-  FFT1D(int nx) = delete;
-  FFT1D(int nx, int batch) = delete;
+  __host__ FFT1D(int nx) = delete;
+  __host__ FFT1D(int nx, int batch) = delete;
 };
 
 template <>
@@ -170,8 +170,8 @@ template <>
 template <hipDataType T>
 class FFT2D : public FFT {
  public:
-  FFT2D(int nx, int ny) = delete;
-  FFT2D(int nx, int ny, int stride, int dist, int batch) = delete;
+  __host__ FFT2D(int nx, int ny) = delete;
+  __host__ FFT2D(int nx, int ny, int stride, int dist, int batch) = delete;
 };
 
 template <>
