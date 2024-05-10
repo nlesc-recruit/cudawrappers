@@ -32,7 +32,7 @@ inline void checkNvrtcCall(nvrtcResult result) {
   if (result != NVRTC_SUCCESS) throw Error(result);
 }
 
-std::string findIncludePath() {
+inline std::string findIncludePath() {
   std::string path;
 
   if (dl_iterate_phdr(
