@@ -73,13 +73,12 @@ class Program {
         program, static_cast<int>(c_options.size()), c_options.data()));
   }
 
-  std::string getPTX() {
+  std::vector<char> getPTX() {
     size_t size{};
-    std::string ptx;
 
     checkNvrtcCall(hiprtcGetCodeSize(program, &size));
-    ptx.resize(size);
-    checkNvrtcCall(hiprtcGetCode(program, &ptx[0]));
+    std::vector<char> ptx(size);
+    checkNvrtcCall(hiprtcGetCode(program, ptx.data()));
     return ptx;
   }
 
