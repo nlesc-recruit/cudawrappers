@@ -20,7 +20,10 @@ function(inline_local_includes input_file output_file)
   endforeach()
   string(APPEND processed_file_contents "${input_file_contents}\n")
   file(WRITE ${output_file} "${processed_file_contents}")
-  set(include_files ${include_files} PARENT_SCOPE)
+  set(include_files
+      ${include_files}
+      PARENT_SCOPE
+  )
 endfunction()
 
 # Make it possible to embed a source file in a library, and link it to a target.
