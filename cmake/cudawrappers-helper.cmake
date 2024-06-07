@@ -51,7 +51,7 @@ function(target_embed_source target input_file)
       ld ARGS -r -b binary -A ${CMAKE_SYSTEM_PROCESSOR} -o
       "${CMAKE_CURRENT_BINARY_DIR}/${NAME}.o" ${input_file_inlined_relative}
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-    DEPENDS ${input_file} ${input_file_inlined} ${include_files}
+    DEPENDS ${input_file} ${include_files}
     COMMENT "Creating object file for ${input_file}"
   )
   if(NOT TARGET ${NAME})
