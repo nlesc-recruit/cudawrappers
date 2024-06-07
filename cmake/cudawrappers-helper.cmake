@@ -8,16 +8,22 @@ function(inline_local_includes input_file output_file)
   string(REGEX REPLACE ${include_regex} "" input_file_contents
                        "${input_file_contents}"
   )
+  set(include_files "")
   foreach(include ${includes})
     string(REGEX REPLACE ${include_regex} "\\1" include ${include})
     file(GLOB_RECURSE INCLUDE_PATHS "${PROJECT_SOURCE_DIR}/*/${include}")
     list(SORT INCLUDE_PATHS ORDER DESCENDING)
     list(GET INCLUDE_PATHS 0 include_PATH)
+    list(APPEND include_files ${include_PATH})
     file(READ ${include_PATH} include_contents)
     string(APPEND processed_file_contents "${include_contents}\n\n")
   endforeach()
   string(APPEND processed_file_contents "${input_file_contents}\n")
   file(WRITE ${output_file} "${processed_file_contents}")
+  set(include_files
+      ${include_files}
+      PARENT_SCOPE
+  )
 endfunction()
 
 # Make it possible to embed a source file in a library, and link it to a target.
@@ -45,7 +51,7 @@ function(target_embed_source target input_file)
       ld ARGS -r -b binary -A ${CMAKE_SYSTEM_PROCESSOR} -o
       "${CMAKE_CURRENT_BINARY_DIR}/${NAME}.o" ${input_file_inlined_relative}
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-    DEPENDS ${input_file} ${input_file_inlined}
+    DEPENDS ${input_file} ${include_files}
     COMMENT "Creating object file for ${input_file}"
   )
   if(NOT TARGET ${NAME})
