@@ -1,5 +1,10 @@
 @PACKAGE_INIT@
 
-include(${PACKAGE_PREFIX_DIR}/${CMAKE_INSTALL_LIBDIR}/cmake/@PROJECT_NAME@/cudawrappers-dependencies.cmake)
-include(${PACKAGE_PREFIX_DIR}/${CMAKE_INSTALL_LIBDIR}/cmake/@PROJECT_NAME@/cudawrappers-exported.cmake)
-include(${PACKAGE_PREFIX_DIR}/${CMAKE_INSTALL_LIBDIR}/cmake/@PROJECT_NAME@/cudawrappers-helper.cmake)
+# We cannot assume PACKAGE_PREFIX_DIR remains unchanged after a call to find_package, see
+# https://github.com/Kitware/CMake/blob/140766867b2c8f8dff0e4d0d73e481b6944b5284/Modules/CMakePackageConfigHelpers.cmake#L79
+# find_package is used in the cudawrappers-dependencies.cmake file, so we cannot use PACKAGE_PREFIX_DIR afterwards
+
+set(CUDAWRAPPERS_PACKAGE_PREFIX_DIR ${PACKAGE_PREFIX_DIR})
+include(${CUDAWRAPPERS_PACKAGE_PREFIX_DIR}/${CMAKE_INSTALL_LIBDIR}/cmake/@PROJECT_NAME@/cudawrappers-dependencies.cmake)
+include(${CUDAWRAPPERS_PACKAGE_PREFIX_DIR}/${CMAKE_INSTALL_LIBDIR}/cmake/@PROJECT_NAME@/cudawrappers-exported.cmake)
+include(${CUDAWRAPPERS_PACKAGE_PREFIX_DIR}/${CMAKE_INSTALL_LIBDIR}/cmake/@PROJECT_NAME@/cudawrappers-helper.cmake)

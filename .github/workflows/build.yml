@@ -7,10 +7,10 @@ on:
 jobs:
   linting:
     name: run
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     env:
         gcc-version: "12" 
-        cuda-version: "12.2.0"
+        rocm-version: "6.1.0"
     steps:
 
       - name: Check out a copy of the repository
@@ -24,14 +24,10 @@ jobs:
           echo "GITHUB_HEAD_REF = $GITHUB_HEAD_REF"
           echo "GITHUB_REF_NAME = $GITHUB_REF_NAME"
 
-      - name: Install cuda
-        uses: Jimver/cuda-toolkit@v0.2.11
+      - name: rocm-setup
+        uses: neoblizz/rocm-setup@v0.1.0-beta
         with:
-          cuda: ${{ env.cuda-version }}
-          method: "network"
-          sub-packages: '["runtime", "nvcc", "nvml-dev", "nvrtc-dev", "nvtx"]'
-          non-cuda-sub-packages: '["libcufft-dev"]'
-          linux-local-args: '["--toolkit"]'
+          rocm: ${{ env.rocm-version }}
 
       - name: Show tool versions
         run: |

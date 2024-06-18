@@ -10,13 +10,16 @@ endif()
 
 project(
   cudawrappers
-  DESCRIPTION "C++ Wrappers for the CUDA Driver API"
+  DESCRIPTION "C++ Wrappers for the HIP Driver API"
   VERSION 0.6.0
   HOMEPAGE_URL https://github.com/nlesc-recruit/cudawrappers
   LANGUAGES CXX
 )
 
 include(GNUInstallDirs)
+
+enable_language(HIP)
+set(CMAKE_HIP_COMPILER_ENV_VAR "HIPCXX")
 
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
