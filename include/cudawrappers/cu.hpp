@@ -209,14 +209,13 @@ class Context : public Wrapper<hipCtx_t> {
     return config;
   }
 
- int occupancyMaxActiveBlocksPerMultiprocessor(int blockSize,
-                                               size_t dynamicSMemSize) {
-   int numBlocks;
-   checkCudaCall(hipModuleOccupancyMaxActiveBlocksPerMultiprocessor(
-       &numBlocks, _obj, blockSize, dynamicSMemSize));
-   return numBlocks;
- }
-
+  int occupancyMaxActiveBlocksPerMultiprocessor(int blockSize,
+                                                size_t dynamicSMemSize) {
+    int numBlocks;
+    checkCudaCall(hipModuleOccupancyMaxActiveBlocksPerMultiprocessor(
+        &numBlocks, _obj, blockSize, dynamicSMemSize));
+    return numBlocks;
+  }
 
   static void setCacheConfig(hipFuncCache_t config) {
     checkCudaCall(hipCtxSetCacheConfig(config));
