@@ -23,7 +23,7 @@ TEST_CASE("Test nvrtc::Program", "[program]") {
   }
 
   SECTION("Test Program.getPTX") {
-    const std::string ptx{program.getPTX()};
+    const std::vector<char> ptx{program.getPTX()};
     CHECK(ptx.size() > 0);
   }
 }
@@ -42,7 +42,7 @@ TEST_CASE("Test nvrtc::Program embedded source", "[program]") {
   }
 
   SECTION("Test Program.getPTX") {
-    const std::string ptx{program.getPTX()};
+    const std::vector<char> ptx{program.getPTX()};
     CHECK(ptx.size() > 0);
   }
 }
