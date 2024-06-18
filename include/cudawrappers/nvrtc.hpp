@@ -1,9 +1,9 @@
 #if !defined NVRTC_H
 #define NVRTC_H
-#include <link.h>
-#include <sys/stat.h>
 #include <hip/hip_runtime.h>
 #include <hip/hiprtc.h>
+#include <link.h>
+#include <sys/stat.h>
 
 #include <algorithm>
 #include <cstddef>

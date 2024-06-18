@@ -5,11 +5,9 @@ get_filename_component(
 
 # Define all the individual components that cudawrappers provides
 set(CUDAWRAPPERS_COMPONENTS cu cufft nvml nvrtc nvtx)
-# set(LINK_cu CUDA::cuda_driver)
-# set(LINK_cufft CUDA::cuda_driver CUDA::cufft)
-# set(LINK_nvml CUDA::cuda_driver CUDA::nvml)
-# set(LINK_nvrtc CUDA::cuda_driver CUDA::nvrtc)
-# set(LINK_nvtx CUDA::nvToolsExt)
+# set(LINK_cu CUDA::cuda_driver) set(LINK_cufft CUDA::cuda_driver CUDA::cufft)
+# set(LINK_nvml CUDA::cuda_driver CUDA::nvml) set(LINK_nvrtc CUDA::cuda_driver
+# CUDA::nvrtc) set(LINK_nvtx CUDA::nvToolsExt)
 
 set(LINK_cu hip::host)
 set(LINK_cufft hip::host hip::hipfft)
