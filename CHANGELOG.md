@@ -11,6 +11,7 @@ project adheres to [Semantic Versioning](http://semver.org/).
 - Added `cu::Device::getUUID()`
 - Added initial cudawrappers::nvml target
 - Added `nvrtc::findIncludePath()`
+- Added `nvml::Device::getClock`
 
 ### Changed
 
