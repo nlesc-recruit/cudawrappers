@@ -13,6 +13,14 @@ TEST_CASE("Test nvml::Device with device number", "[device]") {
   nvml::Device device(context, 0);
 }
 
+TEST_CASE("Test nvml::Device::getClock", "[device]") {
+  nvml::Context context;
+  nvml::Device device(context, 0);
+  const unsigned int clockMHz =
+      device.getClock(NVML_CLOCK_GRAPHICS, NVML_CLOCK_ID_CURRENT);
+  REQUIRE(clockMHz > 0);
+}
+
 TEST_CASE("Test nvml::Device with device", "[device]") {
   cu::init();
   cu::Device cu_device(0);
