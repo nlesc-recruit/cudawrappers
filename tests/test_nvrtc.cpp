@@ -23,7 +23,7 @@ TEST_CASE("Test nvrtc::Program", "[program]") {
   }
 
   SECTION("Test Program.getPTX") {
-    const std::vector<char> ptx{program.getPTX()};
+    const std::string ptx{program.getPTX()};
     CHECK(ptx.size() > 0);
   }
 }
@@ -41,10 +41,7 @@ TEST_CASE("Test nvrtc::Program embedded source", "[program]") {
     CHECK_NOTHROW(program.compile(options));
   }
 
-  SECTION("Test Program.getPTX") {
-    const std::vector<char> ptx{program.getPTX()};
-    CHECK(ptx.size() > 0);
-  }
+  SECTION("Test Program.getPTX") { const std::string ptx{program.getPTX()}; }
 }
 
 TEST_CASE("Test nvrtc::findIncludePath", "[helper]") {
