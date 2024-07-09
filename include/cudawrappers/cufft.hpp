@@ -1,7 +1,7 @@
 #if !defined CUFFT_H
 #define CUFFT_H
 
-#if defined(_HIP__)
+#if defined(__HIP__)
 #include <hip/hip_fp16.h>
 #include <hipfft/hipfft.h>
 #include <hipfft/hipfftXt.h>

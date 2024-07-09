@@ -161,53 +161,66 @@ class Device : public Wrapper<hipDevice_t> {
   }
 
   // Primary Context Management
-
+#if !defined(__HIP__)
   std::pair<unsigned, bool> primaryCtxGetState() const {
     unsigned flags{};
     int active{};
     checkCudaCall(hipDevicePrimaryCtxGetState(_obj, &flags, &active));
     return {flags, active};
   }
+#endif
 
   // void primaryCtxRelease() not available; it is released on destruction of
   // the Context returned by Device::primaryContextRetain()
 
+#if !defined(__HIP__)
   void primaryCtxReset() { checkCudaCall(hipDevicePrimaryCtxReset(_obj)); }
+#endif
 
   Context primaryCtxRetain();  // retain this context until the primary context
                                // can be released
 
+#if !defined(__HIP__)
   void primaryCtxSetFlags(unsigned flags) {
     checkCudaCall(hipDevicePrimaryCtxSetFlags(_obj, flags));
   }
+#endif
 };
 
 class Context : public Wrapper<hipCtx_t> {
  public:
   // Context Management
 
-  Context(int flags, Device &device) : _primaryContext(false) {
+  Context(int flags, Device &device) : _primaryContext(false), _device(device) {
+#if !defined(__HIP__)
     checkCudaCall(hipCtxCreate(&_obj, flags, device));
     manager = std::shared_ptr<hipCtx_t>(new hipCtx_t(_obj), [](hipCtx_t *ptr) {
       if (*ptr) hipCtxDestroy(*ptr);
       delete ptr;
     });
+#endif
   }
 
+#if !defined(__HIP__)
   explicit Context(hipCtx_t context)
       : Wrapper<hipCtx_t>(context), _primaryContext(false) {}
+#endif
 
+#if !defined(__HIP__)
   unsigned getApiVersion() const {
     int version{};
     checkCudaCall(hipCtxGetApiVersion(_obj, &version));
     return static_cast<unsigned>(version);
   }
+#endif
 
+#if !defined(__HIP__)
   static hipFuncCache_t getCacheConfig() {
     hipFuncCache_t config{};
     checkCudaCall(hipCtxGetCacheConfig(&config));
     return config;
   }
+#endif
 
   int occupancyMaxActiveBlocksPerMultiprocessor(int blockSize,
                                                 size_t dynamicSMemSize) {
@@ -217,29 +230,43 @@ class Context : public Wrapper<hipCtx_t> {
     return numBlocks;
   }
 
+#if !defined(__HIP__)
   static void setCacheConfig(hipFuncCache_t config) {
     checkCudaCall(hipCtxSetCacheConfig(config));
   }
+#endif
 
-  static Context getCurrent() {
+  Context getCurrent() {
     hipCtx_t context{};
+#if !defined(__HIP__)
     checkCudaCall(hipCtxGetCurrent(&context));
-    return Context(context);
+#endif
+    return Context(context, _device);
   }
 
+#if !defined(__HIP__)
   void setCurrent() const { checkCudaCall(hipCtxSetCurrent(_obj)); }
+#endif
 
+#if !defined(__HIP__)
   void pushCurrent() { checkCudaCall(hipCtxPushCurrent(_obj)); }
+#endif
 
+#if !defined(__HIP__)
   static Context popCurrent() {
     hipCtx_t context{};
     checkCudaCall(hipCtxPopCurrent(&context));
     return Context(context);
   }
+#endif
 
-  static Device getDevice() {
+  Device getDevice() {
     hipDevice_t device;
+#if !defined(__HIP__)
     checkCudaCall(hipCtxGetDevice(&device));
+#else
+    device = _device;
+#endif
     return Device(Device::CUdeviceArg(), device);
   }
 
@@ -277,14 +304,17 @@ class Context : public Wrapper<hipCtx_t> {
     return total;
   }
 
+#if !defined(__HIP__)
   static void synchronize() { checkCudaCall(hipCtxSynchronize()); }
+#endif
 
  private:
   friend class Device;
   Context(hipCtx_t context, Device &device)
-      : Wrapper<hipCtx_t>(context), _primaryContext(true) {}
+      : Wrapper<hipCtx_t>(context), _primaryContext(true), _device(device) {}
 
   bool _primaryContext;
+  cu::Device &_device;
 };
 
 class HostMemory : public Wrapper<void *> {
@@ -439,247 +469,242 @@ class Function : public Wrapper<hipFunction_t> {
   int occupancyMaxActiveBlocksPerMultiprocessor(int blockSize,
                                                 size_t dynamicSMemSize) {
     int numBlocks;
-    checkCudaCall(cuOccupancyMaxActiveBlocksPerMultiprocessor(
+    checkCudaCall(hipOccupancyMaxActiveBlocksPerMultiprocessor(
         &numBlocks, _obj, blockSize, dynamicSMemSize));
     return numBlocks;
-    void setCacheConfig(hipFuncCache_t config) {
-      checkCudaCall(hipFuncSetCacheConfig(_obj, config));
+  }
+
+  void setCacheConfig(hipFuncCache_t config) {
+    checkCudaCall(hipFuncSetCacheConfig(_obj, config));
+  }
+
+  const char *name() const { return _name; }
+
+ private:
+  const char *_name;
+};
+
+class Event : public Wrapper<hipEvent_t> {
+ public:
+  explicit Event(unsigned int flags = hipEventDefault) {
+    checkCudaCall(hipEventCreateWithFlags(&_obj, flags));
+    manager =
+        std::shared_ptr<hipEvent_t>(new hipEvent_t(_obj), [](hipEvent_t *ptr) {
+          hipEventDestroy(*ptr);
+          delete ptr;
+        });
+  }
+
+  explicit Event(hipEvent_t &event) : Wrapper(event) {}
+
+  float elapsedTime(const Event &start) const {
+    float ms{};
+    checkCudaCall(hipEventElapsedTime(&ms, start, _obj));
+    return ms;
+  }
+
+  void query() const {
+    checkCudaCall(hipEventQuery(_obj));  // unsuccessful result throws cu::Error
+  }
+
+  void record() { checkCudaCall(hipEventRecord(_obj, 0)); }
+
+  void record(Stream &);
+
+  void synchronize() { checkCudaCall(hipEventSynchronize(_obj)); }
+};
+
+class DeviceMemory : public Wrapper<hipDeviceptr_t> {
+ public:
+  explicit DeviceMemory(size_t size, hipMemoryType type = hipMemoryTypeDevice,
+                        unsigned int flags = 0)
+      : _size(size) {
+    if (size == 0) {
+      _obj = 0;
+      return;
+    } else if (type == hipMemoryTypeDevice && !flags) {
+      checkCudaCall(hipMalloc(&_obj, size));
+    } else if (type == hipMemoryTypeUnified) {
+      checkCudaCall(hipMallocManaged(&_obj, size, flags));
+    } else {
+      throw Error(hipErrorInvalidValue);
     }
+    manager = std::shared_ptr<hipDeviceptr_t>(new hipDeviceptr_t(_obj),
+                                              [](hipDeviceptr_t *ptr) {
+                                                hipFree(*ptr);
+                                                delete ptr;
+                                              });
+  }
 
-    const char *name() const { return _name; }
+  explicit DeviceMemory(hipDeviceptr_t ptr) : Wrapper(ptr) {}
 
-   private:
-    const char *_name;
-  };
+  explicit DeviceMemory(hipDeviceptr_t ptr, size_t size)
+      : Wrapper(ptr), _size(size) {}
 
-  class Event : public Wrapper<hipEvent_t> {
-   public:
-    explicit Event(unsigned int flags = hipEventDefault) {
-      checkCudaCall(hipEventCreateWithFlags(&_obj, flags));
-      manager = std::shared_ptr<hipEvent_t>(new hipEvent_t(_obj),
-                                            [](hipEvent_t *ptr) {
-                                              hipEventDestroy(*ptr);
-                                              delete ptr;
-                                            });
+  explicit DeviceMemory(const HostMemory &hostMemory) {
+    checkCudaCall(hipHostGetDevicePointer(&_obj, hostMemory, 0));
+  }
+
+  void zero(size_t size) { checkCudaCall(hipMemsetD8(_obj, 0, size)); }
+
+  const void *parameter()
+      const  // used to construct parameter list for launchKernel();
+  {
+    return &_obj;
+  }
+
+  template <typename T>
+  operator T *() {
+    int data;
+    checkCudaCall(
+        hipPointerGetAttribute(&data, HIP_POINTER_ATTRIBUTE_IS_MANAGED, _obj));
+    if (data) {
+      return reinterpret_cast<T *>(_obj);
+    } else {
+      throw std::runtime_error(
+          "Cannot return memory of type hipMemoryTypeDevice as pointer.");
     }
+  }
 
-    explicit Event(hipEvent_t &event) : Wrapper(event) {}
+  size_t size() const { return _size; }
 
-    float elapsedTime(const Event &start) const {
-      float ms{};
-      checkCudaCall(hipEventElapsedTime(&ms, start, _obj));
-      return ms;
-    }
+ private:
+  size_t _size;
+};
 
-    void query() const {
-      checkCudaCall(
-          hipEventQuery(_obj));  // unsuccessful result throws cu::Error
-    }
+class Stream : public Wrapper<hipStream_t> {
+  friend class Event;
 
-    void record() { checkCudaCall(hipEventRecord(_obj, 0)); }
+ public:
+  explicit Stream(unsigned int flags = hipStreamDefault) {
+    checkCudaCall(hipStreamCreateWithFlags(&_obj, flags));
+    manager = std::shared_ptr<hipStream_t>(new hipStream_t(_obj),
+                                           [](hipStream_t *ptr) {
+                                             hipStreamDestroy(*ptr);
+                                             delete ptr;
+                                           });
+  }
 
-    void record(Stream &);
+  explicit Stream(hipStream_t stream) : Wrapper<hipStream_t>(stream) {}
 
-    void synchronize() { checkCudaCall(hipEventSynchronize(_obj)); }
-  };
+  DeviceMemory memAllocAsync(size_t size) {
+    hipDeviceptr_t ptr;
+    checkCudaCall(hipMallocAsync(&ptr, size, _obj));
+    return DeviceMemory(ptr, size);
+  }
 
-  class DeviceMemory : public Wrapper<hipDeviceptr_t> {
-   public:
-    explicit DeviceMemory(size_t size, hipMemoryType type = hipMemoryTypeDevice,
-                          unsigned int flags = 0)
-        : _size(size) {
-      if (size == 0) {
-        _obj = 0;
-        return;
-      } else if (type == hipMemoryTypeDevice && !flags) {
-        checkCudaCall(hipMalloc(&_obj, size));
-      } else if (type == hipMemoryTypeUnified) {
-        checkCudaCall(hipMallocManaged(&_obj, size, flags));
-      } else {
-        throw Error(hipErrorInvalidValue);
-      }
-      manager = std::shared_ptr<hipDeviceptr_t>(new hipDeviceptr_t(_obj),
-                                                [](hipDeviceptr_t *ptr) {
-                                                  hipFree(*ptr);
-                                                  delete ptr;
-                                                });
-    }
+  void memFreeAsync(DeviceMemory &devMem) {
+    checkCudaCall(hipFreeAsync(devMem, _obj));
+  }
 
-    explicit DeviceMemory(hipDeviceptr_t ptr) : Wrapper(ptr) {}
+  void memcpyHtoHAsync(void *dstPtr, const void *srcPtr, size_t size) {
+    checkCudaCall(hipMemcpyAsync(
+        reinterpret_cast<hipDeviceptr_t>(dstPtr),
+        reinterpret_cast<hipDeviceptr_t>(const_cast<void *>(srcPtr)), size,
+        hipMemcpyDefault, _obj));
+  }
 
-    explicit DeviceMemory(hipDeviceptr_t ptr, size_t size)
-        : Wrapper(ptr), _size(size) {}
+  void memcpyHtoDAsync(DeviceMemory &devPtr, const void *hostPtr, size_t size) {
+    checkCudaCall(
+        hipMemcpyHtoDAsync(devPtr, const_cast<void *>(hostPtr), size, _obj));
+  }
 
-    explicit DeviceMemory(const HostMemory &hostMemory) {
-      checkCudaCall(hipHostGetDevicePointer(&_obj, hostMemory, 0));
-    }
+  void memcpyHtoDAsync(hipDeviceptr_t devPtr, const void *hostPtr,
+                       size_t size) {
+    checkCudaCall(
+        hipMemcpyHtoDAsync(devPtr, const_cast<void *>(hostPtr), size, _obj));
+  }
 
-    void zero(size_t size) { checkCudaCall(hipMemsetD8(_obj, 0, size)); }
+  void memcpyDtoHAsync(void *hostPtr, const DeviceMemory &devPtr, size_t size) {
+    checkCudaCall(hipMemcpyDtoHAsync(hostPtr, devPtr, size, _obj));
+  }
 
-    const void *parameter()
-        const  // used to construct parameter list for launchKernel();
-    {
-      return &_obj;
-    }
+  void memcpyDtoHAsync(void *hostPtr, hipDeviceptr_t devPtr, size_t size) {
+    checkCudaCall(hipMemcpyDtoHAsync(hostPtr, devPtr, size, _obj));
+  }
 
-    template <typename T>
-    operator T *() {
-      int data;
-      checkCudaCall(hipPointerGetAttribute(
-          &data, HIP_POINTER_ATTRIBUTE_IS_MANAGED, _obj));
-      if (data) {
-        return reinterpret_cast<T *>(_obj);
-      } else {
-        throw std::runtime_error(
-            "Cannot return memory of type hipMemoryTypeDevice as pointer.");
-      }
-    }
+  void memcpyDtoDAsync(DeviceMemory &dstPtr, DeviceMemory &srcPtr,
+                       size_t size) {
+    checkCudaCall(hipMemcpyAsync(dstPtr, srcPtr, size, hipMemcpyDefault, _obj));
+  }
 
-    size_t size() const { return _size; }
+  void memPrefetchAsync(DeviceMemory &devPtr, size_t size) {
+    checkCudaCall(hipMemPrefetchAsync(devPtr, size, hipCpuDeviceId, _obj));
+  }
 
-   private:
-    size_t _size;
-  };
+  void memPrefetchAsync(DeviceMemory &devPtr, size_t size, Device &dstDevice) {
+    checkCudaCall(hipMemPrefetchAsync(devPtr, size, dstDevice, _obj));
+  }
 
-  class Stream : public Wrapper<hipStream_t> {
-    friend class Event;
+  void zero(DeviceMemory &devPtr, size_t size) {
+    checkCudaCall(hipMemsetD8Async(devPtr, 0, size, _obj));
+  }
 
-   public:
-    explicit Stream(unsigned int flags = hipStreamDefault) {
-      checkCudaCall(hipStreamCreateWithFlags(&_obj, flags));
-      manager = std::shared_ptr<hipStream_t>(new hipStream_t(_obj),
-                                             [](hipStream_t *ptr) {
-                                               hipStreamDestroy(*ptr);
-                                               delete ptr;
-                                             });
-    }
-
-    explicit Stream(hipStream_t stream) : Wrapper<hipStream_t>(stream) {}
-
-    DeviceMemory memAllocAsync(size_t size) {
-      hipDeviceptr_t ptr;
-      checkCudaCall(hipMallocAsync(&ptr, size, _obj));
-      return DeviceMemory(ptr, size);
-    }
-
-    void memFreeAsync(DeviceMemory &devMem) {
-      checkCudaCall(hipFreeAsync(devMem, _obj));
-    }
-
-    void memcpyHtoHAsync(void *dstPtr, const void *srcPtr, size_t size) {
-      checkCudaCall(hipMemcpyAsync(
-          reinterpret_cast<hipDeviceptr_t>(dstPtr),
-          reinterpret_cast<hipDeviceptr_t>(const_cast<void *>(srcPtr)), size,
-          hipMemcpyDefault, _obj));
-    }
-
-    void memcpyHtoDAsync(DeviceMemory &devPtr, const void *hostPtr,
-                         size_t size) {
-      checkCudaCall(
-          hipMemcpyHtoDAsync(devPtr, const_cast<void *>(hostPtr), size, _obj));
-    }
-
-    void memcpyHtoDAsync(hipDeviceptr_t devPtr, const void *hostPtr,
-                         size_t size) {
-      checkCudaCall(
-          hipMemcpyHtoDAsync(devPtr, const_cast<void *>(hostPtr), size, _obj));
-    }
-
-    void memcpyDtoHAsync(void *hostPtr, const DeviceMemory &devPtr,
-                         size_t size) {
-      checkCudaCall(hipMemcpyDtoHAsync(hostPtr, devPtr, size, _obj));
-    }
-
-    void memcpyDtoHAsync(void *hostPtr, hipDeviceptr_t devPtr, size_t size) {
-      checkCudaCall(hipMemcpyDtoHAsync(hostPtr, devPtr, size, _obj));
-    }
-
-    void memcpyDtoDAsync(DeviceMemory &dstPtr, DeviceMemory &srcPtr,
-                         size_t size) {
-      checkCudaCall(
-          hipMemcpyAsync(dstPtr, srcPtr, size, hipMemcpyDefault, _obj));
-    }
-
-    void memPrefetchAsync(DeviceMemory &devPtr, size_t size) {
-      checkCudaCall(hipMemPrefetchAsync(devPtr, size, hipCpuDeviceId, _obj));
-    }
-
-    void memPrefetchAsync(DeviceMemory &devPtr, size_t size,
-                          Device &dstDevice) {
-      checkCudaCall(hipMemPrefetchAsync(devPtr, size, dstDevice, _obj));
-    }
-
-    void zero(DeviceMemory &devPtr, size_t size) {
-      checkCudaCall(hipMemsetD8Async(devPtr, 0, size, _obj));
-    }
-
-    void launchKernel(Function &function, unsigned gridX, unsigned gridY,
-                      unsigned gridZ, unsigned blockX, unsigned blockY,
-                      unsigned blockZ, unsigned sharedMemBytes,
-                      const std::vector<const void *> &parameters) {
-      checkCudaCall(hipModuleLaunchKernel(
-          function, gridX, gridY, gridZ, blockX, blockY, blockZ, sharedMemBytes,
-          _obj, const_cast<void **>(&parameters[0]), nullptr));
-    }
+  void launchKernel(Function &function, unsigned gridX, unsigned gridY,
+                    unsigned gridZ, unsigned blockX, unsigned blockY,
+                    unsigned blockZ, unsigned sharedMemBytes,
+                    const std::vector<const void *> &parameters) {
+    checkCudaCall(hipModuleLaunchKernel(
+        function, gridX, gridY, gridZ, blockX, blockY, blockZ, sharedMemBytes,
+        _obj, const_cast<void **>(&parameters[0]), nullptr));
+  }
 
 #if CUDART_VERSION >= 9000
-    void launchCooperativeKernel(Function &function, unsigned gridX,
-                                 unsigned gridY, unsigned gridZ,
-                                 unsigned blockX, unsigned blockY,
-                                 unsigned blockZ, unsigned sharedMemBytes,
-                                 const std::vector<const void *> &parameters) {
-      checkCudaCall(hipModuleLaunchCooperativeKernel(
-          function, gridX, gridY, gridZ, blockX, blockY, blockZ, sharedMemBytes,
-          _obj, const_cast<void **>(&parameters[0])));
-    }
-#endif
-
-    void query() {
-      checkCudaCall(
-          hipStreamQuery(_obj));  // unsuccessful result throws cu::Error
-    }
-
-    void synchronize() { checkCudaCall(hipStreamSynchronize(_obj)); }
-
-    void wait(Event &event) {
-      checkCudaCall(hipStreamWaitEvent(_obj, event, 0));
-    }
-
-    void addCallback(hipStreamCallback_t callback, void *userData,
-                     unsigned int flags = 0) {
-      checkCudaCall(hipStreamAddCallback(_obj, callback, userData, flags));
-    }
-
-    void record(Event &event) { checkCudaCall(hipEventRecord(event, _obj)); }
-
-#if !defined(__HIP__)
-    void batchMemOp(unsigned count, CUstreamBatchMemOpParams *paramArray,
-                    unsigned flags) {
-      checkCudaCall(cuStreamBatchMemOp(_obj, count, paramArray, flags));
-    }
-#endif
-
-    void waitValue32(hipDeviceptr_t addr, cuuint32_t value,
-                     unsigned flags) const {
-      checkCudaCall(hipStreamWaitValue32(_obj, addr, value, flags));
-    }
-
-    void writeValue32(hipDeviceptr_t addr, cuuint32_t value, unsigned flags) {
-      checkCudaCall(hipStreamWriteValue32(_obj, addr, value, flags));
-    }
-
-#if !defined(__HIP__)
-    Context getContext() const {
-      CUcontext context;
-      checkCudaCall(cuStreamGetCtx(_obj, &context));
-      return Context(context);
-    }
-#endif
-  };
-
-  inline void Event::record(Stream &stream) {
-    checkCudaCall(hipEventRecord(_obj, stream._obj));
+  void launchCooperativeKernel(Function &function, unsigned gridX,
+                               unsigned gridY, unsigned gridZ, unsigned blockX,
+                               unsigned blockY, unsigned blockZ,
+                               unsigned sharedMemBytes,
+                               const std::vector<const void *> &parameters) {
+    checkCudaCall(hipModuleLaunchCooperativeKernel(
+        function, gridX, gridY, gridZ, blockX, blockY, blockZ, sharedMemBytes,
+        _obj, const_cast<void **>(&parameters[0])));
   }
+#endif
+
+  void query() {
+    checkCudaCall(
+        hipStreamQuery(_obj));  // unsuccessful result throws cu::Error
+  }
+
+  void synchronize() { checkCudaCall(hipStreamSynchronize(_obj)); }
+
+  void wait(Event &event) { checkCudaCall(hipStreamWaitEvent(_obj, event, 0)); }
+
+  void addCallback(hipStreamCallback_t callback, void *userData,
+                   unsigned int flags = 0) {
+    checkCudaCall(hipStreamAddCallback(_obj, callback, userData, flags));
+  }
+
+  void record(Event &event) { checkCudaCall(hipEventRecord(event, _obj)); }
+
+#if !defined(__HIP__)
+  void batchMemOp(unsigned count, CUstreamBatchMemOpParams *paramArray,
+                  unsigned flags) {
+    checkCudaCall(cuStreamBatchMemOp(_obj, count, paramArray, flags));
+  }
+#endif
+
+  void waitValue32(hipDeviceptr_t addr, cuuint32_t value,
+                   unsigned flags) const {
+    checkCudaCall(hipStreamWaitValue32(_obj, addr, value, flags));
+  }
+
+  void writeValue32(hipDeviceptr_t addr, cuuint32_t value, unsigned flags) {
+    checkCudaCall(hipStreamWriteValue32(_obj, addr, value, flags));
+  }
+
+#if !defined(__HIP__)
+  Context getContext() const {
+    CUcontext context;
+    checkCudaCall(cuStreamGetCtx(_obj, &context));
+    return Context(context);
+  }
+#endif
+};
+
+inline void Event::record(Stream &stream) {
+  checkCudaCall(hipEventRecord(_obj, stream._obj));
+}
 }  // namespace cu
 
 #endif
