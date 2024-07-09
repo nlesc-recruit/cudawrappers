@@ -2,10 +2,6 @@
 #define NVRTC_H
 #include <link.h>
 #include <sys/stat.h>
-#include <hip/hip_runtime.h>
-#include <hip/hiprtc.h>
-#include <link.h>
-#include <sys/stat.h>
 
 #include <algorithm>
 #include <cstddef>
@@ -15,6 +11,14 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
+
+#if !defined(__HIP__)
+#include <cuda.h>
+#include <nvrtc.h>
+#else
+#include <hip/hip_runtime.h>
+#include <hip/hiprtc.h>
+#endif
 
 namespace nvrtc {
 class Error : public std::exception {
@@ -40,10 +44,13 @@ inline std::string findIncludePath() {
           [](struct dl_phdr_info *info, size_t, void *arg) -> int {
             std::string &path = *static_cast<std::string *>(arg);
             path = info->dlpi_name;
-            // HIPRTC symbols are also in libamdhip64.so, although they will be removed from there
-            // see https://rocm.docs.amd.com/projects/HIP/en/docs-6.1.0/how-to/hip_rtc.html#deprecation-notice
-            // check both libraries for now, as linking with hiprtc is not yet required
-            return (path.find("libhiprtc.so") != std::string::npos) | (path.find("libamdhip64.so") != std::string::npos);
+            // HIPRTC symbols are also in libamdhip64.so, although they will be
+            // removed from there see
+            // https://rocm.docs.amd.com/projects/HIP/en/docs-6.1.0/how-to/hip_rtc.html#deprecation-notice
+            // check both libraries for now, as linking with hiprtc is not yet
+            // required
+            return (path.find("libhiprtc.so") != std::string::npos) |
+                   (path.find("libamdhip64.so") != std::string::npos);
           },
           &path))
     for (size_t pos; (pos = path.find_last_of("/")) != std::string::npos;) {

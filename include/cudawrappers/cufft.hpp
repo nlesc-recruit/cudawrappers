@@ -1,9 +1,15 @@
 #if !defined CUFFT_H
 #define CUFFT_H
 
+#if defined(_HIP__)
 #include <hip/hip_fp16.h>
 #include <hipfft/hipfft.h>
 #include <hipfft/hipfftXt.h>
+#else
+#include <cuda_fp16.h>
+#include <cufft.h>
+#include <cufftXt.h>
+#endif
 
 #include <exception>
 

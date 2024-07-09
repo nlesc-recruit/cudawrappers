@@ -18,9 +18,6 @@ project(
 
 include(GNUInstallDirs)
 
-enable_language(HIP)
-set(CMAKE_HIP_COMPILER_ENV_VAR "HIPCXX")
-
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_CXX_EXTENSIONS False)
@@ -29,6 +26,12 @@ option(BUILD_SHARED_LIBS "Create shared libraries" True)
 option(CUDAWRAPPERS_BUILD_TESTING "Build cudawrappers tests"
        ${CUDAWRAPPERS_TESTING_DEFAULT}
 )
+option(CUDAWRAPPERS_ENABLE_HIP "Enable HIP mode" False)
+
+if(${CUDAWRAPPERS_ENABLE_HIP})
+  enable_language(HIP)
+  set(CMAKE_HIP_COMPILER_ENV_VAR "HIPCXX")
+endif()
 
 # Enable Clang compiler warnings
 if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
