@@ -1,9 +1,9 @@
-# cudawrappers requires the CUDA Toolkit.If you include cudawrappers in your
-# project, you need to include the toolkit yourself
 if(${CUDAWRAPPERS_ENABLE_HIP})
   find_package(hip REQUIRED)
   find_package(hipfft REQUIRED)
 else()
+  # cudawrappers requires the CUDA Toolkit.If you include cudawrappers in your
+  # project, you need to include the toolkit yourself
   set(CUDA_MIN_VERSION 10.0)
   if(${CUDAWRAPPERS_INSTALLED})
     find_package(CUDAToolkit ${CUDA_MIN_VERSION} REQUIRED)
