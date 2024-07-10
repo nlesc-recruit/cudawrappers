@@ -372,7 +372,7 @@ class Array : public Wrapper<CUarray> {
 
   void createManager() {
     manager = std::shared_ptr<CUarray>(new CUarray(_obj), [](CUarray *ptr) {
-      cuArrayDestroy(*ptr);
+      checkCudaCall(cuArrayDestroy(*ptr));
       delete ptr;
     });
   }
@@ -390,7 +390,7 @@ class Module : public Wrapper<CUmodule> {
     checkCudaCall(cuModuleLoad(&_obj, file_name));
 #endif
     manager = std::shared_ptr<CUmodule>(new CUmodule(_obj), [](CUmodule *ptr) {
-      cuModuleUnload(*ptr);
+      checkCudaCall(cuModuleUnload(*ptr));
       delete ptr;
     });
   }
@@ -398,7 +398,7 @@ class Module : public Wrapper<CUmodule> {
   explicit Module(const void *data) {
     checkCudaCall(cuModuleLoadData(&_obj, data));
     manager = std::shared_ptr<CUmodule>(new CUmodule(_obj), [](CUmodule *ptr) {
-      cuModuleUnload(*ptr);
+      checkCudaCall(cuModuleUnload(*ptr));
       delete ptr;
     });
   }
@@ -479,7 +479,7 @@ class Event : public Wrapper<CUevent> {
   explicit Event(unsigned int flags = CU_EVENT_DEFAULT) {
     checkCudaCall(cuEventCreate(&_obj, flags));
     manager = std::shared_ptr<CUevent>(new CUevent(_obj), [](CUevent *ptr) {
-      cuEventDestroy(*ptr);
+      checkCudaCall(cuEventDestroy(*ptr));
       delete ptr;
     });
   }
@@ -568,7 +568,7 @@ class Stream : public Wrapper<CUstream> {
   explicit Stream(unsigned int flags = CU_STREAM_DEFAULT) {
     checkCudaCall(cuStreamCreate(&_obj, flags));
     manager = std::shared_ptr<CUstream>(new CUstream(_obj), [](CUstream *ptr) {
-      cuStreamDestroy(*ptr);
+      checkCudaCall(cuStreamDestroy(*ptr));
       delete ptr;
     });
   }
