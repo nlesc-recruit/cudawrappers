@@ -18,7 +18,7 @@ if(not ${CUDAWRAPPER_ENABLE_HIP})
 endif()
 
 foreach(component ${COMPONENTS})
-  if(${CUDAWRAPPERS_ENABLE_HIP})
+  if(${CUDAWRAPPERS_BACKEND_HIP})
     set_source_files_properties(test_${component}.cpp PROPERTIES LANGUAGE HIP)
   endif()
   add_executable(test_${component} test_${component}.cpp)

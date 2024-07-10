@@ -1,4 +1,4 @@
-if(${CUDAWRAPPERS_ENABLE_HIP})
+if(${CUDAWRAPPERS_BACKEND_HIP})
   find_package(hip REQUIRED)
   find_package(hipfft REQUIRED)
 else()

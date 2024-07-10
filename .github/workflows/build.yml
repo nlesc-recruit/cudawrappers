@@ -53,5 +53,5 @@ jobs:
       - name: Build the code in HIP mode
         shell: bash -el {0}
         run: |
-          cmake -DCMAKE_CXX_COMPILER=g++-${{ env.gcc-version }} -DCUDAWRAPPERS_BUILD_TESTING=True -DCUDAWRAPPERS_ENABLE_HIP=1 -S . -B build
+          cmake -DCMAKE_CXX_COMPILER=g++-${{ env.gcc-version }} -DCUDAWRAPPERS_BUILD_TESTING=True -DCUDAWRAPPERS_BACKEND_HIP=1 -S . -B build
           make -C build -j

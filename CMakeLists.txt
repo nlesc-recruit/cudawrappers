@@ -26,9 +26,25 @@ option(BUILD_SHARED_LIBS "Create shared libraries" True)
 option(CUDAWRAPPERS_BUILD_TESTING "Build cudawrappers tests"
        ${CUDAWRAPPERS_TESTING_DEFAULT}
 )
-option(CUDAWRAPPERS_ENABLE_HIP "Enable HIP mode" False)
 
-if(${CUDAWRAPPERS_ENABLE_HIP})
+set(CUDAWRAPPERS_BACKEND
+    "CUDA"
+    CACHE STRING "Backend API to use in cudawrappers"
+)
+set_property(CACHE CUDAWRAPPERS_BACKEND PROPERTY STRINGS "CUDA" "HIP")
+
+if(${CUDAWRAPPERS_BACKEND} STREQUAL "CUDA")
+  set(CUDAWRAPPERS_BACKEND_CUDA True)
+elseif(${CUDAWRAPPERS_BACKEND} STREQUAL "HIP")
+  set(CUDAWRAPPERS_BACKEND_HIP TRUE)
+else()
+  message(
+    FATAL_ERROR
+      "Invalid value for CUDAWRAPPERS_BACKEND: ${CUDAWRAPPERS_BACKEND}"
+  )
+endif()
+
+if(${CUDAWRAPPERS_BACKEND_HIP})
   enable_language(HIP)
   set(CMAKE_HIP_COMPILER_ENV_VAR "HIPCXX")
 endif()
