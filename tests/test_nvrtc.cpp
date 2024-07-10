@@ -17,16 +17,16 @@ TEST_CASE("Test nvrtc::Program", "[program]") {
 
   nvrtc::Program program(kernel, "kernel.cu");
 
-  SECTION("Test Program.compile") {
 #if defined(__HIP__)
-    const std::vector<std::string> options = {"-ffast-math"};
+  const std::vector<std::string> options = {"-ffast-math"};
 #else
-    const std::vector<std::string> options = {"-use_fast_math"};
+  const std::vector<std::string> options = {"-use_fast_math"};
 #endif
-    CHECK_NOTHROW(program.compile(options));
-  }
+
+  SECTION("Test Program.compile") { CHECK_NOTHROW(program.compile(options)); }
 
   SECTION("Test Program.getPTX") {
+    program.compile(options);
     const std::string ptx{program.getPTX()};
     CHECK(ptx.size() > 0);
   }
@@ -40,16 +40,18 @@ TEST_CASE("Test nvrtc::Program embedded source", "[program]") {
                            &_binary_tests_kernels_vector_add_kernel_cu_end);
   nvrtc::Program program(kernel, "vector_add_kernel.cu");
 
-  SECTION("Test Program.compile") {
 #if defined(__HIP__)
-    const std::vector<std::string> options = {"-ffast-math"};
+  const std::vector<std::string> options = {"-ffast-math"};
 #else
-    const std::vector<std::string> options = {"-use_fast_math"};
+  const std::vector<std::string> options = {"-use_fast_math"};
 #endif
-    CHECK_NOTHROW(program.compile(options));
-  }
 
-  SECTION("Test Program.getPTX") { const std::string ptx{program.getPTX()}; }
+  SECTION("Test Program.compile") { CHECK_NOTHROW(program.compile(options)); }
+
+  SECTION("Test Program.getPTX") {
+    program.compile(options);
+    const std::string ptx{program.getPTX()};
+  }
 }
 
 TEST_CASE("Test nvrtc::findIncludePath", "[helper]") {
