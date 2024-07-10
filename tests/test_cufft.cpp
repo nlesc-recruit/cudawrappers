@@ -64,7 +64,7 @@ TEST_CASE("Test 1D FFT", "[FFT1D]") {
   const size_t patchSize = 10;
 
   SECTION("FP32") {
-    const size_t arraySize = size * sizeof(hipfftComplex);
+    const size_t arraySize = size * sizeof(cufftComplex);
 
     cu::HostMemory h_in(arraySize);
     cu::HostMemory h_out(arraySize);
@@ -72,19 +72,19 @@ TEST_CASE("Test 1D FFT", "[FFT1D]") {
     cu::DeviceMemory d_out(arraySize);
     cu::DeviceMemory d_out2(arraySize);
 
-    generateSignal(static_cast<hipfftComplex *>(h_in), size, patchSize, {1, 1});
+    generateSignal(static_cast<cufftComplex *>(h_in), size, patchSize, {1, 1});
     stream.memcpyHtoDAsync(d_in, h_in, arraySize);
 
-    cufft::FFT1D<HIP_C_32F> fft{size};
+    cufft::FFT1D<CUDA_C_32F> fft{size};
     fft.setStream(stream);
 
-    fft.execute(d_in, d_out, HIPFFT_FORWARD);
-    fft.execute(d_out, d_out2, HIPFFT_BACKWARD);
+    fft.execute(d_in, d_out, CUFFT_FORWARD);
+    fft.execute(d_out, d_out2, CUFFT_INVERSE);
     stream.memcpyDtoHAsync(h_out, d_out2, arraySize);
     stream.synchronize();
 
-    hipFloatComplex *in_ptr = static_cast<hipFloatComplex *>(h_in);
-    hipFloatComplex *out_ptr = static_cast<hipFloatComplex *>(h_out);
+    cuFloatComplex *in_ptr = static_cast<cuFloatComplex *>(h_in);
+    cuFloatComplex *out_ptr = static_cast<cuFloatComplex *>(h_out);
     scaleSignal(out_ptr, out_ptr, size, float(size));
     compare(out_ptr, in_ptr, size);
   }
@@ -101,11 +101,11 @@ TEST_CASE("Test 1D FFT", "[FFT1D]") {
     generateSignal(static_cast<half2 *>(h_in), 1, size, patchSize, {0.1, 0.1});
     stream.memcpyHtoDAsync(d_in, h_in, arraySize);
 
-    cufft::FFT1D<HIP_C_16F> fft{size};
+    cufft::FFT1D<CUDA_C_16F> fft{size};
     fft.setStream(stream);
 
-    fft.execute(d_in, d_out, HIPFFT_FORWARD);
-    fft.execute(d_out, d_out2, HIPFFT_BACKWARD);
+    fft.execute(d_in, d_out, CUFFT_FORWARD);
+    fft.execute(d_out, d_out2, CUFFT_INVERSE);
     stream.memcpyDtoHAsync(h_out, d_out2, arraySize);
     stream.synchronize();
 
@@ -127,7 +127,7 @@ TEST_CASE("Test 2D FFT", "[FFT2D]") {
   const size_t patchSize = 10;
 
   SECTION("FP32") {
-    const size_t arraySize = height * width * sizeof(hipfftComplex);
+    const size_t arraySize = height * width * sizeof(cufftComplex);
 
     cu::HostMemory h_in(arraySize);
     cu::HostMemory h_out(arraySize);
@@ -135,27 +135,27 @@ TEST_CASE("Test 2D FFT", "[FFT2D]") {
     cu::DeviceMemory d_out(arraySize);
     cu::DeviceMemory d_out2(arraySize);
 
-    generateSignal(static_cast<hipfftComplex *>(h_in), height, width, patchSize,
+    generateSignal(static_cast<cufftComplex *>(h_in), height, width, patchSize,
                    {1, 1});
     stream.memcpyHtoDAsync(d_in, h_in, arraySize);
 
-    cufft::FFT2D<HIP_C_32F> fft{height, width};
+    cufft::FFT2D<CUDA_C_32F> fft{height, width};
     fft.setStream(stream);
 
-    fft.execute(d_in, d_out, HIPFFT_FORWARD);
-    fft.execute(d_out, d_out2, HIPFFT_BACKWARD);
+    fft.execute(d_in, d_out, CUFFT_FORWARD);
+    fft.execute(d_out, d_out2, CUFFT_INVERSE);
     stream.memcpyDtoHAsync(h_out, d_out2, arraySize);
     stream.synchronize();
 
-    hipFloatComplex *in_ptr = static_cast<hipFloatComplex *>(h_in);
-    hipFloatComplex *out_ptr = static_cast<hipFloatComplex *>(h_out);
+    cuFloatComplex *in_ptr = static_cast<cuFloatComplex *>(h_in);
+    cuFloatComplex *out_ptr = static_cast<cuFloatComplex *>(h_out);
     scaleSignal(out_ptr, out_ptr, height * width, float(height * width));
     compare(out_ptr, in_ptr, height * width);
   }
 
   SECTION("FP32 batched") {
     const size_t batch = 2;
-    const size_t arraySize = batch * height * width * sizeof(hipfftComplex);
+    const size_t arraySize = batch * height * width * sizeof(cufftComplex);
 
     cu::HostMemory h_in(arraySize);
     cu::HostMemory h_out(arraySize);
@@ -166,22 +166,22 @@ TEST_CASE("Test 2D FFT", "[FFT2D]") {
     const size_t stride = 1;
     const size_t dist = height * width;
 
-    generateSignal(static_cast<hipFloatComplex *>(h_in), height, width,
+    generateSignal(static_cast<cuFloatComplex *>(h_in), height, width,
                    patchSize, {1, 1});
-    generateSignal(static_cast<hipFloatComplex *>(h_in) + dist, height, width,
+    generateSignal(static_cast<cuFloatComplex *>(h_in) + dist, height, width,
                    patchSize, {2, 2});
     stream.memcpyHtoDAsync(d_in, h_in, arraySize);
 
-    cufft::FFT2D<HIP_C_32F> fft{height, width, stride, dist, batch};
+    cufft::FFT2D<CUDA_C_32F> fft{height, width, stride, dist, batch};
     fft.setStream(stream);
 
-    fft.execute(d_in, d_out, HIPFFT_FORWARD);
-    fft.execute(d_out, d_out2, HIPFFT_BACKWARD);
+    fft.execute(d_in, d_out, CUFFT_FORWARD);
+    fft.execute(d_out, d_out2, CUFFT_INVERSE);
     stream.memcpyDtoHAsync(h_out, d_out2, arraySize);
     stream.synchronize();
 
-    hipFloatComplex *in_ptr = static_cast<hipFloatComplex *>(h_in);
-    hipFloatComplex *out_ptr = static_cast<hipFloatComplex *>(h_out);
+    cuFloatComplex *in_ptr = static_cast<cuFloatComplex *>(h_in);
+    cuFloatComplex *out_ptr = static_cast<cuFloatComplex *>(h_out);
     scaleSignal(out_ptr, out_ptr, height * width, float(height * width));
     compare(out_ptr, in_ptr, height * width);
   }
@@ -199,11 +199,11 @@ TEST_CASE("Test 2D FFT", "[FFT2D]") {
                    {0.1, 0.1});
     stream.memcpyHtoDAsync(d_in, h_in, arraySize);
 
-    cufft::FFT2D<HIP_C_16F> fft{height, width};
+    cufft::FFT2D<CUDA_C_16F> fft{height, width};
     fft.setStream(stream);
 
-    fft.execute(d_in, d_out, HIPFFT_FORWARD);
-    fft.execute(d_out, d_out2, HIPFFT_BACKWARD);
+    fft.execute(d_in, d_out, CUFFT_FORWARD);
+    fft.execute(d_out, d_out2, CUFFT_INVERSE);
     stream.memcpyDtoHAsync(h_out, d_out2, arraySize);
     stream.synchronize();
 
