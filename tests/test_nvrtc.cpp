@@ -51,6 +51,7 @@ TEST_CASE("Test nvrtc::Program embedded source", "[program]") {
   SECTION("Test Program.getPTX") {
     program.compile(options);
     const std::string ptx{program.getPTX()};
+    CHECK(ptx.size() > 0);
   }
 }
 
