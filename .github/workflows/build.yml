@@ -38,7 +38,7 @@ jobs:
       - name: Show tool versions
         run: |
            echo "nvcc: $(nvcc --version)"
-           echo "hipcc: $(hipcc --version)"
+           echo "hipcc: $(/opt/rocm/bin/hipcc --version)"
            echo "g++: $(g++ --version)"
 
       - name: Build the code in CUDA mode
