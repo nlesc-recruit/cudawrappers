@@ -18,7 +18,11 @@ TEST_CASE("Test nvrtc::Program", "[program]") {
   nvrtc::Program program(kernel, "kernel.cu");
 
   SECTION("Test Program.compile") {
-    const std::vector<std::string> options = {"--generate-line-info"};
+#if defined(__HIP__)
+    const std::vector<std::string> options = {"-ffast-math"};
+#else
+    const std::vector<std::string> options = {"-use_fast_math"};
+#endif
     CHECK_NOTHROW(program.compile(options));
   }
 
@@ -37,7 +41,11 @@ TEST_CASE("Test nvrtc::Program embedded source", "[program]") {
   nvrtc::Program program(kernel, "vector_add_kernel.cu");
 
   SECTION("Test Program.compile") {
-    const std::vector<std::string> options = {"--generate-line-info"};
+#if defined(__HIP__)
+    const std::vector<std::string> options = {"-ffast-math"};
+#else
+    const std::vector<std::string> options = {"-use_fast_math"};
+#endif
     CHECK_NOTHROW(program.compile(options));
   }
 
