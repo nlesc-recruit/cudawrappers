@@ -36,9 +36,9 @@ jobs:
         shell: bash -el {0}
         run: |
           wget https://repo.radeon.com/amdgpu-install/6.1.3/ubuntu/jammy/amdgpu-install_6.1.60103-1_all.deb
-          apt -y install ./amdgpu-install_6.1.60103-1_all.deb
-          apt update
-          apt -y install rocm-hip-runtime-dev hipfft-dev
+          sudo apt -y install ./amdgpu-install_6.1.60103-1_all.deb
+          sudo apt update
+          sudo apt -y install rocm-hip-runtime-dev hipfft-dev
 
       - name: Show tool versions
         run: |
