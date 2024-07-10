@@ -35,7 +35,7 @@ jobs:
           linux-local-args: '["--toolkit"]'
 
       - name: rocm-setup
-        uses: neoblizz/rocm-setup@v0.1.0-beta
+        uses: neoblizz/rocm-setup@v0.1.4-beta
         with:
           rocm: ${{ env.rocm-version }}
 
