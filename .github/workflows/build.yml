@@ -9,7 +9,6 @@ jobs:
     name: run
     runs-on: ubuntu-22.04
     env:
-        gcc-version: "12" 
         cuda-version: "12.2.0"
     steps:
 
@@ -40,16 +39,16 @@ jobs:
         run: |
            echo "nvcc: $(nvcc --version)"
            echo "hipcc: $(hipcc --version)"
-           echo "g++: $(g++-${{ env.gcc-version}} --version)"
+           echo "g++: $(g++ --version)"
 
       - name: Build the code in CUDA mode
         shell: bash -el {0}
         run: |
-          cmake -DCMAKE_CXX_COMPILER=g++-${{ env.gcc-version }} -DCUDAWRAPPERS_BUILD_TESTING=True -S . -B build
+          cmake -DCUDAWRAPPERS_BUILD_TESTING=True -S . -B build
           make -C build -j
 
       - name: Build the code in HIP mode
         shell: bash -el {0}
         run: |
-          cmake -DCMAKE_CXX_COMPILER=g++-${{ env.gcc-version }} -DCUDAWRAPPERS_BUILD_TESTING=True -DCUDAWRAPPERS_BACKEND_HIP=1 -DCMAKE_PREFIX_PATH=/opt/rocm -S . -B build
+          cmake -DCUDAWRAPPERS_BUILD_TESTING=True -DCUDAWRAPPERS_BACKEND_HIP=1 -DCMAKE_PREFIX_PATH=/opt/rocm -S . -B build
           make -C build -j
