@@ -514,6 +514,7 @@
 #define cuArrayCreate hipArrayCreate
 #define cuArrayDestroy hipArrayDestroy
 #define cuArrayGetDescriptor hipArrayGetDescriptor
+#define cuComplex hipComplex
 #define cuCtxCreate hipCtxCreate
 #define cuCtxDestroy hipCtxDestroy
 #define cuCtxGetApiVersion hipCtxGetApiVersion
@@ -548,6 +549,7 @@
 #define cuDevicePrimaryCtxSetFlags hipDevicePrimaryCtxSetFlags
 #define cuDeviceSetMemPool hipDeviceSetMemPool
 #define cuDeviceTotalMem hipDeviceTotalMem
+#define cuDoubleComplex hipDoubleComplex
 #define cuDriverGetVersion hipDriverGetVersion
 #define cuEventCreate hipEventCreateWithFlags
 #define cuEventDestroy hipEventDestroy
@@ -555,6 +557,7 @@
 #define cuEventQuery hipEventQuery
 #define cuEventRecord hipEventRecord
 #define cuEventSynchronize hipEventSynchronize
+#define cuFloatComplex hipFloatComplex
 #define cuFuncGetAttribute hipFuncGetAttribute
 #define cuFuncSetAttribute hipFuncSetAttribute
 #define cuFuncSetCacheConfig hipFuncSetCacheConfig
