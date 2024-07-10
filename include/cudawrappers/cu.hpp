@@ -207,11 +207,6 @@ class Context : public Wrapper<CUcontext> {
   }
 
 #if !defined(__HIP__)
-  explicit Context(CUcontext context)
-      : Wrapper<CUcontext>(context), _primaryContext(false) {}
-#endif
-
-#if !defined(__HIP__)
   unsigned getApiVersion() const {
     unsigned version{};
     checkCudaCall(cuCtxGetApiVersion(_obj, &version));
@@ -247,14 +242,6 @@ class Context : public Wrapper<CUcontext> {
 
 #if !defined(__HIP__)
   void pushCurrent() { checkCudaCall(cuCtxPushCurrent(_obj)); }
-#endif
-
-#if !defined(__HIP__)
-  static Context popCurrent() {
-    CUcontext context{};
-    checkCudaCall(cuCtxPopCurrent(&context));
-    return Context(context);
-  }
 #endif
 
   Device getDevice() {
@@ -707,14 +694,6 @@ class Stream : public Wrapper<CUstream> {
   void writeValue32(CUdeviceptr addr, cuuint32_t value, unsigned flags) {
     checkCudaCall(cuStreamWriteValue32(_obj, addr, value, flags));
   }
-
-#if !defined(__HIP__)
-  Context getContext() const {
-    CUcontext context;
-    checkCudaCall(cuStreamGetCtx(_obj, &context));
-    return Context(context);
-  }
-#endif
 };
 
 inline void Event::record(Stream &stream) {
