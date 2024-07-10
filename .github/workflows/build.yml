@@ -44,12 +44,14 @@ jobs:
            echo "nvcc: $(nvcc --version)"
            echo "g++: $(g++-${{ env.gcc-version}} --version)"
 
-      - name: Run CMake
+      - name: Build the code in CUDA mode
         shell: bash -el {0}
         run: |
           cmake -DCMAKE_CXX_COMPILER=g++-${{ env.gcc-version }} -DCUDAWRAPPERS_BUILD_TESTING=True -S . -B build
+          make -C build -j
 
-      - name: Build the code
+      - name: Build the code in HIP mode
         shell: bash -el {0}
         run: |
-          cd build && make -j
+          cmake -DCMAKE_CXX_COMPILER=g++-${{ env.gcc-version }} -DCUDAWRAPPERS_BUILD_TESTING=True -DCUDAWRAPPERS_ENABLE_HIP=1 -S . -B build
+          make -C build -j
