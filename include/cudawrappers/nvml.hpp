@@ -1,6 +1,6 @@
 #if !defined NVML_H
 #define NVML_H
-// not avalailable on AMD
+// NVML is not avalailable on AMD
 #if !defined(__HIP_PLATFORM_AMD__)
 
 #include <nvml.h>
