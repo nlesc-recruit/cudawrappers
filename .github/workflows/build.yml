@@ -40,6 +40,7 @@ jobs:
            echo "nvcc: $(nvcc --version)"
            echo "hipcc: $(/opt/rocm/bin/hipcc --version)"
            echo "g++: $(g++ --version)"
+           echo "cmake: $(cmake --version)"
 
       - name: Build the code in CUDA mode
         shell: bash -el {0}
