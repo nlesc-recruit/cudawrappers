@@ -11,7 +11,6 @@ jobs:
     env:
         gcc-version: "12" 
         cuda-version: "12.2.0"
-        rocm-version: "6.1.0"
     steps:
 
       - name: Check out a copy of the repository
@@ -34,14 +33,13 @@ jobs:
           non-cuda-sub-packages: '["libcufft-dev"]'
           linux-local-args: '["--toolkit"]'
 
-      - name: rocm-setup
-        uses: neoblizz/rocm-setup@v0.1.4-beta
-        with:
-          rocm: ${{ env.rocm-version }}
+      - name: Install ROCm and HIP
+        uses: nlesc-recruit/rocm-setup
 
       - name: Show tool versions
         run: |
            echo "nvcc: $(nvcc --version)"
+           echo "hipcc: $(hipcc --version)"
            echo "g++: $(g++-${{ env.gcc-version}} --version)"
 
       - name: Build the code in CUDA mode
