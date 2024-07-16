@@ -6,6 +6,7 @@ project adheres to [Semantic Versioning](http://semver.org/).
 ## Unreleased
 
 ### Added 
+- Added compatibility with HIP
 - Added `cu::Device::getArch()`
 
 ### Changed
