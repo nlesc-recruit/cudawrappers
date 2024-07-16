@@ -18,7 +18,7 @@
 #include <cuda_runtime_api.h>
 #endif
 
-#if defined(__HIP__) || defined(__HIP_PLATFORM_AMD__)
+#if defined(__HIP__)
 #include <cudawrappers/macros.hpp>
 
 typedef uint32_t cuuint32_t;
