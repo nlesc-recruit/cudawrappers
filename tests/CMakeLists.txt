@@ -32,7 +32,7 @@ set(LINK_LIBRARIES Catch2::Catch2 cudawrappers::cu)
 
 target_link_libraries(test_cu PUBLIC ${LINK_LIBRARIES})
 
-if(not ${CUDAWRAPPER_ENABLE_HIP})
+if(${CUDAWRAPPERS_BACKEND_CUDA})
   target_link_libraries(test_nvml PUBLIC ${LINK_LIBRARIES} cudawrappers::nvml)
 endif()
 
