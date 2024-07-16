@@ -193,30 +193,32 @@ class Device : public Wrapper<CUdevice> {
   }
 
   // Primary Context Management
-#if !defined(__HIP__)
   std::pair<unsigned, bool> primaryCtxGetState() const {
     unsigned flags{};
     int active{};
+#if !defined(__HIP__)
     checkCudaCall(cuDevicePrimaryCtxGetState(_obj, &flags, &active));
+#endif
     return {flags, active};
   }
-#endif
 
   // void primaryCtxRelease() not available; it is released on destruction of
   // the Context returned by Device::primaryContextRetain()
 
+  void primaryCtxReset() {
 #if !defined(__HIP__)
-  void primaryCtxReset() { checkCudaCall(cuDevicePrimaryCtxReset(_obj)); }
+    checkCudaCall(cuDevicePrimaryCtxReset(_obj));
 #endif
+  }
 
   Context primaryCtxRetain();  // retain this context until the primary context
                                // can be released
 
-#if !defined(__HIP__)
   void primaryCtxSetFlags(unsigned flags) {
+#if !defined(__HIP__)
     checkCudaCall(cuDevicePrimaryCtxSetFlags(_obj, flags));
-  }
 #endif
+  }
 
  private:
   int _ordinal;
@@ -237,27 +239,27 @@ class Context : public Wrapper<CUcontext> {
 #endif
   }
 
-#if !defined(__HIP__)
   unsigned getApiVersion() const {
     unsigned version{};
+#if !defined(__HIP__)
     checkCudaCall(cuCtxGetApiVersion(_obj, &version));
+#endif
     return version;
   }
-#endif
 
-#if !defined(__HIP__)
   static CUfunc_cache getCacheConfig() {
     CUfunc_cache config{};
+#if !defined(__HIP__)
     checkCudaCall(cuCtxGetCacheConfig(&config));
+#endif
     return config;
   }
-#endif
 
-#if !defined(__HIP__)
   static void setCacheConfig(CUfunc_cache config) {
+#if !defined(__HIP__)
     checkCudaCall(cuCtxSetCacheConfig(config));
-  }
 #endif
+  }
 
   Context getCurrent() {
     CUcontext context{};
@@ -267,13 +269,25 @@ class Context : public Wrapper<CUcontext> {
     return Context(context, _device);
   }
 
+  void setCurrent() const {
 #if !defined(__HIP__)
-  void setCurrent() const { checkCudaCall(cuCtxSetCurrent(_obj)); }
+    checkCudaCall(cuCtxSetCurrent(_obj));
 #endif
+  }
 
+  Context popCurrent() {
+    CUcontext context{};
 #if !defined(__HIP__)
-  void pushCurrent() { checkCudaCall(cuCtxPushCurrent(_obj)); }
+    checkCudaCall(cuCtxPopCurrent(&context));
 #endif
+    return Context(context, _device);
+  }
+
+  void pushCurrent() {
+#if !defined(__HIP__)
+    checkCudaCall(cuCtxPushCurrent(_obj));
+#endif
+  }
 
   Device getDevice() {
     CUdevice device;
