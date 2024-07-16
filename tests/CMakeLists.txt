@@ -13,7 +13,7 @@ list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/contrib)
 include(Catch)
 
 set(COMPONENTS cu nvrtc cufft vector_add)
-if(not ${CUDAWRAPPER_ENABLE_HIP})
+if(${CUDAWRAPPERS_BACKEND_CUDA})
   list(APPEND COMPONENTS nvml)
 endif()
 
