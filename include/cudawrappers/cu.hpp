@@ -120,7 +120,7 @@ class Device : public Wrapper<CUdevice> {
       CUdevice current_device;
       cuDeviceGet(&current_device, ordinal);
       if (current_device == device) {
-        ordinal_ = ordinal;
+        _ordinal = ordinal;
       }
     }
   }
