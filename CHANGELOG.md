@@ -12,13 +12,7 @@ project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Changed
 
-- `cu::Context::getCurrent()` is no longer static
-- `cu::Context::getDevice()` is no longer static
-
-### Removed:
-
-- Removed `cu::Context::popCurrent`
-- Removed constructor `cu::Context(CUcontext context)`
+- `cu::Context::{getCurrent, popCurrent, getDevice}` are no longer static
 
 ## \[0.8.0\] - 2024-07-05
 
