@@ -319,9 +319,11 @@ class Context : public Wrapper<CUcontext> {
     return total;
   }
 
+  static void synchronize() {
 #if !defined(__HIP__)
-  static void synchronize() { checkCudaCall(cuCtxSynchronize()); }
+    checkCudaCall(cuCtxSynchronize());
 #endif
+  }
 
  private:
   friend class Device;
