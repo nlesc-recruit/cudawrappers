@@ -17,6 +17,8 @@ This library is a C++ wrapper for the Nvidia C libraries (e.g. CUDA driver, nvrt
 2. _better fault handling_ (through exceptions);
 3. _more compact user code_.
 
+This library also supports AMD GPUs through the HIP: C++ Heterogeneous-Compute Interface for Portability.
+
 Originally, the API enforced RAII to even further reduce the risk of faulty code, but enforcing RAII and compatibility with (unmanaged) objects obtained outside this API are mutually exclusive.
 
 ## Requirements
@@ -24,13 +26,17 @@ Originally, the API enforced RAII to even further reduce the risk of faulty code
 | Software    | Minimum version |
 | ----------- | ----------- |
 | CUDA        | 10.0 or later |
+| ROCM        | 6.1.0 or later |
 | CMake       | 3.17 or later |
 | gcc         | 9.3 or later  |
 | OS          | Linux distro (amd64) |
 
 | Hardware    | Type |
 | ----------- | ----------- |
-| GPU architecture        | [NVIDIA PASCAL](https://www.nvidia.com/en-in/geforce/products/10series/architecture/) or newer|
+| NVIDIA GPU  | [Pascal](https://www.nvidia.com/en-in/geforce/products/10series/architecture/) or newer|
+| AMD GPU  | [RDNA2](https://www.amd.com/en/technologies/rdna.html) or newer|
+| AMD GPU  | [CDNA2](https://www.amd.com/en/technologies/cdna.html) or newer|
+
 
 ## Usage
 
@@ -54,6 +60,11 @@ cmake -DCMAKE_INSTALL_PREFIX=$HOME/.local -S . -B build
 make -C build
 make -C build install
 ```
+
+## Usage (HIP)
+To enable HIP, make sure to build cudawrappers with `-DCUDAWRAPPERS_BACKEND=HIP`, or when using `FetchContent`, use `set(CUDAWRAPPERS_BACKEND "HIP")`.
+In your project's `CMakeLists.txt`, add `enable_language(HIP)`. Furthermore, every
+target that includes a cudawrappers header file needs to be 'hipified', to this end, add `set_source_files_properties(source.cpp PROPERTIES LANGUAGE HIP)` for every relevant `source.cpp` file. Some CUDA specific features may not be available or not work on non-NVIDIA GPUs, in those cases use `#ifdef(__HIP__)` guards to patch your code wherever this is needed.
 
 ### Usage examples
 
