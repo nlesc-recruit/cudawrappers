@@ -5,15 +5,18 @@ project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
-### Added 
+### Added
+
 - Added compatibility with HIP
 - Added `cu::Device::getArch()`
 
 ### Changed
+
 - `cu::Context::getCurrent()` is no longer static
 - `cu::Context::getDevice()` is no longer static
 
 ### Removed:
+
 - Removed `cu::Context::popCurrent`
 - Removed constructor `cu::Context(CUcontext context)`
 
