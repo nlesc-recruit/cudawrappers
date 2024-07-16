@@ -17,6 +17,12 @@ TEST_CASE("Test cu::Device", "[device]") {
     std::cout << "Device name: " << name << std::endl;
     CHECK(name.size() > 0);
   }
+
+  SECTION("Test Device.getArch") {
+    const std::string arch = device.getArch();
+    std::cout << "Device arch: " << arch << std::endl;
+    CHECK(arch.size() > 0);
+  }
 }
 
 TEST_CASE("Test context::getDevice", "[device]") {

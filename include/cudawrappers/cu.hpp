@@ -106,7 +106,9 @@ class Device : public Wrapper<CUdevice> {
  public:
   // Device Management
 
-  explicit Device(int ordinal) { checkCudaCall(cuDeviceGet(&_obj, ordinal)); }
+  explicit Device(int ordinal) : _ordinal(ordinal) {
+    checkCudaCall(cuDeviceGet(&_obj, ordinal));
+  }
 
   struct CUdeviceArg {
   };  // int and CUdevice are the same type, but we need two constructors
@@ -159,6 +161,21 @@ class Device : public Wrapper<CUdevice> {
     return result.str();
   }
 
+  std::string getArch() const {
+#if defined(__HIP__)
+    hipDeviceProp_t prop;
+    checkCudaCall(hipGetDeviceProperties(&prop, _ordinal));
+    return prop.gcnArchName;
+#else
+    return std::to_string(
+        10 *
+
+            getAttribute<CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MAJOR>() +
+        getAttribute<CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MINOR>());
+
+#endif
+  }
+
   size_t totalMem() const {
     size_t size{};
     checkCudaCall(cuDeviceTotalMem(&size, _obj));
@@ -190,6 +207,9 @@ class Device : public Wrapper<CUdevice> {
     checkCudaCall(cuDevicePrimaryCtxSetFlags(_obj, flags));
   }
 #endif
+
+ private:
+  int _ordinal;
 };
 
 class Context : public Wrapper<CUcontext> {
