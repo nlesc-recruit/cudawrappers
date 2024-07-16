@@ -1,18 +1,21 @@
 if(${CUDAWRAPPERS_BACKEND_HIP})
   # cmake-format: off
-  # This following code attempts to locate the HIP runtime library's root directory.
+  # This following code attempts to locate the HIP runtime library's root
+  # directory.
   #
   # 1. Checks if the ROCM_ROOT and ROCM_PATH variables are defined.
   #    - Assign them from corresponding environment variables if not defined.
-  # 2. Searches for the HIP runtime header file in the paths specified by ROCM_ROOT and ROCM_PATH.
+  # 2. Searches for the HIP runtime header file in the paths specified
+  #    by ROCM_ROOT and ROCM_PATH.
   #    - If the path is set but HIP is not found, an error message is generated.
   # 3. If HIP is still not found, the script searches in the default path.
   # 4. Adding HIP_ROOT_DIR to CMAKE_PREFIX_PATH and Finding Packages
-  #    - The HIP runtime directory (HIP_ROOT_DIR) is appended to CMAKE_PREFIX_PATH
+  #    - The HIP runtime directory is appended to CMAKE_PREFIX_PATH
   #      to ensure that CMake can find the HIP-related packages.
-  # 
+  #
   # Usage:
-  # Set the ROCM_ROOT or ROCM_PATH environment variables or pass them as CMake options, e.g.:
+  # Set the ROCM_ROOT or ROCM_PATH environment variables, or
+  # pass them as CMake options, e.g.:
   #   cmake -DROCM_ROOT=/path/to/rocm ..
   #   or
   #   ROCM_ROOT=/path/to/rocm cmake ..
