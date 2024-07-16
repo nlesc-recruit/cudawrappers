@@ -178,12 +178,11 @@ class Device : public Wrapper<CUdevice> {
     checkCudaCall(hipGetDeviceProperties(&prop, _ordinal));
     return prop.gcnArchName;
 #else
-    return std::to_string(
-        10 *
-
-            getAttribute<CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MAJOR>() +
-        getAttribute<CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MINOR>());
-
+    const int major =
+        getAttribute<CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MAJOR>();
+    const int minor =
+        getAttribute<CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MAJOR>();
+    return std::to_string(10 * major + minor);
 #endif
   }
 
