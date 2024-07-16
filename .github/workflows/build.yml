@@ -58,5 +58,5 @@ jobs:
       - name: Build the code in HIP mode
         shell: bash -el {0}
         run: |
-          cmake -DCUDAWRAPPERS_BUILD_TESTING=True -DCUDAWRAPPERS_BACKEND_HIP=1 -DCMAKE_PREFIX_PATH=/opt/rocm -S . -B build
+          cmake -DCUDAWRAPPERS_BUILD_TESTING=True -DCUDAWRAPPERS_BACKEND=HIP -DAMDGPU_TARGETS=gfx1101 -S . -B build
           make -C build -j
