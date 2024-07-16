@@ -34,7 +34,9 @@ Originally, the API enforced RAII to even further reduce the risk of faulty code
 
 | Hardware    | Type |
 | ----------- | ----------- |
-| NVIDIA GPU  | [Pascal](https://www.nvidia.com/en-in/geforce/products/10series/architecture/) or newer|
+| NVIDIA GPU  |
+[Pascal](https://www.nvidia.com/en-in/geforce/products/10series/architecture/)
+or newer|
 | AMD GPU     | RDNA2 or newer, CDNA2 or newer |
 
 
@@ -63,6 +65,7 @@ make -C build install
 ```
 
 ## Usage (HIP)
+
 To enable HIP, make sure to build cudawrappers with
 `-DCUDAWRAPPERS_BACKEND=HIP`, or when using `FetchContent`, use
 `set(CUDAWRAPPERS_BACKEND "HIP")`.  In your project's `CMakeLists.txt`, add
