@@ -31,7 +31,7 @@ TEST_CASE("Test context::getDevice", "[device]") {
   cu::Device device(0);
   cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, device);
 
-  SECTION("Test after initialization") {
+  SECTION("Test getName from context") {
     CHECK(device.getName() == context.getCurrent().getDevice().getName());
   }
 }
