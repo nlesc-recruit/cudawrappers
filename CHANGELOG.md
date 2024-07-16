@@ -8,6 +8,14 @@ project adheres to [Semantic Versioning](http://semver.org/).
 ### Added 
 - Added `cu::Device::getArch()`
 
+### Changed
+- `cu::Context::getCurrent()` is no longer static
+- `cu::Context::getDevice()` is no longer static
+
+### Removed:
+- Removed `cu::Context::popCurrent`
+- Removed constructor `cu::Context(CUcontext context)`
+
 ## \[0.8.0\] - 2024-07-05
 
 ### Added
