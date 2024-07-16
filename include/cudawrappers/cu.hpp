@@ -114,11 +114,11 @@ class Device : public Wrapper<CUdevice> {
   };  // int and CUdevice are the same type, but we need two constructors
   Device(CUdeviceArg, CUdevice device) : Wrapper(device) {
     int count = 0;
-    cuDeviceGetCount(&count);
+    checkCudaCall(cuDeviceGetCount(&count));
 
     for (int ordinal = 0; ordinal < count; ordinal++) {
       CUdevice current_device;
-      cuDeviceGet(&current_device, ordinal);
+      checkCudaCall(cuDeviceGet(&current_device, ordinal));
       if (current_device == device) {
         _ordinal = ordinal;
       }
@@ -550,7 +550,7 @@ class DeviceMemory : public Wrapper<CUdeviceptr> {
     }
     manager = std::shared_ptr<CUdeviceptr>(new CUdeviceptr(_obj),
                                            [](CUdeviceptr *ptr) {
-                                             cuMemFree(*ptr);
+                                             checkCudaCall(cuMemFree(*ptr));
                                              delete ptr;
                                            });
   }
