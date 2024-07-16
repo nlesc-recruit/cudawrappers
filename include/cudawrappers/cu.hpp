@@ -182,7 +182,7 @@ class Device : public Wrapper<CUdevice> {
         getAttribute<CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MAJOR>();
     const int minor =
         getAttribute<CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MINOR>();
-    return std::to_string(10 * major + minor);
+    return "sm_" + std::to_string(10 * major + minor);
 #endif
   }
 
