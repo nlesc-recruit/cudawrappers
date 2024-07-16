@@ -112,7 +112,18 @@ class Device : public Wrapper<CUdevice> {
 
   struct CUdeviceArg {
   };  // int and CUdevice are the same type, but we need two constructors
-  Device(CUdeviceArg, CUdevice device) : Wrapper(device) {}
+  Device(CUdeviceArg, CUdevice device) : Wrapper(device) {
+    int count = 0;
+    cuDeviceGetCount(&count);
+
+    for (int ordinal = 0; ordinal < count; ordinal++) {
+      CUdevice current_device;
+      cuDeviceGet(&current_device, ordinal);
+      if (current_device == device) {
+        ordinal_ = ordinal;
+      }
+    }
+  }
 
   int getAttribute(CUdevice_attribute attribute) const {
     int value{};
