@@ -3,25 +3,26 @@
 # '#include "helper.h"` will lead to `helper.h` being inlined.
 function(inline_local_includes input_file output_file)
   file(READ ${input_file} input_file_contents)
-  set(include_regex "#include[ \t]*\"([^\"]+)\"")
+  set(include_regex "(^|\r?\n)(#include[ \t]*\"([^\"]+)\")")
   string(REGEX MATCHALL ${include_regex} includes ${input_file_contents})
-  string(REGEX REPLACE ${include_regex} "" input_file_contents
-                       "${input_file_contents}"
-  )
   set(include_files "")
   foreach(include ${includes})
-    string(REGEX REPLACE ${include_regex} "\\1" include ${include})
-    file(GLOB_RECURSE INCLUDE_PATHS "${PROJECT_SOURCE_DIR}/*/${include}")
+    # Get the name of the file to include, e.g. 'helper.h'
+    string(REGEX REPLACE ${include_regex} "\\3" include_name ${include})
+    # Get the complete line of the include, e.g.  '#include <helper.h>'
+    string(REGEX REPLACE ${include_regex} "\\2" include_line ${include})
+    file(GLOB_RECURSE INCLUDE_PATHS "${PROJECT_SOURCE_DIR}/*/${include_name}")
     if(NOT INCLUDE_PATHS STREQUAL "")
       list(SORT INCLUDE_PATHS ORDER DESCENDING)
       list(GET INCLUDE_PATHS 0 include_PATH)
       list(APPEND include_files ${include_PATH})
       file(READ ${include_PATH} include_contents)
-      string(APPEND processed_file_contents "${include_contents}\n\n")
+      string(REPLACE "${include_line}" "${include_contents}"
+                     input_file_contents "${input_file_contents}"
+      )
     endif()
   endforeach()
-  string(APPEND processed_file_contents "${input_file_contents}\n")
-  file(WRITE ${output_file} "${processed_file_contents}")
+  file(WRITE ${output_file} "${input_file_contents}")
   set(include_files
       ${include_files}
       PARENT_SCOPE
