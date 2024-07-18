@@ -13,6 +13,8 @@ project adheres to [Semantic Versioning](http://semver.org/).
 ### Changed
 
 - `cu::Context::{getCurrent, popCurrent, getDevice}` are no longer static
+- `inline_local_includes` is now more robust: it properly handles commented
+  includes and respects the location of an include in the original source file
 
 ## \[0.8.0\] - 2024-07-05
 
