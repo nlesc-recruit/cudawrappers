@@ -7,7 +7,7 @@ project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Changed
 
-- `inline_local_includes` is now more robust: it properly handles commented 
+- `inline_local_includes` is now more robust: it properly handles commented
   includes and respects the location of an include in the original source file
 
 ## \[0.8.0\] - 2024-07-05
