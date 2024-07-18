@@ -7,7 +7,7 @@ function(inline_local_includes input_file output_file)
   string(REGEX MATCHALL ${include_regex} includes ${input_file_contents})
   set(include_files "")
   foreach(include ${includes})
-    string(REGEX REPLACE ${include_regex} "\\3" include_name ${include})
+    string(REGEX REPLACE ${include_regex} "\\3" include_name ${include}) # e.g. 'helper.h'
     string(REGEX REPLACE ${include_regex} "\\2" include_line ${include})
     file(GLOB_RECURSE INCLUDE_PATHS "${PROJECT_SOURCE_DIR}/*/${include_name}")
     if(NOT INCLUDE_PATHS STREQUAL "")
