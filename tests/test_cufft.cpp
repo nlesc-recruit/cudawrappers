@@ -98,7 +98,7 @@ TEST_CASE("Test 1D FFT", "[FFT1D]") {
     cu::DeviceMemory d_out(arraySize);
     cu::DeviceMemory d_out2(arraySize);
 
-    generateSignal(static_cast<half2 *>(h_in), 1, size, patchSize, {0.1, 0.1});
+    generateSignal(static_cast<half2 *>(h_in), size, patchSize, {0.1, 0.1});
     stream.memcpyHtoDAsync(d_in, h_in, arraySize);
 
     cufft::FFT1D<CUDA_C_16F> fft{size};
@@ -187,7 +187,7 @@ TEST_CASE("Test 2D FFT", "[FFT2D]") {
   }
 
   SECTION("FP16") {
-    const size_t arraySize = height * width * sizeof(__half2);
+    const size_t arraySize = height * width * sizeof(half2);
 
     cu::HostMemory h_in(arraySize);
     cu::HostMemory h_out(arraySize);

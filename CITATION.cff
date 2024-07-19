@@ -37,6 +37,11 @@ authors:
     email: l.oostrum@esciencecenter.nl
     affiliation: Netherlands eScience Center
     orcid: 'https://orcid.org/0000-0001-8724-8372'
+  - given-names: Hanno
+    family-names: Spreeuw
+    email: h.spreeuw@esciencecenter.nl
+    affiliation: Netherlands eScience Center
+    orcid: 'https://orcid.org/0000-0002-5057-0322'
   - given-names: Laura
     family-names: Ootes
     email: l.ootes@esciencecenter.nl
@@ -76,6 +81,7 @@ repository-code: 'https://github.com/nlesc-recruit/cudawrappers'
 abstract: C++ Wrappers for the CUDA Driver API.
 keywords:
   - CUDA
+  - HIP
   - C++
   - GPU
   - accelerators

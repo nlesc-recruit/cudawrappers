@@ -12,8 +12,15 @@
 #include <string>
 #include <vector>
 
+#if !defined(__HIP__)
 #include <cuda.h>
 #include <nvrtc.h>
+#else
+#include <hip/hip_runtime.h>
+#include <hip/hiprtc.h>
+
+#include <cudawrappers/macros.hpp>
+#endif
 
 namespace nvrtc {
 class Error : public std::exception {
@@ -39,14 +46,28 @@ inline std::string findIncludePath() {
           [](struct dl_phdr_info *info, size_t, void *arg) -> int {
             std::string &path = *static_cast<std::string *>(arg);
             path = info->dlpi_name;
+#if defined(__HIP__)
+            // HIPRTC symbols are also in libamdhip64.so, although they will be
+            // removed from there see
+            // https://rocm.docs.amd.com/projects/HIP/en/docs-6.1.0/how-to/hip_rtc.html#deprecation-notice
+            // check both libraries for now, as linking with hiprtc is not yet
+            // required
+            return (path.find("libhiprtc.so") != std::string::npos) |
+                   (path.find("libamdhip64.so") != std::string::npos);
+#else
             return path.find("libnvrtc.so") != std::string::npos;
+#endif
           },
           &path))
     for (size_t pos; (pos = path.find_last_of("/")) != std::string::npos;) {
       path.erase(pos);  // remove last part of path
 
       struct stat buffer;
+#if defined(__HIP__)
+      const std::string filename = path + "/include/hip/hip_runtime.h";
+#else
       const std::string filename = path + "/include/cuda.h";
+#endif
       if (stat(filename.c_str(), &buffer) == 0) {
         return path + "/include";
       }
@@ -105,7 +126,7 @@ class Program {
 
     checkNvrtcCall(nvrtcGetPTXSize(program, &size));
     ptx.resize(size);
-    checkNvrtcCall(nvrtcGetPTX(program, &ptx[0]));
+    checkNvrtcCall(nvrtcGetPTX(program, const_cast<char *>(ptx.data())));
     return ptx;
   }
 

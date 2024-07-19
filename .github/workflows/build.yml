@@ -7,10 +7,11 @@ on:
 jobs:
   linting:
     name: run
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     env:
-        gcc-version: "12" 
         cuda-version: "12.2.0"
+        hip-version: "6.1.3"
+        amdgpu-version: "6.1.60103-1_all"
     steps:
 
       - name: Check out a copy of the repository
@@ -33,17 +34,29 @@ jobs:
           non-cuda-sub-packages: '["libcufft-dev"]'
           linux-local-args: '["--toolkit"]'
 
+      - name: Install ROCm and HIP
+        shell: bash -el {0}
+        run: |
+          wget https://repo.radeon.com/amdgpu-install/${{ env.hip-version }}/ubuntu/jammy/amdgpu-install_${{ env.amdgpu-version }}.deb
+          sudo apt -y install ./amdgpu-install_${{ env.amdgpu-version }}.deb
+          sudo apt update
+          sudo apt -y install rocm-hip-runtime-dev hipfft-dev
+
       - name: Show tool versions
         run: |
            echo "nvcc: $(nvcc --version)"
-           echo "g++: $(g++-${{ env.gcc-version}} --version)"
+           echo "hipcc: $(/opt/rocm/bin/hipcc --version)"
+           echo "g++: $(g++ --version)"
+           echo "cmake: $(cmake --version)"
 
-      - name: Run CMake
+      - name: Build the code in CUDA mode
         shell: bash -el {0}
         run: |
-          cmake -DCMAKE_CXX_COMPILER=g++-${{ env.gcc-version }} -DCUDAWRAPPERS_BUILD_TESTING=True -S . -B build
+          cmake -DCUDAWRAPPERS_BUILD_TESTING=True -S . -B build
+          make -C build -j
 
-      - name: Build the code
+      - name: Build the code in HIP mode
         shell: bash -el {0}
         run: |
-          cd build && make -j
+          cmake -DCUDAWRAPPERS_BUILD_TESTING=True -DCUDAWRAPPERS_BACKEND=HIP -DAMDGPU_TARGETS=gfx1101 -S . -B build
+          make -C build -j
