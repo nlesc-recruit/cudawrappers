@@ -574,6 +574,14 @@ class DeviceMemory : public Wrapper<CUdeviceptr> {
     checkCudaCall(cuMemHostGetDevicePointer(&_obj, hostMemory, 0));
   }
 
+  explicit DeviceMemory(const DeviceMemory &other, size_t offset, size_t size)
+      : _size(size) {
+    if (size + offset > other.size()) {
+      throw Error(CUDA_ERROR_INVALID_VALUE);
+    }
+    _obj = reinterpret_cast<CUdeviceptr>(reinterpret_cast<char *>(other._obj) + offset);
+  }
+
   void zero(size_t size) { checkCudaCall(cuMemsetD8(_obj, 0, size)); }
 
   const void *parameter()
