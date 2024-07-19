@@ -579,7 +579,8 @@ class DeviceMemory : public Wrapper<CUdeviceptr> {
     if (size + offset > other.size()) {
       throw Error(CUDA_ERROR_INVALID_VALUE);
     }
-    _obj = reinterpret_cast<CUdeviceptr>(reinterpret_cast<char *>(other._obj) + offset);
+    _obj = reinterpret_cast<CUdeviceptr>(reinterpret_cast<char *>(other._obj) +
+                                         offset);
   }
 
   void zero(size_t size) { checkCudaCall(cuMemsetD8(_obj, 0, size)); }

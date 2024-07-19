@@ -9,8 +9,8 @@ project adheres to [Semantic Versioning](http://semver.org/).
 
 - Added compatibility with HIP
 - Added `cu::Device::getArch()`
-- Added `cu::DeviceMemory` constructor to create non-owning slice of 
-  another `cu::DeviceMemory` object
+- Added `cu::DeviceMemory` constructor to create non-owning slice of another
+  `cu::DeviceMemory` object
 
 ### Changed
 
