@@ -51,7 +51,8 @@ if(${CUDAWRAPPERS_BACKEND_HIP})
 
   # Step 4.
   list(APPEND CMAKE_PREFIX_PATH ${HIP_ROOT_DIR})
-  find_package(hip REQUIRED)
+  set(HIP_MIN_VERSION 6.1)
+  find_package(hip ${HIP_MIN_VERSION} REQUIRED)
   find_package(hipfft REQUIRED)
 else()
   # cudawrappers requires the CUDA Toolkit.If you include cudawrappers in your
