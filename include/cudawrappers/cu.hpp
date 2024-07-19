@@ -15,16 +15,10 @@
 
 #if !defined(__HIP__)
 #include <cuda.h>
-#include <cuda_runtime_api.h>
-#endif
-
-#if defined(__HIP__)
-#include <cudawrappers/macros.hpp>
-
-typedef uint32_t cuuint32_t;
-
+#else
 #include <hip/hip_runtime.h>
-#include <hip/hip_runtime_api.h>
+
+#include <cudawrappers/macros.hpp>
 #endif
 
 namespace cu {
