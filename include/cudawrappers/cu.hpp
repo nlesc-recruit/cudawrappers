@@ -7,13 +7,19 @@
 #include <iomanip>
 #include <map>
 #include <memory>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
 
+#if !defined(__HIP__)
 #include <cuda.h>
-#include <cuda_runtime_api.h>
+#else
+#include <hip/hip_runtime.h>
+
+#include <cudawrappers/macros.hpp>
+#endif
 
 namespace cu {
 class Error : public std::exception {
@@ -46,7 +52,12 @@ inline int driverGetVersion() {
 }
 
 inline void memcpyHtoD(CUdeviceptr dst, const void *src, size_t size) {
+#if defined(__HIP__)
+  // const_cast is a temp fix for https://github.com/ROCm/ROCm/issues/2977
+  checkCudaCall(cuMemcpyHtoD(dst, const_cast<void *>(src), size));
+#else
   checkCudaCall(cuMemcpyHtoD(dst, src, size));
+#endif
 }
 
 inline void memcpyDtoH(void *dst, CUdeviceptr src, size_t size) {
@@ -89,11 +100,24 @@ class Device : public Wrapper<CUdevice> {
  public:
   // Device Management
 
-  explicit Device(int ordinal) { checkCudaCall(cuDeviceGet(&_obj, ordinal)); }
+  explicit Device(int ordinal) : _ordinal(ordinal) {
+    checkCudaCall(cuDeviceGet(&_obj, ordinal));
+  }
 
   struct CUdeviceArg {
   };  // int and CUdevice are the same type, but we need two constructors
-  Device(CUdeviceArg, CUdevice device) : Wrapper(device) {}
+  Device(CUdeviceArg, CUdevice device) : Wrapper(device) {
+    int count = 0;
+    checkCudaCall(cuDeviceGetCount(&count));
+
+    for (int ordinal = 0; ordinal < count; ordinal++) {
+      CUdevice current_device;
+      checkCudaCall(cuDeviceGet(&current_device, ordinal));
+      if (current_device == device) {
+        _ordinal = ordinal;
+      }
+    }
+  }
 
   int getAttribute(CUdevice_attribute attribute) const {
     int value{};
@@ -142,6 +166,20 @@ class Device : public Wrapper<CUdevice> {
     return result.str();
   }
 
+  std::string getArch() const {
+#if defined(__HIP_PLATFORM_AMD__)
+    hipDeviceProp_t prop;
+    checkCudaCall(hipGetDeviceProperties(&prop, _ordinal));
+    return prop.gcnArchName;
+#else
+    const int major =
+        getAttribute<CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MAJOR>();
+    const int minor =
+        getAttribute<CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MINOR>();
+    return "sm_" + std::to_string(10 * major + minor);
+#endif
+  }
+
   size_t totalMem() const {
     size_t size{};
     checkCudaCall(cuDeviceTotalMem(&size, _obj));
@@ -149,78 +187,109 @@ class Device : public Wrapper<CUdevice> {
   }
 
   // Primary Context Management
-
   std::pair<unsigned, bool> primaryCtxGetState() const {
     unsigned flags{};
     int active{};
+#if !defined(__HIP__)
     checkCudaCall(cuDevicePrimaryCtxGetState(_obj, &flags, &active));
+#endif
     return {flags, active};
   }
 
   // void primaryCtxRelease() not available; it is released on destruction of
   // the Context returned by Device::primaryContextRetain()
 
-  void primaryCtxReset() { checkCudaCall(cuDevicePrimaryCtxReset(_obj)); }
+  void primaryCtxReset() {
+#if !defined(__HIP__)
+    checkCudaCall(cuDevicePrimaryCtxReset(_obj));
+#endif
+  }
 
   Context primaryCtxRetain();  // retain this context until the primary context
                                // can be released
 
   void primaryCtxSetFlags(unsigned flags) {
+#if !defined(__HIP__)
     checkCudaCall(cuDevicePrimaryCtxSetFlags(_obj, flags));
+#endif
   }
+
+ private:
+  int _ordinal;
 };
 
 class Context : public Wrapper<CUcontext> {
  public:
   // Context Management
 
-  Context(int flags, Device &device) : _primaryContext(false) {
+  Context(int flags, Device &device) : _primaryContext(false), _device(device) {
+#if !defined(__HIP__)
     checkCudaCall(cuCtxCreate(&_obj, flags, device));
     manager =
         std::shared_ptr<CUcontext>(new CUcontext(_obj), [](CUcontext *ptr) {
           if (*ptr) cuCtxDestroy(*ptr);
           delete ptr;
         });
+#endif
   }
-
-  explicit Context(CUcontext context)
-      : Wrapper<CUcontext>(context), _primaryContext(false) {}
 
   unsigned getApiVersion() const {
     unsigned version{};
+#if !defined(__HIP__)
     checkCudaCall(cuCtxGetApiVersion(_obj, &version));
+#endif
     return version;
   }
 
   static CUfunc_cache getCacheConfig() {
     CUfunc_cache config{};
+#if !defined(__HIP__)
     checkCudaCall(cuCtxGetCacheConfig(&config));
+#endif
     return config;
   }
 
   static void setCacheConfig(CUfunc_cache config) {
+#if !defined(__HIP__)
     checkCudaCall(cuCtxSetCacheConfig(config));
+#endif
   }
 
-  static Context getCurrent() {
+  Context getCurrent() {
     CUcontext context{};
+#if !defined(__HIP__)
     checkCudaCall(cuCtxGetCurrent(&context));
-    return Context(context);
+#endif
+    return Context(context, _device);
   }
 
-  void setCurrent() const { checkCudaCall(cuCtxSetCurrent(_obj)); }
+  void setCurrent() const {
+#if !defined(__HIP__)
+    checkCudaCall(cuCtxSetCurrent(_obj));
+#endif
+  }
 
-  void pushCurrent() { checkCudaCall(cuCtxPushCurrent(_obj)); }
-
-  static Context popCurrent() {
+  Context popCurrent() {
     CUcontext context{};
+#if !defined(__HIP__)
     checkCudaCall(cuCtxPopCurrent(&context));
-    return Context(context);
+#endif
+    return Context(context, _device);
   }
 
-  static Device getDevice() {
+  void pushCurrent() {
+#if !defined(__HIP__)
+    checkCudaCall(cuCtxPushCurrent(_obj));
+#endif
+  }
+
+  Device getDevice() {
     CUdevice device;
+#if !defined(__HIP__)
     checkCudaCall(cuCtxGetDevice(&device));
+#else
+    device = _device;
+#endif
     return Device(Device::CUdeviceArg(), device);
   }
 
@@ -258,14 +327,19 @@ class Context : public Wrapper<CUcontext> {
     return total;
   }
 
-  static void synchronize() { checkCudaCall(cuCtxSynchronize()); }
+  static void synchronize() {
+#if !defined(__HIP__)
+    checkCudaCall(cuCtxSynchronize());
+#endif
+  }
 
  private:
   friend class Device;
   Context(CUcontext context, Device &device)
-      : Wrapper<CUcontext>(context), _primaryContext(true) {}
+      : Wrapper<CUcontext>(context), _primaryContext(true), _device(device) {}
 
   bool _primaryContext;
+  cu::Device &_device;
 };
 
 class HostMemory : public Wrapper<void *> {
@@ -338,7 +412,7 @@ class Array : public Wrapper<CUarray> {
 
   void createManager() {
     manager = std::shared_ptr<CUarray>(new CUarray(_obj), [](CUarray *ptr) {
-      cuArrayDestroy(*ptr);
+      checkCudaCall(cuArrayDestroy(*ptr));
       delete ptr;
     });
   }
@@ -356,7 +430,7 @@ class Module : public Wrapper<CUmodule> {
     checkCudaCall(cuModuleLoad(&_obj, file_name));
 #endif
     manager = std::shared_ptr<CUmodule>(new CUmodule(_obj), [](CUmodule *ptr) {
-      cuModuleUnload(*ptr);
+      checkCudaCall(cuModuleUnload(*ptr));
       delete ptr;
     });
   }
@@ -364,7 +438,7 @@ class Module : public Wrapper<CUmodule> {
   explicit Module(const void *data) {
     checkCudaCall(cuModuleLoadData(&_obj, data));
     manager = std::shared_ptr<CUmodule>(new CUmodule(_obj), [](CUmodule *ptr) {
-      cuModuleUnload(*ptr);
+      checkCudaCall(cuModuleUnload(*ptr));
       delete ptr;
     });
   }
@@ -404,11 +478,19 @@ class Function : public Wrapper<CUfunction> {
 
   explicit Function(CUfunction &function) : Wrapper(function) {}
 
+#if defined(__HIP__)
+  int getAttribute(hipFunction_attribute attribute) const {
+    int value{};
+    checkCudaCall(cuFuncGetAttribute(&value, attribute, _obj));
+    return value;
+  }
+#else
   int getAttribute(CUfunction_attribute attribute) const {
     int value{};
     checkCudaCall(cuFuncGetAttribute(&value, attribute, _obj));
     return value;
   }
+#endif
 
   void setAttribute(CUfunction_attribute attribute, int value) {
     checkCudaCall(cuFuncSetAttribute(_obj, attribute, value));
@@ -437,7 +519,7 @@ class Event : public Wrapper<CUevent> {
   explicit Event(unsigned int flags = CU_EVENT_DEFAULT) {
     checkCudaCall(cuEventCreate(&_obj, flags));
     manager = std::shared_ptr<CUevent>(new CUevent(_obj), [](CUevent *ptr) {
-      cuEventDestroy(*ptr);
+      checkCudaCall(cuEventDestroy(*ptr));
       delete ptr;
     });
   }
@@ -478,7 +560,7 @@ class DeviceMemory : public Wrapper<CUdeviceptr> {
     }
     manager = std::shared_ptr<CUdeviceptr>(new CUdeviceptr(_obj),
                                            [](CUdeviceptr *ptr) {
-                                             cuMemFree(*ptr);
+                                             checkCudaCall(cuMemFree(*ptr));
                                              delete ptr;
                                            });
   }
@@ -526,7 +608,7 @@ class Stream : public Wrapper<CUstream> {
   explicit Stream(unsigned int flags = CU_STREAM_DEFAULT) {
     checkCudaCall(cuStreamCreate(&_obj, flags));
     manager = std::shared_ptr<CUstream>(new CUstream(_obj), [](CUstream *ptr) {
-      cuStreamDestroy(*ptr);
+      checkCudaCall(cuStreamDestroy(*ptr));
       delete ptr;
     });
   }
@@ -544,17 +626,34 @@ class Stream : public Wrapper<CUstream> {
   }
 
   void memcpyHtoHAsync(void *dstPtr, const void *srcPtr, size_t size) {
+#if defined(__HIP__)
+    checkCudaCall(hipMemcpyAsync(
+        reinterpret_cast<CUdeviceptr>(dstPtr),
+        reinterpret_cast<CUdeviceptr>(const_cast<void *>(srcPtr)), size,
+        hipMemcpyDefault, _obj));
+#else
     checkCudaCall(cuMemcpyAsync(reinterpret_cast<CUdeviceptr>(dstPtr),
                                 reinterpret_cast<CUdeviceptr>(srcPtr), size,
                                 _obj));
+#endif
   }
 
   void memcpyHtoDAsync(DeviceMemory &devPtr, const void *hostPtr, size_t size) {
+#if defined(__HIP__)
+    checkCudaCall(
+        hipMemcpyHtoDAsync(devPtr, const_cast<void *>(hostPtr), size, _obj));
+#else
     checkCudaCall(cuMemcpyHtoDAsync(devPtr, hostPtr, size, _obj));
+#endif
   }
 
   void memcpyHtoDAsync(CUdeviceptr devPtr, const void *hostPtr, size_t size) {
+#if defined(__HIP__)
+    checkCudaCall(
+        hipMemcpyHtoDAsync(devPtr, const_cast<void *>(hostPtr), size, _obj));
+#else
     checkCudaCall(cuMemcpyHtoDAsync(devPtr, hostPtr, size, _obj));
+#endif
   }
 
   void memcpyDtoHAsync(void *hostPtr, const DeviceMemory &devPtr, size_t size) {
@@ -567,7 +666,11 @@ class Stream : public Wrapper<CUstream> {
 
   void memcpyDtoDAsync(DeviceMemory &dstPtr, DeviceMemory &srcPtr,
                        size_t size) {
+#if defined(__HIP__)
+    checkCudaCall(hipMemcpyAsync(dstPtr, srcPtr, size, hipMemcpyDefault, _obj));
+#else
     checkCudaCall(cuMemcpyAsync(dstPtr, srcPtr, size, _obj));
+#endif
   }
 
   void memPrefetchAsync(DeviceMemory &devPtr, size_t size) {
@@ -618,10 +721,12 @@ class Stream : public Wrapper<CUstream> {
 
   void record(Event &event) { checkCudaCall(cuEventRecord(event, _obj)); }
 
+#if !defined(__HIP__)
   void batchMemOp(unsigned count, CUstreamBatchMemOpParams *paramArray,
                   unsigned flags) {
     checkCudaCall(cuStreamBatchMemOp(_obj, count, paramArray, flags));
   }
+#endif
 
   void waitValue32(CUdeviceptr addr, cuuint32_t value, unsigned flags) const {
     checkCudaCall(cuStreamWaitValue32(_obj, addr, value, flags));
@@ -629,12 +734,6 @@ class Stream : public Wrapper<CUstream> {
 
   void writeValue32(CUdeviceptr addr, cuuint32_t value, unsigned flags) {
     checkCudaCall(cuStreamWriteValue32(_obj, addr, value, flags));
-  }
-
-  Context getContext() const {
-    CUcontext context;
-    checkCudaCall(cuStreamGetCtx(_obj, &context));
-    return Context(context);
   }
 };
 

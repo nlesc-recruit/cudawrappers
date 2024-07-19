@@ -5,8 +5,14 @@ project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+### Added
+
+- Added compatibility with HIP
+- Added `cu::Device::getArch()`
+
 ### Changed
 
+- `cu::Context::{getCurrent, popCurrent, getDevice}` are no longer static
 - `inline_local_includes` is now more robust: it properly handles commented
   includes and respects the location of an include in the original source file
 

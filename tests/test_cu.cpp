@@ -5,7 +5,6 @@
 
 #define CATCH_CONFIG_MAIN
 #include <catch2/catch.hpp>
-#include <cuda.h>
 #include <cudawrappers/cu.hpp>
 
 TEST_CASE("Test cu::Device", "[device]") {
@@ -18,20 +17,22 @@ TEST_CASE("Test cu::Device", "[device]") {
     std::cout << "Device name: " << name << std::endl;
     CHECK(name.size() > 0);
   }
+
+  SECTION("Test Device.getArch") {
+    const std::string arch = device.getArch();
+    std::cout << "Device arch: " << arch << std::endl;
+    CHECK(arch.size() > 0);
+  }
 }
 
 TEST_CASE("Test context::getDevice", "[device]") {
   cu::init();
 
-  SECTION("Test before initialization") {
-    CHECK_THROWS(cu::Context::getCurrent().getDevice());
-  }
-
   cu::Device device(0);
   cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, device);
 
-  SECTION("Test after initialization") {
-    CHECK(device.getName() == cu::Context::getCurrent().getDevice().getName());
+  SECTION("Test getName from context") {
+    CHECK(device.getName() == context.getCurrent().getDevice().getName());
   }
 }
 

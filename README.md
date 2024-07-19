@@ -6,7 +6,7 @@
 [![fair-software.eu](https://img.shields.io/badge/fair--software.eu-%E2%97%8F%20%20%E2%97%8F%20%20%E2%97%8F%20%20%E2%97%8F%20%20%E2%97%8F-green)](https://fair-software.eu)
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/d38b0338fda24733ab41a64915af8248)](https://app.codacy.com/gh/nlesc-recruit/cudawrappers/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=nlesc-recruit/cudawrappers&amp;utm_campaign=Badge_Grade)
 [![citation metadata](https://github.com/nlesc-recruit/cudawrappers/actions/workflows/cffconvert.yml/badge.svg)](https://github.com/nlesc-recruit/cudawrappers/actions/workflows/cffconvert.yml)
-[![Documentation Status](https://readthedocs.org/projects/cudawrappers/badge/?version=latest)](https://cudawrappers.readthedocs.io/en/latest/?badge=latest)
+[![Documentation Status](https://readthedocs.org/projects/cudawrappers/badge)](https://cudawrappers.readthedocs.io/en/latest/)
 
 
 # cudawrappers
@@ -17,6 +17,9 @@ This library is a C++ wrapper for the Nvidia C libraries (e.g. CUDA driver, nvrt
 2. _better fault handling_ (through exceptions);
 3. _more compact user code_.
 
+This library also supports AMD GPUs through the HIP: C++ Heterogeneous-Compute
+Interface for Portability.
+
 Originally, the API enforced RAII to even further reduce the risk of faulty code, but enforcing RAII and compatibility with (unmanaged) objects obtained outside this API are mutually exclusive.
 
 ## Requirements
@@ -24,13 +27,19 @@ Originally, the API enforced RAII to even further reduce the risk of faulty code
 | Software    | Minimum version |
 | ----------- | ----------- |
 | CUDA        | 10.0 or later |
+| ROCM        | 6.1.0 or later |
 | CMake       | 3.17 or later |
 | gcc         | 9.3 or later  |
 | OS          | Linux distro (amd64) |
 
 | Hardware    | Type |
 | ----------- | ----------- |
-| GPU architecture        | [NVIDIA PASCAL](https://www.nvidia.com/en-in/geforce/products/10series/architecture/) or newer|
+| NVIDIA GPU  |
+[Pascal](https://www.nvidia.com/en-in/geforce/products/10series/architecture/)
+or newer|
+| AMD GPU     | RDNA2 or newer, CDNA2 or newer |
+
+
 
 ## Usage
 
@@ -54,6 +63,18 @@ cmake -DCMAKE_INSTALL_PREFIX=$HOME/.local -S . -B build
 make -C build
 make -C build install
 ```
+
+## Usage (HIP)
+
+To enable HIP, make sure to build cudawrappers with
+`-DCUDAWRAPPERS_BACKEND=HIP`, or when using `FetchContent`, use
+`set(CUDAWRAPPERS_BACKEND "HIP")`.  In your project's `CMakeLists.txt`, add
+`enable_language(HIP)`. Furthermore, every target that includes a cudawrappers
+header file needs to be 'hipified', to this end, add
+`set_source_files_properties(source.cpp PROPERTIES LANGUAGE HIP)` for every
+relevant `source.cpp` file. Some CUDA specific features may not be available or
+not work on non-NVIDIA GPUs, in those cases use `#ifdef(__HIP__)` guards to
+patch your code wherever this is needed.
 
 ### Usage examples
 

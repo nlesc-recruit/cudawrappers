@@ -27,6 +27,31 @@ option(CUDAWRAPPERS_BUILD_TESTING "Build cudawrappers tests"
        ${CUDAWRAPPERS_TESTING_DEFAULT}
 )
 
+if(NOT DEFINED CUDAWRAPPERS_BACKEND)
+  set(CUDAWRAPPERS_BACKEND "CUDA")
+endif()
+set(CUDAWRAPPERS_BACKEND
+    ${CUDAWRAPPERS_BACKEND}
+    CACHE STRING "Backend API to use in cudawrappers"
+)
+set_property(CACHE CUDAWRAPPERS_BACKEND PROPERTY STRINGS "CUDA" "HIP")
+
+if(${CUDAWRAPPERS_BACKEND} STREQUAL "CUDA")
+  set(CUDAWRAPPERS_BACKEND_CUDA True)
+elseif(${CUDAWRAPPERS_BACKEND} STREQUAL "HIP")
+  set(CUDAWRAPPERS_BACKEND_HIP True)
+else()
+  message(
+    FATAL_ERROR
+      "Invalid value for CUDAWRAPPERS_BACKEND: ${CUDAWRAPPERS_BACKEND}"
+  )
+endif()
+
+if(${CUDAWRAPPERS_BACKEND_HIP})
+  enable_language(HIP)
+  set(CMAKE_HIP_COMPILER_ENV_VAR "HIPCXX")
+endif()
+
 # Enable Clang compiler warnings
 if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
   add_compile_options(

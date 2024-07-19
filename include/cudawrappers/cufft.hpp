@@ -1,9 +1,15 @@
 #if !defined CUFFT_H
 #define CUFFT_H
 
+#if defined(__HIP__)
+#include <hip/hip_fp16.h>
+#include <hipfft/hipfft.h>
+#include <hipfft/hipfftXt.h>
+#else
 #include <cuda_fp16.h>
 #include <cufft.h>
 #include <cufftXt.h>
+#endif
 
 #include <exception>
 
@@ -58,9 +64,6 @@ static const char *_cudaGetErrorEnum(cufftResult error) {
 
     case CUFFT_NOT_IMPLEMENTED:
       return "CUFFT_NOT_IMPLEMENTED";
-
-    case CUFFT_LICENSE_ERROR:
-      return "CUFFT_LICENSE_ERROR";
 
     case CUFFT_NOT_SUPPORTED:
       return "CUFFT_NOT_SUPPORTED";
@@ -136,7 +139,13 @@ class FFT {
 template <cudaDataType_t T>
 class FFT1D : public FFT {
  public:
+#if defined(__HIP__)
+  __host__
+#endif
   FFT1D(int nx) = delete;
+#if defined(__HIP__)
+  __host__
+#endif
   FFT1D(int nx, int batch) = delete;
 };
 
@@ -173,7 +182,13 @@ FFT1D<CUDA_C_16F>::FFT1D(int nx) : FFT1D(nx, 1) {}
 template <cudaDataType_t T>
 class FFT2D : public FFT {
  public:
+#if defined(__HIP__)
+  __host__
+#endif
   FFT2D(int nx, int ny) = delete;
+#if defined(__HIP__)
+  __host__
+#endif
   FFT2D(int nx, int ny, int stride, int dist, int batch) = delete;
 };
 
