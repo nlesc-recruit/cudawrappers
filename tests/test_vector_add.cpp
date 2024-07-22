@@ -4,13 +4,14 @@
 #include <vector>
 
 #define CATCH_CONFIG_MAIN
-#include <catch2/catch.hpp>
+#include <catch2/catch_test_macros.hpp>
+#include <catch2/catch_approx.hpp>
 #include <cudawrappers/cu.hpp>
 #include <cudawrappers/nvrtc.hpp>
 
 bool arrays_equal(const float *a, const float *b, size_t n) {
   for (size_t i = 0; i < n; i++) {
-    if (a[i] != Approx(b[i]).epsilon(1e-6)) {
+    if (a[i] != Catch::Approx(b[i]).epsilon(1e-6)) {
       return false;
     }
   }
