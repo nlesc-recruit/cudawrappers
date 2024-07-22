@@ -1,11 +1,9 @@
 include(FetchContent)
 
-# We use Catch2 v2.x because it is the last version that supports C++11, see
-# https://github.com/catchorg/Catch2.
 FetchContent_Declare(
   Catch2
   GIT_REPOSITORY https://github.com/catchorg/Catch2.git
-  GIT_TAG v2.13.9
+  GIT_TAG v3.6.0
 )
 
 FetchContent_MakeAvailable(Catch2)
@@ -28,7 +26,7 @@ foreach(component ${COMPONENTS})
   catch_discover_tests(test_${component})
 endforeach()
 
-set(LINK_LIBRARIES Catch2::Catch2 cudawrappers::cu)
+set(LINK_LIBRARIES Catch2::Catch2WithMain cudawrappers::cu)
 
 target_link_libraries(test_cu PUBLIC ${LINK_LIBRARIES})
 

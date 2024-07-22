@@ -1,8 +1,8 @@
+#include <catch2/catch_test_macros.hpp>
+#include <catch2/matchers/catch_matchers_floating_point.hpp>
 #include <fstream>
 #include <iostream>
 
-#define CATCH_CONFIG_MAIN
-#include <catch2/catch.hpp>
 #include <cudawrappers/cufft.hpp>
 
 #define FP16_EPSILON 1e-3f
