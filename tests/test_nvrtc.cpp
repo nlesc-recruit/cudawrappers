@@ -1,7 +1,7 @@
+#include <catch2/catch_test_macros.hpp>
 #include <string>
 #include <vector>
 
-#include <catch2/catch_test_macros.hpp>
 #include <cudawrappers/nvrtc.hpp>
 
 TEST_CASE("Test nvrtc::Program", "[program]") {
