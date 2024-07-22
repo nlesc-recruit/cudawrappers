@@ -187,6 +187,22 @@ TEST_CASE("Test zeroing cu::DeviceMemory", "[zero]") {
     CHECK_THROWS(
         cu::DeviceMemory(size, CU_MEMORYTYPE_DEVICE, CU_MEM_ATTACH_HOST));
   }
+
+  SECTION("Test cu::DeviceMemory offset") {
+    const size_t size = 1024;
+    const size_t offset = 512;
+    const size_t slice_size = 512;
+    cu::DeviceMemory mem(size);
+    CHECK_NOTHROW(cu::DeviceMemory(mem, offset, slice_size));
+  }
+
+  SECTION("Test cu::DeviceMemory invalid offset") {
+    const size_t size = 1024;
+    const size_t offset = 512;
+    const size_t slice_size = 1024;
+    cu::DeviceMemory mem(size);
+    CHECK_THROWS(cu::DeviceMemory(mem, offset, slice_size));
+  }
 }
 
 TEST_CASE("Test cu::Stream", "[stream]") {
