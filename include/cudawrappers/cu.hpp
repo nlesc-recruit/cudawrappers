@@ -15,6 +15,7 @@
 
 #if !defined(__HIP__)
 #include <cuda.h>
+#include <cuda_runtime.h>
 #else
 #include <hip/hip_runtime.h>
 
