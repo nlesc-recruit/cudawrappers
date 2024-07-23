@@ -14,6 +14,8 @@
 #include <vector>
 
 #if !defined(__HIP__)
+#include <cuda_runtime.h>
+
 #include <cuda.h>
 #else
 #include <hip/hip_runtime.h>
