@@ -585,7 +585,19 @@ class DeviceMemory : public Wrapper<CUdeviceptr> {
                                          offset);
   }
 
-  void zero(size_t size) { checkCudaCall(cuMemsetD8(_obj, 0, size)); }
+  void memset(unsigned char value, size_t size) {
+    checkCudaCall(cuMemsetD8(_obj, value, size));
+  }
+
+  void memset(unsigned short value, size_t size) {
+    checkCudaCall(cuMemsetD16(_obj, value, size));
+  }
+
+  void memset(unsigned int value, size_t size) {
+    checkCudaCall(cuMemsetD32(_obj, value, size));
+  }
+
+  void zero(size_t size) { memset(static_cast<unsigned char>(0), size); }
 
   const void *parameter()
       const  // used to construct parameter list for launchKernel();

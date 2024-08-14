@@ -204,6 +204,39 @@ TEST_CASE("Test cu::DeviceMemory", "[devicememory]") {
   }
 }
 
+using TestTypes = std::tuple<unsigned char, unsigned short, unsigned int>;
+TEMPLATE_LIST_TEST_CASE("Test memset", "[memset]", TestTypes) {
+  cu::init();
+  cu::Device device(0);
+  cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, device);
+
+  SECTION("Test memset cu::DeviceMemory synchronously") {
+    const size_t N = 3;
+    const size_t size = N * sizeof(TestType);
+    cu::HostMemory a(size);
+    cu::HostMemory b(size);
+    TestType value = 0xAA;
+
+    // Populate the memory with values
+    TestType* const a_ptr = static_cast<TestType*>(a);
+    TestType* const b_ptr = static_cast<TestType*>(b);
+    for (int i = 0; i < N; i++) {
+      a_ptr[i] = 0;
+      b_ptr[i] = value;
+    }
+    cu::DeviceMemory mem(size);
+
+    cu::Stream stream;
+    stream.memcpyHtoDAsync(mem, a, size);
+    stream.synchronize();
+    mem.memset(value, N);
+    stream.memcpyDtoHAsync(b, mem, size);
+    stream.synchronize();
+
+    CHECK(static_cast<bool>(memcmp(a, b, size)));
+  }
+}
+
 TEST_CASE("Test cu::Stream", "[stream]") {
   cu::init();
   cu::Device device(0);
