@@ -156,7 +156,7 @@ TEST_CASE("Test cu::DeviceMemory", "[devicememory]") {
     stream.memcpyDtoHAsync(tgt, mem, size);
     stream.synchronize();
 
-    CHECK(static_cast<bool>(!memcmp(data_in.data(), data_out.data(), size)));
+    CHECK(data_in == data_out);
   }
 
   SECTION("Test cu::DeviceMemory with CU_MEMORYTYPE_DEVICE as host pointer") {
