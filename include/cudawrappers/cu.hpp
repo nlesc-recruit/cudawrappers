@@ -585,7 +585,19 @@ class DeviceMemory : public Wrapper<CUdeviceptr> {
                                          offset);
   }
 
-  void zero(size_t size) { checkCudaCall(cuMemsetD8(_obj, 0, size)); }
+  void memset(unsigned char value, size_t size) {
+    checkCudaCall(cuMemsetD8(_obj, value, size));
+  }
+
+  void memset(unsigned short value, size_t size) {
+    checkCudaCall(cuMemsetD16(_obj, value, size));
+  }
+
+  void memset(unsigned int value, size_t size) {
+    checkCudaCall(cuMemsetD32(_obj, value, size));
+  }
+
+  void zero(size_t size) { memset(static_cast<unsigned char>(0), size); }
 
   const void *parameter()
       const  // used to construct parameter list for launchKernel();
@@ -692,8 +704,20 @@ class Stream : public Wrapper<CUstream> {
     checkCudaCall(cuMemPrefetchAsync(devPtr, size, dstDevice, _obj));
   }
 
+  void memsetAsync(DeviceMemory &devPtr, unsigned char value, size_t size) {
+    checkCudaCall(cuMemsetD8Async(devPtr, value, size, _obj));
+  }
+
+  void memsetAsync(DeviceMemory &devPtr, unsigned short value, size_t size) {
+    checkCudaCall(cuMemsetD16Async(devPtr, value, size, _obj));
+  }
+
+  void memsetAsync(DeviceMemory &devPtr, unsigned int value, size_t size) {
+    checkCudaCall(cuMemsetD32Async(devPtr, value, size, _obj));
+  }
+
   void zero(DeviceMemory &devPtr, size_t size) {
-    checkCudaCall(cuMemsetD8Async(devPtr, 0, size, _obj));
+    memsetAsync(devPtr, static_cast<unsigned char>(0), size);
   }
 
   void launchKernel(Function &function, unsigned gridX, unsigned gridY,
