@@ -11,6 +11,8 @@ project adheres to [Semantic Versioning](http://semver.org/).
 - Added `cu::Device::getArch()`
 - Added `cu::DeviceMemory` constructor to create non-owning slice of another
   `cu::DeviceMemory` object
+- Added `cu::DeviceMemory::memset()`
+- Added `cu::Stream::memsetAsync()`
 
 ### Changed
 
