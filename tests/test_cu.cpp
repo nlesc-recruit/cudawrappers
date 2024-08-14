@@ -80,7 +80,7 @@ TEST_CASE("Test copying cu::DeviceMemory and cu::HostMemory using cu::Stream",
   }
 }
 
-TEST_CASE("Test zeroing cu::DeviceMemory", "[zero]") {
+TEST_CASE("Test cu::DeviceMemory", "[devicememory]") {
   cu::init();
   cu::Device device(0);
   cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, device);
@@ -134,7 +134,7 @@ TEST_CASE("Test zeroing cu::DeviceMemory", "[zero]") {
     CHECK(static_cast<bool>(memcmp(src, tgt, size)));
   }
 
-  SECTION("Test cu::RegisteredMemory") {
+  SECTION("Test cu::DeviceMemory memcpy asynchronously") {
     const size_t N = 3;
     const size_t size = N * sizeof(int);
 
@@ -156,7 +156,7 @@ TEST_CASE("Test zeroing cu::DeviceMemory", "[zero]") {
     stream.memcpyDtoHAsync(tgt, mem, size);
     stream.synchronize();
 
-    CHECK(data_in == data_out);
+    CHECK(static_cast<bool>(!memcmp(data_in.data(), data_out.data(), size)));
   }
 
   SECTION("Test cu::DeviceMemory with CU_MEMORYTYPE_DEVICE as host pointer") {
