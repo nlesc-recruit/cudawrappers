@@ -704,8 +704,20 @@ class Stream : public Wrapper<CUstream> {
     checkCudaCall(cuMemPrefetchAsync(devPtr, size, dstDevice, _obj));
   }
 
+  void memsetAsync(DeviceMemory &devPtr, unsigned char value, size_t size) {
+    checkCudaCall(cuMemsetD8Async(devPtr, value, size, _obj));
+  }
+
+  void memsetAsync(DeviceMemory &devPtr, unsigned short value, size_t size) {
+    checkCudaCall(cuMemsetD16Async(devPtr, value, size, _obj));
+  }
+
+  void memsetAsync(DeviceMemory &devPtr, unsigned int value, size_t size) {
+    checkCudaCall(cuMemsetD32Async(devPtr, value, size, _obj));
+  }
+
   void zero(DeviceMemory &devPtr, size_t size) {
-    checkCudaCall(cuMemsetD8Async(devPtr, 0, size, _obj));
+    memsetAsync(devPtr, static_cast<unsigned char>(0), size);
   }
 
   void launchKernel(Function &function, unsigned gridX, unsigned gridY,
