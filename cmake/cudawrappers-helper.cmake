@@ -1,7 +1,6 @@
-# Copy the contents of the input file to the output file with all the local
-# includes inlined. Local includes are assumed to have ""'s, e.g. having a line
-# '#include "helper.h"` will lead to `helper.h` being inlined.
-function(inline_local_includes input_file output_file)
+# Retun a list of asbolute file names for all the local includes of the
+# input_file.  Only files in the root directory will be considered.
+function(get_local_includes input_file root_dir)
   file(READ ${input_file} input_file_contents)
   set(include_regex "(^|\r?\n)(#include[ \t]*\"([^\"]+)\")")
   string(REGEX MATCHALL ${include_regex} includes ${input_file_contents})
@@ -10,19 +9,13 @@ function(inline_local_includes input_file output_file)
     # Get the name of the file to include, e.g. 'helper.h'
     string(REGEX REPLACE ${include_regex} "\\3" include_name ${include})
     # Get the complete line of the include, e.g.  '#include <helper.h>'
-    string(REGEX REPLACE ${include_regex} "\\2" include_line ${include})
-    file(GLOB_RECURSE INCLUDE_PATHS "${PROJECT_SOURCE_DIR}/*/${include_name}")
+    file(GLOB_RECURSE INCLUDE_PATHS "${root_dir}/*/${include_name}")
     if(NOT INCLUDE_PATHS STREQUAL "")
       list(SORT INCLUDE_PATHS ORDER DESCENDING)
       list(GET INCLUDE_PATHS 0 include_PATH)
       list(APPEND include_files ${include_PATH})
-      file(READ ${include_PATH} include_contents)
-      string(REPLACE "${include_line}" "${include_contents}"
-                     input_file_contents "${input_file_contents}"
-      )
     endif()
   endforeach()
-  file(WRITE ${output_file} "${input_file_contents}")
   set(include_files
       ${include_files}
       PARENT_SCOPE
@@ -43,7 +36,18 @@ function(target_embed_source target input_file)
   string(REPLACE "${PROJECT_SOURCE_DIR}" "${CMAKE_BINARY_DIR}"
                  input_file_inlined ${input_file_absolute}
   )
-  inline_local_includes(${input_file_absolute} ${input_file_inlined})
+  # Get a list of all local includes so that they can be added as dependencies
+  get_local_includes(${input_file} ${PROJECT_SOURCE_DIR})
+  # Create a copy of the input file with all local headers inlined
+  add_custom_command(
+    OUTPUT ${input_file_inlined}
+    COMMAND
+      ${CMAKE_COMMAND} -Dinput_file=${input_file_absolute}
+      -Doutput_file=${input_file_inlined} -Droot_dir=${PROJECT_SOURCE_DIR} -P
+      ${CMAKE_CURRENT_FUNCTION_LIST_DIR}/cudawrappers-inline-local-includes.cmake
+    DEPENDS "${input_file_absolute};${include_files}"
+    COMMENT "Inlining all includes of ${input_file}"
+  )
   # Link the input_file into an object file
   string(REPLACE "${PROJECT_SOURCE_DIR}/" "" input_file_inlined_relative
                  ${input_file_absolute}
@@ -54,7 +58,7 @@ function(target_embed_source target input_file)
       ld ARGS -r -b binary -A ${CMAKE_SYSTEM_PROCESSOR} -o
       "${CMAKE_CURRENT_BINARY_DIR}/${NAME}.o" ${input_file_inlined_relative}
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-    DEPENDS ${input_file} ${include_files}
+    DEPENDS ${input_file_inlined}
     COMMENT "Creating object file for ${input_file}"
   )
   if(NOT TARGET ${NAME})
