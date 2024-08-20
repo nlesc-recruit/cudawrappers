@@ -44,7 +44,7 @@ function(target_embed_source target input_file)
     COMMAND
       ${CMAKE_COMMAND} -Dinput_file=${input_file_absolute}
       -Doutput_file=${input_file_inlined} -Droot_dir=${PROJECT_SOURCE_DIR} -P
-      ${CMAKE_CURRENT_FUNCTION_LIST_DIR}/cudawrappers-inline-local-includes.cmake
+      "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/cudawrappers-inline-local-includes.cmake"
     DEPENDS "${input_file_absolute};${include_files}"
     COMMENT "Inlining all includes of ${input_file}"
   )
