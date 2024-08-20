@@ -21,6 +21,8 @@ project adheres to [Semantic Versioning](http://semver.org/).
   includes and respects the location of an include in the original source file
 - Upgrade C++ standard to C++14
 - Upgrade Catch2 to version v3.6.0
+- `target_embed_source` is now more robust: it properly tracks dependencies and
+  runs again whenever any of them changes
 
 ## \[0.8.0\] - 2024-07-05
 
