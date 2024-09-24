@@ -13,6 +13,7 @@ project adheres to [Semantic Versioning](http://semver.org/).
   `cu::DeviceMemory` object
 - Added `cu::DeviceMemory::memset()`
 - Added `cu::Stream::memsetAsync()`
+- Added `nvml::Device::getPower()`
 
 ### Changed
 

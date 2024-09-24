@@ -54,6 +54,12 @@ class Device {
     return clockMhz;
   }
 
+  unsigned int getPower() {
+    unsigned int power;
+    checkNvmlCall(nvmlDeviceGetPowerUsage(device_, &power));
+    return power;
+  }
+
  private:
   nvmlDevice_t device_;
 };
