@@ -12,6 +12,7 @@
 #endif
 
 #include <exception>
+#include <array>
 
 #include "cudawrappers/cu.hpp"
 
@@ -224,6 +225,78 @@ FFT2D<CUDA_C_16F>::FFT2D(int nx, int ny, int stride, int dist, int batch) {
 template <>
 FFT2D<CUDA_C_16F>::FFT2D(int nx, int ny) : FFT2D(nx, ny, 1, nx * ny, 1) {}
 
+/*
+ * FFT1DRealToComplex
+ */
+template <cudaDataType_t T>
+class FFT1DRealToComplex : public FFT {
+ public:
+#if defined(__HIP__)
+  __host__
+#endif
+  FFT1DRealToComplex(int nx) = delete;
+#if defined(__HIP__)
+  __host__
+#endif
+  FFT1DRealToComplex(int nx, int batch) = delete;
+
+  FFT1DRealToComplex(int nx, int batch, std::array<long long, 1>& inembed, std::array<long long, 1>& ouembed) = delete;
+};
+
+
+template <>
+FFT1DRealToComplex<CUDA_R_32F>::FFT1DRealToComplex(int nx, int batch, std::array<long long, 1>& inembed, std::array<long long, 1>& ouembed) {
+  checkCuFFTCall(cufftCreate(plan()));
+  const int rank = 1;
+  size_t ws = 0;
+  std::array<long long, 1> n{nx};
+  long long int idist = inembed[0];
+  long long int odist = ouembed[0];
+  int istride = 1;
+  int ostride = 1;
+  checkCuFFTCall(cufftXtMakePlanMany(*plan(), rank, n.data(), inembed.data(), istride,
+                                     idist, CUDA_R_32F, ouembed.data(), ostride, odist,
+                                     CUDA_C_32F, batch, &ws, CUDA_R_32F));
+}
+
+/*
+ * FFT1DComplexToReal
+ */
+template <cudaDataType_t T>
+class FFT1DComplexToReal : public FFT {
+ public:
+#if defined(__HIP__)
+  __host__
+#endif
+  FFT1DComplexToReal(int nx) = delete;
+#if defined(__HIP__)
+  __host__
+#endif
+  FFT1DComplexToReal(int nx, int batch) = delete;
+
+  FFT1DComplexToReal(int nx, int batch, std::array<long long, 1>& inembed, std::array<long long, 1>& ouembed) = delete;
+};
+
+
+template <>
+FFT1DComplexToReal<CUDA_C_32F>::FFT1DComplexToReal(int nx, int batch, std::array<long long, 1>& inembed, std::array<long long, 1>& ouembed) {
+  checkCuFFTCall(cufftCreate(plan()));
+  const int rank = 1;
+  size_t ws = 0;
+  std::array<long long, 1> n{nx};
+  long long int idist = inembed[0];
+  long long int odist = ouembed[0];
+  int istride = 1;
+  int ostride = 1;
+  checkCuFFTCall(cufftXtMakePlanMany(*plan(), rank, n.data(), inembed.data(), istride,
+                                     idist, CUDA_C_32F, ouembed.data(), ostride, odist,
+                                     CUDA_R_32F, batch, &ws, CUDA_C_32F));
+}
+
+
 }  // namespace cufft
+
+
+
 
 #endif  // CUFFT_H
