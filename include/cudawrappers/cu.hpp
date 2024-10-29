@@ -189,6 +189,7 @@ class Device : public Wrapper<CUdevice> {
   }
 
   size_t getTotalConstMem() const {
+    // FIXME: implement HIP.
     return static_cast<size_t>(
         getAttribute(CU_DEVICE_ATTRIBUTE_TOTAL_CONSTANT_MEMORY));
   }
@@ -617,6 +618,15 @@ class DeviceMemory : public Wrapper<CUdeviceptr> {
   }
 
   void zero(size_t size) { memset(static_cast<unsigned char>(0), size); }
+
+  void memcpyToSymbolAsync(const void *symbol, size_t count, size_t offset,
+                           cudaStream_t stream) {
+    if (cudaMemcpyToSymbolAsync(symbol, reinterpret_cast<const void *>(_obj),
+                                count, offset, cudaMemcpyDeviceToDevice,
+                                stream) != cudaSuccess) {
+      throw cu::Error(CUDA_ERROR_UNKNOWN);
+    }
+  }
 
   void memcpyToSymbolSync(const void *symbol, size_t count, size_t offset) {
     if (cudaMemcpyToSymbol(symbol, reinterpret_cast<const void *>(_obj), count,

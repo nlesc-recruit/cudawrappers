@@ -11,8 +11,8 @@
 #include <cufftXt.h>
 #endif
 
-#include <exception>
 #include <array>
+#include <exception>
 
 #include "cudawrappers/cu.hpp"
 
@@ -240,23 +240,26 @@ class FFT1DRealToComplex : public FFT {
 #endif
   FFT1DRealToComplex(int nx, int batch) = delete;
 
-  FFT1DRealToComplex(int nx, int batch, std::array<long long, 1>& inembed, std::array<long long, 1>& ouembed) = delete;
+  FFT1DRealToComplex(int nx, int batch, long long inembed,
+                     long long ouembed) = delete;
 };
 
-
 template <>
-FFT1DRealToComplex<CUDA_R_32F>::FFT1DRealToComplex(int nx, int batch, std::array<long long, 1>& inembed, std::array<long long, 1>& ouembed) {
+FFT1DRealToComplex<CUDA_R_32F>::FFT1DRealToComplex(int nx, int batch,
+                                                   long long inembed,
+                                                   long long ouembed) {
   checkCuFFTCall(cufftCreate(plan()));
   const int rank = 1;
   size_t ws = 0;
   std::array<long long, 1> n{nx};
-  long long int idist = inembed[0];
-  long long int odist = ouembed[0];
+  const long long int idist = inembed;
+  const long long int odist = ouembed;
+
   int istride = 1;
   int ostride = 1;
-  checkCuFFTCall(cufftXtMakePlanMany(*plan(), rank, n.data(), inembed.data(), istride,
-                                     idist, CUDA_R_32F, ouembed.data(), ostride, odist,
-                                     CUDA_C_32F, batch, &ws, CUDA_R_32F));
+  checkCuFFTCall(cufftXtMakePlanMany(
+      *plan(), rank, n.data(), &inembed, istride, idist, CUDA_R_32F, &ouembed,
+      ostride, odist, CUDA_C_32F, batch, &ws, CUDA_R_32F));
 }
 
 /*
@@ -266,6 +269,7 @@ template <cudaDataType_t T>
 class FFT1DComplexToReal : public FFT {
  public:
 #if defined(__HIP__)
+
   __host__
 #endif
   FFT1DComplexToReal(int nx) = delete;
@@ -273,30 +277,27 @@ class FFT1DComplexToReal : public FFT {
   __host__
 #endif
   FFT1DComplexToReal(int nx, int batch) = delete;
-
-  FFT1DComplexToReal(int nx, int batch, std::array<long long, 1>& inembed, std::array<long long, 1>& ouembed) = delete;
+  FFT1DComplexToReal(int nx, int batch, long long inembed,
+                     long long ouembed) = delete;
 };
 
-
 template <>
-FFT1DComplexToReal<CUDA_C_32F>::FFT1DComplexToReal(int nx, int batch, std::array<long long, 1>& inembed, std::array<long long, 1>& ouembed) {
+FFT1DComplexToReal<CUDA_C_32F>::FFT1DComplexToReal(int nx, int batch,
+                                                   long long inembed,
+                                                   long long ouembed) {
   checkCuFFTCall(cufftCreate(plan()));
   const int rank = 1;
   size_t ws = 0;
   std::array<long long, 1> n{nx};
-  long long int idist = inembed[0];
-  long long int odist = ouembed[0];
+  long long int idist = inembed;
+  long long int odist = ouembed;
   int istride = 1;
   int ostride = 1;
-  checkCuFFTCall(cufftXtMakePlanMany(*plan(), rank, n.data(), inembed.data(), istride,
-                                     idist, CUDA_C_32F, ouembed.data(), ostride, odist,
-                                     CUDA_R_32F, batch, &ws, CUDA_C_32F));
+  checkCuFFTCall(cufftXtMakePlanMany(
+      *plan(), rank, n.data(), &inembed, istride, idist, CUDA_C_32F, &ouembed,
+      ostride, odist, CUDA_R_32F, batch, &ws, CUDA_C_32F));
 }
 
-
 }  // namespace cufft
-
-
-
 
 #endif  // CUFFT_H
