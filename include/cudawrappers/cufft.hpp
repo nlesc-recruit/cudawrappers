@@ -226,7 +226,7 @@ template <>
 FFT2D<CUDA_C_16F>::FFT2D(int nx, int ny) : FFT2D(nx, ny, 1, nx * ny, 1) {}
 
 /*
- * FFT1DRealToComplex
+ * FFT2DRealToComplex
  */
 template <cudaDataType_t T>
 class FFT1DRealToComplex : public FFT {
@@ -240,26 +240,29 @@ class FFT1DRealToComplex : public FFT {
 #endif
   FFT1DRealToComplex(int nx, int batch) = delete;
 
+#if defined(__HIP__)
+  __host__
+#endif
   FFT1DRealToComplex(int nx, int batch, long long inembed,
                      long long ouembed) = delete;
 };
 
 template <>
 FFT1DRealToComplex<CUDA_R_32F>::FFT1DRealToComplex(int nx, int batch,
-                                                   long long inembed,
-                                                   long long ouembed) {
+                                                   long long int inembed,
+                                                   long long int ouembed) {
   checkCuFFTCall(cufftCreate(plan()));
   const int rank = 1;
   size_t ws = 0;
   std::array<long long, 1> n{nx};
-  const long long int idist = inembed;
-  const long long int odist = ouembed;
-
+  long long int idist = inembed;
+  long long int odist = ouembed;
   int istride = 1;
   int ostride = 1;
+
   checkCuFFTCall(cufftXtMakePlanMany(
       *plan(), rank, n.data(), &inembed, istride, idist, CUDA_R_32F, &ouembed,
-      ostride, odist, CUDA_C_32F, batch, &ws, CUDA_R_32F));
+      ostride, odist, CUDA_C_32F, batch, &ws, CUDA_C_32F));
 }
 
 /*
@@ -269,7 +272,6 @@ template <cudaDataType_t T>
 class FFT1DComplexToReal : public FFT {
  public:
 #if defined(__HIP__)
-
   __host__
 #endif
   FFT1DComplexToReal(int nx) = delete;
@@ -277,14 +279,17 @@ class FFT1DComplexToReal : public FFT {
   __host__
 #endif
   FFT1DComplexToReal(int nx, int batch) = delete;
+#if defined(__HIP__)
+  __host__
+#endif
   FFT1DComplexToReal(int nx, int batch, long long inembed,
                      long long ouembed) = delete;
 };
 
 template <>
 FFT1DComplexToReal<CUDA_C_32F>::FFT1DComplexToReal(int nx, int batch,
-                                                   long long inembed,
-                                                   long long ouembed) {
+                                                   long long int inembed,
+                                                   long long int ouembed) {
   checkCuFFTCall(cufftCreate(plan()));
   const int rank = 1;
   size_t ws = 0;
@@ -293,6 +298,7 @@ FFT1DComplexToReal<CUDA_C_32F>::FFT1DComplexToReal(int nx, int batch,
   long long int odist = ouembed;
   int istride = 1;
   int ostride = 1;
+
   checkCuFFTCall(cufftXtMakePlanMany(
       *plan(), rank, n.data(), &inembed, istride, idist, CUDA_C_32F, &ouembed,
       ostride, odist, CUDA_R_32F, batch, &ws, CUDA_C_32F));

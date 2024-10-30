@@ -605,35 +605,31 @@ class DeviceMemory : public Wrapper<CUdeviceptr> {
 
   void memset2D(unsigned char value, size_t pitch, size_t width,
                 size_t height) {
+#if defined(__HIP__)
+    checkCudaCall(hipMemset2D(_obj, pitch, value, width, height));
+#else
     checkCudaCall(cuMemsetD2D8(_obj, pitch, value, width, height));
+#endif
   }
 
   void memset2D(unsigned short value, size_t pitch, size_t width,
                 size_t height) {
+#if defined(__HIP__)
+    checkCudaCall(hipMemset2D(_obj, pitch, value, width, height));
+#else
     checkCudaCall(cuMemsetD2D16(_obj, pitch, value, width, height));
+#endif
   }
 
   void memset2D(unsigned int value, size_t pitch, size_t width, size_t height) {
+#if defined(__HIP__)
+    checkCudaCall(hipMemset2D(_obj, pitch, value, width, height));
+#else
     checkCudaCall(cuMemsetD2D32(_obj, pitch, value, width, height));
+#endif
   }
 
   void zero(size_t size) { memset(static_cast<unsigned char>(0), size); }
-
-  void memcpyToSymbolAsync(const void *symbol, size_t count, size_t offset,
-                           cudaStream_t stream) {
-    if (cudaMemcpyToSymbolAsync(symbol, reinterpret_cast<const void *>(_obj),
-                                count, offset, cudaMemcpyDeviceToDevice,
-                                stream) != cudaSuccess) {
-      throw cu::Error(CUDA_ERROR_UNKNOWN);
-    }
-  }
-
-  void memcpyToSymbolSync(const void *symbol, size_t count, size_t offset) {
-    if (cudaMemcpyToSymbol(symbol, reinterpret_cast<const void *>(_obj), count,
-                           offset, cudaMemcpyDeviceToDevice) != cudaSuccess) {
-      throw cu::Error(CUDA_ERROR_UNKNOWN);
-    }
-  }
 
   const void *parameter()
       const  // used to construct parameter list for launchKernel();
@@ -713,8 +709,8 @@ class Stream : public Wrapper<CUstream> {
                          const void *hostPtr, size_t spitch, size_t width,
                          size_t height) {
 #if defined(__HIP__)
-// FIXME: implement for HIP
-#error "memcpyHtoD2DAsync not yet implemented for HIP"
+    checkCudaCall(hipMemcpy2DAsync(devPtr, dpitch, hostPtr, spitch, width,
+                                   height, hipMemcpyHostToDevice, _obj));
 #else
     // Initialize the CUDA_MEMCPY2D structure
     CUDA_MEMCPY2D copyParams = {0};
@@ -747,8 +743,8 @@ class Stream : public Wrapper<CUstream> {
                          const DeviceMemory &devPtr, size_t spitch,
                          size_t width, size_t height) {
 #if defined(__HIP__)
-// FIXME: implement for HIP
-#error "memcpyDtoH2DAsync not yet implemented for HIP"
+    checkCudaCall(hipMemcpy2DAsync(hostPtr, dpitch, devPtr, spitch, width,
+                                   height, hipMemcpyDeviceToHost, _obj));
 #else
     // Initialize the CUDA_MEMCPY2D structure
     CUDA_MEMCPY2D copyParams = {0};
@@ -825,19 +821,31 @@ class Stream : public Wrapper<CUstream> {
 
   void memset2DAsync(DeviceMemory &devPtr, unsigned char value, size_t pitch,
                      size_t width, size_t height) {
+#if defined(__HIP__)
+    checkCudaCall(hipMemset2DAsync(devPtr, pitch, value, width, height, _obj));
+#else
     checkCudaCall(cuMemsetD2D8Async(devPtr, pitch, value, width, height, _obj));
+#endif
   }
 
   void memset2DAsync(DeviceMemory &devPtr, unsigned short value, size_t pitch,
                      size_t width, size_t height) {
+#if defined(__HIP__)
+    checkCudaCall(hipMemset2DAsync(devPtr, pitch, value, width, height, _obj));
+#else
     checkCudaCall(
         cuMemsetD2D16Async(devPtr, pitch, value, width, height, _obj));
+#endif
   }
 
   void memset2DAsync(DeviceMemory &devPtr, unsigned int value, size_t pitch,
                      size_t width, size_t height) {
+#if defined(__HIP__)
+    checkCudaCall(hipMemset2DAsync(devPtr, pitch, value, width, height, _obj));
+#else
     checkCudaCall(
         cuMemsetD2D32Async(devPtr, pitch, value, width, height, _obj));
+#endif
   }
 
   void zero(DeviceMemory &devPtr, size_t size) {
