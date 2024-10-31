@@ -15,7 +15,7 @@ project adheres to [Semantic Versioning](http://semver.org/).
 - Added `cu::Stream::memsetAsync()`
 - Added `nvml::Device::getPower()`
 - Added 2D memcpy and memset operations
-- Added `FFT1DRealToComplex` and `FFT1DComplexToReal` 
+- Added `FFT1DRealToComplex` and `FFT1DComplexToReal`
 
 ### Changed
 
