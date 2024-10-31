@@ -189,7 +189,6 @@ class Device : public Wrapper<CUdevice> {
   }
 
   size_t getTotalConstMem() const {
-    // FIXME: implement HIP.
     return static_cast<size_t>(
         getAttribute(CU_DEVICE_ATTRIBUTE_TOTAL_CONSTANT_MEMORY));
   }
@@ -636,9 +635,7 @@ class DeviceMemory : public Wrapper<CUdeviceptr> {
   {
     return &_obj;
   }
-
-  // FIXME: remove this function.
-  void *parameter_copy_temp() { return reinterpret_cast<void *>(_obj); }
+  void *parameter_copy() { return reinterpret_cast<void *>(_obj); }
 
   template <typename T>
   operator T *() {
@@ -911,37 +908,6 @@ class Stream : public Wrapper<CUstream> {
 inline void Event::record(Stream &stream) {
   checkCudaCall(cuEventRecord(_obj, stream._obj));
 }
-
-// inline void memcpyToSymbolSync(const void *symbol, cu::DeviceMemory &src,
-// size_t count, size_t offset) {
-//   // cudaMemcpyToSymbolAsync(c_killmask, src, count, offset,
-//   //                       cudaMemcpyDeviceToDevice, stream);
-//   #if defined(__HIP__)
-//   // FIXME: finish HIP implementation.
-//   #error "memcpyToSymbolAsync not yet implemented for HIP"
-//   #else
-
-//   // FIXME: find the 'cu' equivalent of cudaMemcpyToSymbolAsync, i.e.
-//   cuMemcpyToSymbolAsync
-//   // checkCudaCall(cudaMemcpyToSymbol(symbol, src, count, offset,
-//   cudaMemcpyDeviceToDevice));
-
-//   if (cudaMemcpyToSymbol(symbol, src.parameter_by_copy(), count, offset,
-//   cudaMemcpyDeviceToDevice) != cudaSuccess) {
-//     throw cu::Error(CUDA_ERROR_UNKNOWN);
-//   }
-
-//   // CUresult cuModuleGetGlobal ( CUdeviceptr* dptr, size_t* bytes, CUmodule
-//   hmod, const char* name )
-//   // CUdeviceptr dptr = nullptr;
-//   // size_t dsize = 0;
-
-//   // checkCudaCall(cuModuleGetGlobal())
-
-//   // checkCudaCall(cuMemcpyToSymbolAsync(symbol, src, count,
-//   cudaMemcpyDeviceToDevice, _obj)); #endif
-// }
-
 }  // namespace cu
 
 #endif
