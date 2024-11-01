@@ -19,7 +19,7 @@ project adheres to [Semantic Versioning](http://semver.org/).
 - Added `cu::DeviceMemory::memset2D()` and `cu::Stream::memset2DAsync()` for 2D
   memsets
 - Added `cufft::FFT1D_R2C` and `cufft::FFT1D_C2R` for 1D real-to-complex and
-  vice verse FFT
+  vice versa FFT
 
 ### Changed
 
