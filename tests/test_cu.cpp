@@ -24,7 +24,7 @@ TEST_CASE("Test cu::Device", "[device]") {
     CHECK(arch.size() > 0);
   }
 
-  SECTION("Test Device.totalMem") {
+  SECTION("Test device::totalMem", "[device]") {
     const size_t total_mem = device.totalMem();
     std::cout << "Device total memory: " << (total_mem / (1024 * 1024))
               << " bytes" << std::endl;
