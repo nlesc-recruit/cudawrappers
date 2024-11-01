@@ -182,7 +182,7 @@ class Device : public Wrapper<CUdevice> {
 #endif
   }
 
-  size_t totalMem() const {
+  size_t getTotalMem() const {
     size_t size{};
     checkCudaCall(cuDeviceTotalMem(&size, _obj));
     return size;

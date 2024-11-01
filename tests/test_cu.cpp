@@ -12,26 +12,26 @@ TEST_CASE("Test cu::Device", "[device]") {
   cu::Device device(0);
   cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, device);
 
-  SECTION("Test Device.getName") {
+  SECTION("Test Device.getName", "[device]") {
     const std::string name = device.getName();
     std::cout << "Device name: " << name << std::endl;
     CHECK(name.size() > 0);
   }
 
-  SECTION("Test Device.getArch") {
+  SECTION("Test Device.getArch", "[device]") {
     const std::string arch = device.getArch();
     std::cout << "Device arch: " << arch << std::endl;
     CHECK(arch.size() > 0);
   }
 
-  SECTION("Test device::totalMem", "[device]") {
-    const size_t total_mem = device.totalMem();
+  SECTION("Test device.getTotalMem", "[device]") {
+    const size_t total_mem = device.getTotalMem();
     std::cout << "Device total memory: " << (total_mem / (1024 * 1024))
               << " bytes" << std::endl;
     CHECK(total_mem > 0);
   }
 
-  SECTION("Test Device.getTotalConstMem") {
+  SECTION("Test Device.getTotalConstMem", "[device]") {
     const size_t const_mem = device.getTotalConstMem();
     std::cout << "Device constant memory: " << const_mem << " bytes"
               << std::endl;

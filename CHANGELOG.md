@@ -14,8 +14,12 @@ project adheres to [Semantic Versioning](http://semver.org/).
 - Added `cu::DeviceMemory::memset()`
 - Added `cu::Stream::memsetAsync()`
 - Added `nvml::Device::getPower()`
-- Added 2D memcpy and memset operations
-- Added `FFT1DRealToComplex` and `FFT1DComplexToReal`
+- Added `cu::Stream::memcpyHtoD2DAsync()`, `cu::Stream::memcpyDtoHD2Async()`,
+  and `cu::Stream::memcpyDtoD2DAsync()` for 2D asynchronous memory copies.
+- Added `cu::DeviceMemory::memset2D()` and `cu::Stream::memset2DAsync()` for 2D
+  memsets
+- Added `cufft::FFT1D_R2C` and `cufft::FFT1D_C2R` for 1D real-to-complex and
+  vice verse FFT
 
 ### Changed
 
@@ -26,6 +30,7 @@ project adheres to [Semantic Versioning](http://semver.org/).
 - Upgrade Catch2 to version v3.6.0
 - `target_embed_source` is now more robust: it properly tracks dependencies and
   runs again whenever any of them changes
+- Expanded tests to cover the new 2D memory operations and FFT support
 
 ## \[0.8.0\] - 2024-07-05
 
