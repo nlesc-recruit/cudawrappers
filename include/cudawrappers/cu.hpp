@@ -193,6 +193,8 @@ class Device : public Wrapper<CUdevice> {
         getAttribute(CU_DEVICE_ATTRIBUTE_TOTAL_CONSTANT_MEMORY));
   }
 
+  int getOrdinal() const { return _ordinal; }
+
   // Primary Context Management
   std::pair<unsigned, bool> primaryCtxGetState() const {
     unsigned flags{};

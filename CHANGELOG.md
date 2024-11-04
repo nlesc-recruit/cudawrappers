@@ -20,6 +20,7 @@ project adheres to [Semantic Versioning](http://semver.org/).
   memsets
 - Added `cufft::FFT1D_R2C` and `cufft::FFT1D_C2R` for 1D real-to-complex and
   vice versa FFT
+- Added cu::Device::getOrdinal().
 
 ### Changed
 
