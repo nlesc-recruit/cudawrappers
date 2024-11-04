@@ -37,6 +37,11 @@ TEST_CASE("Test cu::Device", "[device]") {
               << std::endl;
     CHECK(const_mem > 0);
   }
+
+  SECTION("Test Device.getOrdinal", "[device]") {
+    const int dev_ordinal = device.getOrdinal();
+    CHECK(dev_ordinal >= 0);
+  }
 }
 
 TEST_CASE("Test context::getDevice", "[device]") {
