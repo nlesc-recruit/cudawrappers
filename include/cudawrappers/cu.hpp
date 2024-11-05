@@ -182,15 +182,10 @@ class Device : public Wrapper<CUdevice> {
 #endif
   }
 
-  size_t getTotalMem() const {
+  size_t totalMem() const {
     size_t size{};
     checkCudaCall(cuDeviceTotalMem(&size, _obj));
     return size;
-  }
-
-  size_t getTotalConstMem() const {
-    return static_cast<size_t>(
-        getAttribute(CU_DEVICE_ATTRIBUTE_TOTAL_CONSTANT_MEMORY));
   }
 
   int getOrdinal() const { return _ordinal; }

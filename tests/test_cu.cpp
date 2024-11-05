@@ -24,18 +24,11 @@ TEST_CASE("Test cu::Device", "[device]") {
     CHECK(arch.size() > 0);
   }
 
-  SECTION("Test device.getTotalMem", "[device]") {
-    const size_t total_mem = device.getTotalMem();
+  SECTION("Test device.totalMem", "[device]") {
+    const size_t total_mem = device.totalMem();
     std::cout << "Device total memory: " << (total_mem / (1024 * 1024))
               << " bytes" << std::endl;
     CHECK(total_mem > 0);
-  }
-
-  SECTION("Test Device.getTotalConstMem", "[device]") {
-    const size_t const_mem = device.getTotalConstMem();
-    std::cout << "Device constant memory: " << const_mem << " bytes"
-              << std::endl;
-    CHECK(const_mem > 0);
   }
 
   SECTION("Test Device.getOrdinal", "[device]") {

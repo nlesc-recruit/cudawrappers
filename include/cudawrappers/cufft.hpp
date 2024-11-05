@@ -231,30 +231,30 @@ FFT2D<CUDA_C_16F>::FFT2D(const int nx, const int ny)
     : FFT2D(nx, ny, 1, nx * ny, 1) {}
 
 /*
- * FFT1D_R2C
+ * FFT1DR2C
  */
 template <cudaDataType_t T>
-class FFT1D_R2C : public FFT {
+class FFT1DR2C : public FFT {
  public:
 #if defined(__HIP__)
   __host__
 #endif
-  FFT1D_R2C(const int nx) = delete;
+  FFT1DR2C(const int nx) = delete;
 #if defined(__HIP__)
   __host__
 #endif
-  FFT1D_R2C(const int nx, const int batch) = delete;
+  FFT1DR2C(const int nx, const int batch) = delete;
 
 #if defined(__HIP__)
   __host__
 #endif
-  FFT1D_R2C(const int nx, const int batch, long long inembed,
-            long long ouembed) = delete;
+  FFT1DR2C(const int nx, const int batch, long long inembed,
+           long long ouembed) = delete;
 };
 
 template <>
-FFT1D_R2C<CUDA_R_32F>::FFT1D_R2C(const int nx, const int batch,
-                                 long long inembed, long long ouembed) {
+FFT1DR2C<CUDA_R_32F>::FFT1DR2C(const int nx, const int batch, long long inembed,
+                               long long ouembed) {
   checkCuFFTCall(cufftCreate(plan()));
   const int rank = 1;
   size_t ws = 0;
@@ -273,26 +273,26 @@ FFT1D_R2C<CUDA_R_32F>::FFT1D_R2C(const int nx, const int batch,
  * FFT1D_C2R
  */
 template <cudaDataType_t T>
-class FFT1D_C2R : public FFT {
+class FFT1DC2R : public FFT {
  public:
 #if defined(__HIP__)
   __host__
 #endif
-  FFT1D_C2R(const int nx) = delete;
+  FFT1DC2R(const int nx) = delete;
 #if defined(__HIP__)
   __host__
 #endif
-  FFT1D_C2R(const int nx, const int batch) = delete;
+  FFT1DC2R(const int nx, const int batch) = delete;
 #if defined(__HIP__)
   __host__
 #endif
-  FFT1D_C2R(const int nx, const int batch, long long inembed,
-            long long ouembed) = delete;
+  FFT1DC2R(const int nx, const int batch, long long inembed,
+           long long ouembed) = delete;
 };
 
 template <>
-FFT1D_C2R<CUDA_C_32F>::FFT1D_C2R(const int nx, const int batch,
-                                 long long inembed, long long ouembed) {
+FFT1DC2R<CUDA_C_32F>::FFT1DC2R(const int nx, const int batch, long long inembed,
+                               long long ouembed) {
   checkCuFFTCall(cufftCreate(plan()));
   const int rank = 1;
   size_t ws = 0;

@@ -17,7 +17,7 @@ project adheres to [Semantic Versioning](http://semver.org/).
 - Added `cu::Stream::memcpyHtoD2DAsync()`, `cu::Stream::memcpyDtoHD2Async()`,
   and `cu::Stream::memcpyDtoD2DAsync()`
 - Added `cu::DeviceMemory::memset2D()` and `cu::Stream::memset2DAsync()`
-- Added `cufft::FFT1D_R2C` and `cufft::FFT1D_C2R`
+- Added `cufft::FFT1DR2C` and `cufft::FFT1DC2R`
 - Added `cu::Device::getOrdinal()`
 
 ### Changed

@@ -127,8 +127,8 @@ TEST_CASE("Test 1D FFT", "[FFT1D]") {
     generateSignal(static_cast<cufftComplex *>(h_in), size, patchSize, {1, 1});
     stream.memcpyHtoDAsync(d_in, h_in, arraySize);
 
-    cufft::FFT1D_R2C<CUDA_R_32F> fft_r2c(size, 1, 1, 1);
-    cufft::FFT1D_C2R<CUDA_C_32F> fft_c2r(size, 1, 1, 1);
+    cufft::FFT1DR2C<CUDA_R_32F> fft_r2c(size, 1, 1, 1);
+    cufft::FFT1DC2R<CUDA_C_32F> fft_c2r(size, 1, 1, 1);
     fft_r2c.setStream(stream);
     fft_c2r.setStream(stream);
 
