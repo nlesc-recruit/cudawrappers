@@ -15,12 +15,10 @@ project adheres to [Semantic Versioning](http://semver.org/).
 - Added `cu::Stream::memsetAsync()`
 - Added `nvml::Device::getPower()`
 - Added `cu::Stream::memcpyHtoD2DAsync()`, `cu::Stream::memcpyDtoHD2Async()`,
-  and `cu::Stream::memcpyDtoD2DAsync()` for 2D asynchronous memory copies.
-- Added `cu::DeviceMemory::memset2D()` and `cu::Stream::memset2DAsync()` for 2D
-  memsets
-- Added `cufft::FFT1D_R2C` and `cufft::FFT1D_C2R` for 1D real-to-complex and
-  vice versa FFT
-- Added cu::Device::getOrdinal().
+  and `cu::Stream::memcpyDtoD2DAsync()`
+- Added `cu::DeviceMemory::memset2D()` and `cu::Stream::memset2DAsync()`
+- Added `cufft::FFT1D_R2C` and `cufft::FFT1D_C2R`
+- Added `cu::Device::getOrdinal()`
 
 ### Changed
 
