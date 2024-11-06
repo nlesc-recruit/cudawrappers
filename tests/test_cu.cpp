@@ -221,7 +221,7 @@ TEST_CASE("Test cu::DeviceMemory", "[devicememory]") {
   SECTION("Test cu::DeviceMemory with CU_MEMORYTYPE_DEVICE as host pointer") {
     cu::DeviceMemory mem(sizeof(float), CU_MEMORYTYPE_DEVICE, 0);
     float* ptr;
-    CHECK_NOTHROWS(ptr = mem);
+    CHECK_NOTHROW(ptr = mem);
   }
 
   SECTION("Test cu::DeviceMemory with CU_MEMORYTYPE_UNIFIED as host pointer") {
