@@ -45,6 +45,20 @@ inline void checkCudaCall(CUresult result) {
   if (result != CUDA_SUCCESS) throw Error(result);
 }
 
+template <typename T>
+inline void checkPointerAccess(const T &pointer) {
+  CUmemorytype memoryType;
+  checkCudaCall(cuPointerGetAttribute(
+      &memoryType, CU_POINTER_ATTRIBUTE_MEMORY_TYPE, pointer));
+
+  if (memoryType != CU_MEMORYTYPE_DEVICE &&
+      memoryType != CU_MEMORYTYPE_UNIFIED) {
+    throw std::runtime_error(
+        "Invalid memory type: only CU_MEMORYTYPE_DEVICE and "
+        "CU_MEMORYTYPE_UNIFIED are supported.");
+  }
+}
+
 inline void init(unsigned flags = 0) { checkCudaCall(cuInit(flags)); }
 
 inline int driverGetVersion() {
@@ -632,19 +646,17 @@ class DeviceMemory : public Wrapper<CUdeviceptr> {
   {
     return &_obj;
   }
-  void *parameter_copy() { return reinterpret_cast<void *>(_obj); }
 
   template <typename T>
   operator T *() {
-    int data;
-    checkCudaCall(
-        cuPointerGetAttribute(&data, CU_POINTER_ATTRIBUTE_IS_MANAGED, _obj));
-    if (data) {
-      return reinterpret_cast<T *>(_obj);
-    } else {
-      throw std::runtime_error(
-          "Cannot return memory of type CU_MEMORYTYPE_DEVICE as pointer.");
-    }
+    checkPointerAccess(_obj);
+    return reinterpret_cast<T *>(_obj);
+  }
+
+  template <typename T>
+  operator T *() const {
+    checkPointerAccess(_obj);
+    return reinterpret_cast<T const *>(_obj);
   }
 
   size_t size() const { return _size; }
