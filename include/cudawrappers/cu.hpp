@@ -1,3 +1,4 @@
+#include <sys/resource.h>
 #if !defined CU_WRAPPER_H
 #define CU_WRAPPER_H
 
@@ -43,20 +44,6 @@ class Error : public std::exception {
 
 inline void checkCudaCall(CUresult result) {
   if (result != CUDA_SUCCESS) throw Error(result);
-}
-
-template <typename T>
-inline void checkPointerAccess(const T &pointer) {
-  CUmemorytype memoryType;
-  checkCudaCall(cuPointerGetAttribute(
-      &memoryType, CU_POINTER_ATTRIBUTE_MEMORY_TYPE, pointer));
-
-  if (memoryType != CU_MEMORYTYPE_DEVICE &&
-      memoryType != CU_MEMORYTYPE_UNIFIED) {
-    throw std::runtime_error(
-        "Invalid memory type: only CU_MEMORYTYPE_DEVICE and "
-        "CU_MEMORYTYPE_UNIFIED are supported.");
-  }
 }
 
 inline void init(unsigned flags = 0) { checkCudaCall(cuInit(flags)); }
@@ -107,6 +94,22 @@ class Wrapper {
   }
 
   explicit Wrapper(T &obj) : _obj(obj) {}
+
+  template <CUmemorytype... AllowedMemoryTypes>
+  inline void checkPointerAccess(const CUdeviceptr &pointer) const {
+    CUmemorytype memoryType;
+    checkCudaCall(cuPointerGetAttribute(
+        &memoryType, CU_POINTER_ATTRIBUTE_MEMORY_TYPE, pointer));
+
+    // Check if the memoryType is one of the allowed memory types
+    bool isAllowed = false;
+    for (auto allowedType : {AllowedMemoryTypes...}) {
+      if (memoryType == allowedType) return;
+    }
+
+    throw std::runtime_error(
+        "Invalid memory type: allowed types are not matched.");
+  }
 
   T _obj{};
   std::shared_ptr<T> manager;
@@ -649,13 +652,13 @@ class DeviceMemory : public Wrapper<CUdeviceptr> {
 
   template <typename T>
   operator T *() {
-    checkPointerAccess(_obj);
+    checkPointerAccess<CU_MEMORYTYPE_DEVICE, CU_MEMORYTYPE_UNIFIED>(_obj);
     return reinterpret_cast<T *>(_obj);
   }
 
   template <typename T>
   operator T *() const {
-    checkPointerAccess(_obj);
+    checkPointerAccess<CU_MEMORYTYPE_DEVICE, CU_MEMORYTYPE_UNIFIED>(_obj);
     return reinterpret_cast<T const *>(_obj);
   }
 
