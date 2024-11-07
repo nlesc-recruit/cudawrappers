@@ -1,4 +1,3 @@
-#include <sys/resource.h>
 #if !defined CU_WRAPPER_H
 #define CU_WRAPPER_H
 
