@@ -114,6 +114,34 @@ TEST_CASE("Test 1D FFT", "[FFT1D]") {
     scaleSignal(out_ptr, out_ptr, size, float(size));
     compare(out_ptr, in_ptr, size);
   }
+
+  SECTION("FP32 FFT with Real-To-Complex translation, and back") {
+    const size_t arraySize = size * sizeof(cufftComplex);
+
+    cu::HostMemory h_in(arraySize);
+    cu::HostMemory h_out(arraySize);
+    cu::DeviceMemory d_in(arraySize);
+    cu::DeviceMemory d_out(arraySize);
+    cu::DeviceMemory d_out2(arraySize);
+
+    generateSignal(static_cast<cufftComplex *>(h_in), size, patchSize, {1, 1});
+    stream.memcpyHtoDAsync(d_in, h_in, arraySize);
+
+    cufft::FFT1DR2C<CUDA_R_32F> fft_r2c(size, 1, 1, 1);
+    cufft::FFT1DC2R<CUDA_C_32F> fft_c2r(size, 1, 1, 1);
+    fft_r2c.setStream(stream);
+    fft_c2r.setStream(stream);
+
+    fft_r2c.execute(d_in, d_out, CUFFT_FORWARD);
+    fft_c2r.execute(d_out, d_out2, CUFFT_INVERSE);
+    stream.memcpyDtoHAsync(h_out, d_out2, arraySize);
+    stream.synchronize();
+
+    cuFloatComplex *in_ptr = static_cast<cuFloatComplex *>(h_in);
+    cuFloatComplex *out_ptr = static_cast<cuFloatComplex *>(h_out);
+    scaleSignal(out_ptr, out_ptr, size, float(size));
+    compare(out_ptr, in_ptr, size);
+  }
 }
 
 TEST_CASE("Test 2D FFT", "[FFT2D]") {
