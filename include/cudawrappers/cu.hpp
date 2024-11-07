@@ -102,7 +102,9 @@ class Wrapper {
 
     // Check if the memoryType is one of the allowed memory types
     for (auto allowedType : {AllowedMemoryTypes...}) {
-      if (memoryType == allowedType) return;
+      if (memoryType == allowedType) {
+            return;
+      }
     }
 
     throw std::runtime_error(
