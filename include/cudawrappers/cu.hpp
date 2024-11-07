@@ -94,6 +94,23 @@ class Wrapper {
 
   explicit Wrapper(T &obj) : _obj(obj) {}
 
+  template <CUmemorytype... AllowedMemoryTypes>
+  inline void checkPointerAccess(const CUdeviceptr &pointer) const {
+    CUmemorytype memoryType;
+    checkCudaCall(cuPointerGetAttribute(
+        &memoryType, CU_POINTER_ATTRIBUTE_MEMORY_TYPE, pointer));
+
+    // Check if the memoryType is one of the allowed memory types
+    for (auto allowedType : {AllowedMemoryTypes...}) {
+      if (memoryType == allowedType) {
+        return;
+      }
+    }
+
+    throw std::runtime_error(
+        "Invalid memory type: allowed types are not matched.");
+  }
+
   T _obj{};
   std::shared_ptr<T> manager;
 };
@@ -187,6 +204,8 @@ class Device : public Wrapper<CUdevice> {
     checkCudaCall(cuDeviceTotalMem(&size, _obj));
     return size;
   }
+
+  int getOrdinal() const { return _ordinal; }
 
   // Primary Context Management
   std::pair<unsigned, bool> primaryCtxGetState() const {
@@ -597,6 +616,32 @@ class DeviceMemory : public Wrapper<CUdeviceptr> {
     checkCudaCall(cuMemsetD32(_obj, value, size));
   }
 
+  void memset2D(unsigned char value, size_t pitch, size_t width,
+                size_t height) {
+#if defined(__HIP__)
+    checkCudaCall(hipMemset2D(_obj, pitch, value, width, height));
+#else
+    checkCudaCall(cuMemsetD2D8(_obj, pitch, value, width, height));
+#endif
+  }
+
+  void memset2D(unsigned short value, size_t pitch, size_t width,
+                size_t height) {
+#if defined(__HIP__)
+    checkCudaCall(hipMemset2D(_obj, pitch, value, width, height));
+#else
+    checkCudaCall(cuMemsetD2D16(_obj, pitch, value, width, height));
+#endif
+  }
+
+  void memset2D(unsigned int value, size_t pitch, size_t width, size_t height) {
+#if defined(__HIP__)
+    checkCudaCall(hipMemset2D(_obj, pitch, value, width, height));
+#else
+    checkCudaCall(cuMemsetD2D32(_obj, pitch, value, width, height));
+#endif
+  }
+
   void zero(size_t size) { memset(static_cast<unsigned char>(0), size); }
 
   const void *parameter()
@@ -607,15 +652,14 @@ class DeviceMemory : public Wrapper<CUdeviceptr> {
 
   template <typename T>
   operator T *() {
-    int data;
-    checkCudaCall(
-        cuPointerGetAttribute(&data, CU_POINTER_ATTRIBUTE_IS_MANAGED, _obj));
-    if (data) {
-      return reinterpret_cast<T *>(_obj);
-    } else {
-      throw std::runtime_error(
-          "Cannot return memory of type CU_MEMORYTYPE_DEVICE as pointer.");
-    }
+    checkPointerAccess<CU_MEMORYTYPE_DEVICE, CU_MEMORYTYPE_UNIFIED>(_obj);
+    return reinterpret_cast<T *>(_obj);
+  }
+
+  template <typename T>
+  operator T *() const {
+    checkPointerAccess<CU_MEMORYTYPE_DEVICE, CU_MEMORYTYPE_UNIFIED>(_obj);
+    return reinterpret_cast<T const *>(_obj);
   }
 
   size_t size() const { return _size; }
@@ -670,6 +714,74 @@ class Stream : public Wrapper<CUstream> {
 #endif
   }
 
+  void memcpyHtoD2DAsync(DeviceMemory &devPtr, size_t dpitch,
+                         const void *hostPtr, size_t spitch, size_t width,
+                         size_t height) {
+#if defined(__HIP__)
+    checkCudaCall(hipMemcpy2DAsync(devPtr, dpitch, hostPtr, spitch, width,
+                                   height, hipMemcpyHostToDevice, _obj));
+#else
+    // Initialize the CUDA_MEMCPY2D structure
+    CUDA_MEMCPY2D copyParams = {0};
+
+    // Set width and height for the 2D copy
+    copyParams.WidthInBytes = width;
+    copyParams.Height = height;
+
+    // Set the destination (dst)
+    copyParams.dstXInBytes = 0;
+    copyParams.dstY = 0;
+    copyParams.dstPitch = dpitch;
+
+    // Set the source (src)
+    copyParams.srcXInBytes = 0;
+    copyParams.srcY = 0;
+    copyParams.srcPitch = spitch;
+
+    copyParams.srcMemoryType = CU_MEMORYTYPE_HOST;
+    copyParams.dstMemoryType = CU_MEMORYTYPE_DEVICE;
+    copyParams.srcHost = hostPtr;
+    copyParams.dstDevice = devPtr;
+
+    // Call the driver API function cuMemcpy2DAsync
+    checkCudaCall(cuMemcpy2DAsync(&copyParams, _obj));
+#endif
+  }
+
+  void memcpyDtoH2DAsync(void *hostPtr, size_t dpitch,
+                         const DeviceMemory &devPtr, size_t spitch,
+                         size_t width, size_t height) {
+#if defined(__HIP__)
+    checkCudaCall(hipMemcpy2DAsync(hostPtr, dpitch, devPtr, spitch, width,
+                                   height, hipMemcpyDeviceToHost, _obj));
+#else
+    // Initialize the CUDA_MEMCPY2D structure
+    CUDA_MEMCPY2D copyParams = {0};
+
+    // Set width and height for the 2D copy
+    copyParams.WidthInBytes = width;
+    copyParams.Height = height;
+
+    // Set the destination (dst)
+    copyParams.dstXInBytes = 0;
+    copyParams.dstY = 0;
+    copyParams.dstPitch = dpitch;
+
+    // Set the source (src)
+    copyParams.srcXInBytes = 0;
+    copyParams.srcY = 0;
+    copyParams.srcPitch = spitch;
+
+    copyParams.srcMemoryType = CU_MEMORYTYPE_DEVICE;
+    copyParams.dstMemoryType = CU_MEMORYTYPE_HOST;
+    copyParams.srcDevice = devPtr;
+    copyParams.dstHost = hostPtr;
+
+    // Call the driver API function cuMemcpy2DAsync
+    checkCudaCall(cuMemcpy2DAsync(&copyParams, _obj));
+#endif
+  }
+
   void memcpyHtoDAsync(CUdeviceptr devPtr, const void *hostPtr, size_t size) {
 #if defined(__HIP__)
     checkCudaCall(
@@ -716,8 +828,41 @@ class Stream : public Wrapper<CUstream> {
     checkCudaCall(cuMemsetD32Async(devPtr, value, size, _obj));
   }
 
+  void memset2DAsync(DeviceMemory &devPtr, unsigned char value, size_t pitch,
+                     size_t width, size_t height) {
+#if defined(__HIP__)
+    checkCudaCall(hipMemset2DAsync(devPtr, pitch, value, width, height, _obj));
+#else
+    checkCudaCall(cuMemsetD2D8Async(devPtr, pitch, value, width, height, _obj));
+#endif
+  }
+
+  void memset2DAsync(DeviceMemory &devPtr, unsigned short value, size_t pitch,
+                     size_t width, size_t height) {
+#if defined(__HIP__)
+    checkCudaCall(hipMemset2DAsync(devPtr, pitch, value, width, height, _obj));
+#else
+    checkCudaCall(
+        cuMemsetD2D16Async(devPtr, pitch, value, width, height, _obj));
+#endif
+  }
+
+  void memset2DAsync(DeviceMemory &devPtr, unsigned int value, size_t pitch,
+                     size_t width, size_t height) {
+#if defined(__HIP__)
+    checkCudaCall(hipMemset2DAsync(devPtr, pitch, value, width, height, _obj));
+#else
+    checkCudaCall(
+        cuMemsetD2D32Async(devPtr, pitch, value, width, height, _obj));
+#endif
+  }
+
   void zero(DeviceMemory &devPtr, size_t size) {
     memsetAsync(devPtr, static_cast<unsigned char>(0), size);
+  }
+
+  void zero2D(DeviceMemory &devPtr, size_t pitch, size_t width, size_t height) {
+    memset2DAsync(devPtr, static_cast<unsigned char>(0), pitch, width, height);
   }
 
   void launchKernel(Function &function, unsigned gridX, unsigned gridY,

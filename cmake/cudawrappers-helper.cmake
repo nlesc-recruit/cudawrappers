@@ -1,4 +1,4 @@
-# Retun a list of asbolute file names for all the local includes of the
+# Return a list of absolute file names for all the local includes of the
 # input_file.  Only files in the root directory will be considered.
 function(get_local_includes input_file root_dir)
   file(READ ${input_file} input_file_contents)

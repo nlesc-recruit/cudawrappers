@@ -12,16 +12,28 @@ TEST_CASE("Test cu::Device", "[device]") {
   cu::Device device(0);
   cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, device);
 
-  SECTION("Test Device.getName") {
+  SECTION("Test Device.getName", "[device]") {
     const std::string name = device.getName();
     std::cout << "Device name: " << name << std::endl;
     CHECK(name.size() > 0);
   }
 
-  SECTION("Test Device.getArch") {
+  SECTION("Test Device.getArch", "[device]") {
     const std::string arch = device.getArch();
     std::cout << "Device arch: " << arch << std::endl;
     CHECK(arch.size() > 0);
+  }
+
+  SECTION("Test device.totalMem", "[device]") {
+    const size_t total_mem = device.totalMem();
+    std::cout << "Device total memory: " << (total_mem / (1024 * 1024))
+              << " bytes" << std::endl;
+    CHECK(total_mem > 0);
+  }
+
+  SECTION("Test Device.getOrdinal", "[device]") {
+    const int dev_ordinal = device.getOrdinal();
+    CHECK(dev_ordinal >= 0);
   }
 }
 
@@ -57,6 +69,24 @@ TEST_CASE("Test copying cu::DeviceMemory and cu::HostMemory using cu::Stream",
     CHECK(src == tgt);
   }
 
+  SECTION("Test copying a 2D std::array to the device and back") {
+    const std::array<std::array<int, 3>, 3> src = {
+        {{1, 2, 3}, {4, 5, 6}, {7, 8, 9}}};
+    std::array<std::array<int, 3>, 3> tgt = {{{0, 0, 0}, {0, 0, 0}, {0, 0, 0}}};
+    const size_t width = 3 * sizeof(int);
+    const size_t height = 3;
+    const size_t pitch = width;
+
+    cu::DeviceMemory mem(pitch * height);
+
+    cu::Stream stream;
+    stream.memcpyHtoD2DAsync(mem, pitch, src.data(), pitch, width, height);
+    stream.memcpyDtoH2DAsync(tgt.data(), pitch, mem, pitch, width, height);
+    stream.synchronize();
+
+    CHECK(src == tgt);
+  }
+
   SECTION("Test copying HostMemory to the device and back") {
     const size_t N = 3;
     const size_t size = N * sizeof(int);
@@ -78,6 +108,34 @@ TEST_CASE("Test copying cu::DeviceMemory and cu::HostMemory using cu::Stream",
     stream.synchronize();
 
     CHECK(!static_cast<bool>(memcmp(src, tgt, size)));
+  }
+
+  SECTION("Test copying 2D HostMemory to the device and back") {
+    const size_t width = 3 * sizeof(int);
+    const size_t height = 3;
+    const size_t pitch = width;
+    const size_t size = pitch * height;
+    cu::HostMemory src(size);
+    cu::HostMemory tgt(size);
+
+    // Populate the 2D memory with values
+    int* const src_ptr = static_cast<int*>(src);
+    int* const tgt_ptr = static_cast<int*>(tgt);
+    for (int y = 0; y < height; ++y) {
+      for (int x = 0; x < 3; ++x) {
+        src_ptr[y * 3 + x] = y * 3 + x + 1;
+        tgt_ptr[y * 3 + x] = 0;
+      }
+    }
+
+    cu::DeviceMemory mem(size);
+    cu::Stream stream;
+
+    stream.memcpyHtoD2DAsync(mem, pitch, src, pitch, width, height);
+    stream.memcpyDtoH2DAsync(tgt, pitch, mem, pitch, width, height);
+    stream.synchronize();
+
+    CHECK(static_cast<bool>(memcmp(src, tgt, size)) == 0);
   }
 }
 
@@ -163,7 +221,7 @@ TEST_CASE("Test cu::DeviceMemory", "[devicememory]") {
   SECTION("Test cu::DeviceMemory with CU_MEMORYTYPE_DEVICE as host pointer") {
     cu::DeviceMemory mem(sizeof(float), CU_MEMORYTYPE_DEVICE, 0);
     float* ptr;
-    CHECK_THROWS(ptr = mem);
+    CHECK_NOTHROW(ptr = mem);
   }
 
   SECTION("Test cu::DeviceMemory with CU_MEMORYTYPE_UNIFIED as host pointer") {
@@ -206,7 +264,7 @@ TEST_CASE("Test cu::DeviceMemory", "[devicememory]") {
 }
 
 using TestTypes = std::tuple<unsigned char, unsigned short, unsigned int>;
-TEMPLATE_LIST_TEST_CASE("Test memset", "[memset]", TestTypes) {
+TEMPLATE_LIST_TEST_CASE("Test memset 1D", "[memset]", TestTypes) {
   cu::init();
   cu::Device device(0);
   cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, device);
@@ -257,6 +315,71 @@ TEMPLATE_LIST_TEST_CASE("Test memset", "[memset]", TestTypes) {
     stream.synchronize();
     mem.memset(value, N);
     stream.memcpyDtoHAsync(b, mem, size);
+    stream.synchronize();
+
+    CHECK(static_cast<bool>(memcmp(a, b, size)));
+  }
+}
+
+using TestTypes = std::tuple<unsigned char, unsigned short, unsigned int>;
+TEMPLATE_LIST_TEST_CASE("Test memset 2D", "[memset]", TestTypes) {
+  cu::init();
+  cu::Device device(0);
+  cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, device);
+
+  SECTION("Test memset2D cu::DeviceMemory asynchronously") {
+    const size_t width = 3;
+    const size_t height = 3;
+    const size_t pitch = width * sizeof(TestType);
+    const size_t size = pitch * height;
+    cu::HostMemory a(size);
+    cu::HostMemory b(size);
+    TestType value = 0xAA;
+
+    // Populate the memory with initial values
+    TestType* const a_ptr = static_cast<TestType*>(a);
+    TestType* const b_ptr = static_cast<TestType*>(b);
+    for (int i = 0; i < width * height; i++) {
+      a_ptr[i] = 0;
+      b_ptr[i] = value;
+    }
+
+    cu::DeviceMemory mem(size);
+    cu::Stream stream;
+
+    // Perform the 2D memory operations
+    stream.memcpyHtoD2DAsync(mem, pitch, b, pitch, width, height);
+    stream.memset2DAsync(mem, value, pitch, width, height);
+    stream.memcpyDtoH2DAsync(b, pitch, mem, pitch, width, height);
+
+    CHECK(static_cast<bool>(memcmp(a, b, size)));
+  }
+
+  SECTION("Test zeroing cu::DeviceMemory synchronously in 2D") {
+    const size_t width = 3;
+    const size_t height = 3;
+    const size_t pitch = width * sizeof(TestType);
+    const size_t size = pitch * height;
+    cu::HostMemory a(size);
+    cu::HostMemory b(size);
+    TestType value = 0xAA;
+
+    // Populate the memory with initial values
+    TestType* const a_ptr = static_cast<TestType*>(a);
+    TestType* const b_ptr = static_cast<TestType*>(b);
+    for (int i = 0; i < width * height; i++) {
+      a_ptr[i] = 0;
+      b_ptr[i] = value;
+    }
+
+    cu::DeviceMemory mem(size);
+    cu::Stream stream;
+
+    // Perform the 2D memory operations
+    stream.memcpyHtoD2DAsync(mem, pitch, b, pitch, width, height);
+    stream.synchronize();
+    mem.memset2D(value, pitch, width, height);
+    stream.memcpyDtoH2DAsync(b, pitch, mem, pitch, width, height);
     stream.synchronize();
 
     CHECK(static_cast<bool>(memcmp(a, b, size)));

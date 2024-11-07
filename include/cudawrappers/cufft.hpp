@@ -11,6 +11,7 @@
 #include <cufftXt.h>
 #endif
 
+#include <array>
 #include <exception>
 
 #include "cudawrappers/cu.hpp"
@@ -110,18 +111,19 @@ class FFT {
 
   ~FFT() { checkCuFFTCall(cufftDestroy(plan_)); }
 
-  void setStream(cu::Stream &stream) {
+  void setStream(cu::Stream &stream) const {
     checkCuFFTCall(cufftSetStream(plan_, stream));
   }
 
-  void execute(cu::DeviceMemory &in, cu::DeviceMemory &out, int direction) {
+  void execute(cu::DeviceMemory &in, cu::DeviceMemory &out,
+               const int direction) const {
     void *in_ptr = reinterpret_cast<void *>(static_cast<CUdeviceptr>(in));
     void *out_ptr = reinterpret_cast<void *>(static_cast<CUdeviceptr>(out));
     checkCuFFTCall(cufftXtExec(plan_, in_ptr, out_ptr, direction));
   }
 
  protected:
-  void checkCuFFTCall(cufftResult result) {
+  void checkCuFFTCall(cufftResult result) const {
     if (result != CUFFT_SUCCESS) {
       throw Error(result);
     }
@@ -142,39 +144,39 @@ class FFT1D : public FFT {
 #if defined(__HIP__)
   __host__
 #endif
-  FFT1D(int nx) = delete;
+  FFT1D(const int nx) = delete;
 #if defined(__HIP__)
   __host__
 #endif
-  FFT1D(int nx, int batch) = delete;
+  FFT1D(const int nx, const int batch) = delete;
 };
 
 template <>
-FFT1D<CUDA_C_32F>::FFT1D(int nx, int batch) {
+FFT1D<CUDA_C_32F>::FFT1D(const int nx, const int batch) {
   checkCuFFTCall(cufftCreate(plan()));
   checkCuFFTCall(cufftPlan1d(plan(), nx, CUFFT_C2C, batch));
 }
 
 template <>
-FFT1D<CUDA_C_32F>::FFT1D(int nx) : FFT1D(nx, 1) {}
+FFT1D<CUDA_C_32F>::FFT1D(const int nx) : FFT1D(nx, 1) {}
 
 template <>
-FFT1D<CUDA_C_16F>::FFT1D(int nx, int batch) {
+FFT1D<CUDA_C_16F>::FFT1D(const int nx, const int batch) {
   checkCuFFTCall(cufftCreate(plan()));
   const int rank = 1;
   size_t ws = 0;
   std::array<long long, 1> n{nx};
-  long long int idist = 1;
-  long long int odist = 1;
-  int istride = 1;
-  int ostride = 1;
+  const long long idist = 1;
+  const long long odist = 1;
+  const int istride = 1;
+  const int ostride = 1;
   checkCuFFTCall(cufftXtMakePlanMany(*plan(), rank, n.data(), nullptr, istride,
                                      idist, CUDA_C_16F, nullptr, ostride, odist,
                                      CUDA_C_16F, batch, &ws, CUDA_C_16F));
 }
 
 template <>
-FFT1D<CUDA_C_16F>::FFT1D(int nx) : FFT1D(nx, 1) {}
+FFT1D<CUDA_C_16F>::FFT1D(const int nx) : FFT1D(nx, 1) {}
 
 /*
  * FFT2D
@@ -185,21 +187,23 @@ class FFT2D : public FFT {
 #if defined(__HIP__)
   __host__
 #endif
-  FFT2D(int nx, int ny) = delete;
+  FFT2D(const int nx, const int ny) = delete;
 #if defined(__HIP__)
   __host__
 #endif
-  FFT2D(int nx, int ny, int stride, int dist, int batch) = delete;
+  FFT2D(const int nx, const int ny, const int stride, const int dist,
+        const int batch) = delete;
 };
 
 template <>
-FFT2D<CUDA_C_32F>::FFT2D(int nx, int ny) {
+FFT2D<CUDA_C_32F>::FFT2D(const int nx, const int ny) {
   checkCuFFTCall(cufftCreate(plan()));
   checkCuFFTCall(cufftPlan2d(plan(), nx, ny, CUFFT_C2C));
 }
 
 template <>
-FFT2D<CUDA_C_32F>::FFT2D(int nx, int ny, int stride, int dist, int batch) {
+FFT2D<CUDA_C_32F>::FFT2D(const int nx, const int ny, const int stride,
+                         const int dist, const int batch) {
   checkCuFFTCall(cufftCreate(plan()));
   std::array<int, 2> n{nx, ny};
   checkCuFFTCall(cufftPlanMany(plan(), 2, n.data(), n.data(), stride, dist,
@@ -207,22 +211,101 @@ FFT2D<CUDA_C_32F>::FFT2D(int nx, int ny, int stride, int dist, int batch) {
 }
 
 template <>
-FFT2D<CUDA_C_16F>::FFT2D(int nx, int ny, int stride, int dist, int batch) {
+FFT2D<CUDA_C_16F>::FFT2D(const int nx, const int ny, const int stride,
+                         const int dist, const int batch) {
   checkCuFFTCall(cufftCreate(plan()));
   const int rank = 2;
   size_t ws = 0;
   std::array<long long, 2> n{nx, ny};
-  int istride = stride;
-  int ostride = stride;
-  long long int idist = dist;
-  long long int odist = dist;
+  const int istride = stride;
+  const int ostride = stride;
+  const long long int idist = dist;
+  const long long int odist = dist;
   checkCuFFTCall(cufftXtMakePlanMany(*plan(), rank, n.data(), nullptr, istride,
                                      idist, CUDA_C_16F, nullptr, ostride, odist,
                                      CUDA_C_16F, batch, &ws, CUDA_C_16F));
 }
 
 template <>
-FFT2D<CUDA_C_16F>::FFT2D(int nx, int ny) : FFT2D(nx, ny, 1, nx * ny, 1) {}
+FFT2D<CUDA_C_16F>::FFT2D(const int nx, const int ny)
+    : FFT2D(nx, ny, 1, nx * ny, 1) {}
+
+/*
+ * FFT1DR2C
+ */
+template <cudaDataType_t T>
+class FFT1DR2C : public FFT {
+ public:
+#if defined(__HIP__)
+  __host__
+#endif
+  FFT1DR2C(const int nx) = delete;
+#if defined(__HIP__)
+  __host__
+#endif
+  FFT1DR2C(const int nx, const int batch) = delete;
+
+#if defined(__HIP__)
+  __host__
+#endif
+  FFT1DR2C(const int nx, const int batch, long long inembed,
+           long long ouembed) = delete;
+};
+
+template <>
+FFT1DR2C<CUDA_R_32F>::FFT1DR2C(const int nx, const int batch, long long inembed,
+                               long long ouembed) {
+  checkCuFFTCall(cufftCreate(plan()));
+  const int rank = 1;
+  size_t ws = 0;
+  std::array<long long, 1> n{nx};
+  const long long idist = inembed;
+  const long long odist = ouembed;
+  const long long istride = 1;
+  const long long ostride = 1;
+
+  checkCuFFTCall(cufftXtMakePlanMany(
+      *plan(), rank, n.data(), &inembed, istride, idist, CUDA_R_32F, &ouembed,
+      ostride, odist, CUDA_C_32F, batch, &ws, CUDA_C_32F));
+}
+
+/*
+ * FFT1D_C2R
+ */
+template <cudaDataType_t T>
+class FFT1DC2R : public FFT {
+ public:
+#if defined(__HIP__)
+  __host__
+#endif
+  FFT1DC2R(const int nx) = delete;
+#if defined(__HIP__)
+  __host__
+#endif
+  FFT1DC2R(const int nx, const int batch) = delete;
+#if defined(__HIP__)
+  __host__
+#endif
+  FFT1DC2R(const int nx, const int batch, long long inembed,
+           long long ouembed) = delete;
+};
+
+template <>
+FFT1DC2R<CUDA_C_32F>::FFT1DC2R(const int nx, const int batch, long long inembed,
+                               long long ouembed) {
+  checkCuFFTCall(cufftCreate(plan()));
+  const int rank = 1;
+  size_t ws = 0;
+  std::array<long long, 1> n{nx};
+  const long long idist = inembed;
+  const long long odist = ouembed;
+  const int istride = 1;
+  const int ostride = 1;
+
+  checkCuFFTCall(cufftXtMakePlanMany(
+      *plan(), rank, n.data(), &inembed, istride, idist, CUDA_C_32F, &ouembed,
+      ostride, odist, CUDA_R_32F, batch, &ws, CUDA_C_32F));
+}
 
 }  // namespace cufft
 

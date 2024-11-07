@@ -299,5 +299,5 @@ To view the generated documentation, open `_build/html/index.html` in your web-b
 
 ### Verification
 
-1. Make sure the new release is added to Zenodo (see <https://zenodo.org/record/6076447>)
+1. Make sure the new release is added to Zenodo (see <https://zenodo.org/records/8075251>)
 1. Activate the latest release documentation at <https://readthedocs.org/projects/cudawrappers/versions/>
