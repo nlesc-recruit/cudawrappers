@@ -101,7 +101,6 @@ class Wrapper {
         &memoryType, CU_POINTER_ATTRIBUTE_MEMORY_TYPE, pointer));
 
     // Check if the memoryType is one of the allowed memory types
-    bool isAllowed = false;
     for (auto allowedType : {AllowedMemoryTypes...}) {
       if (memoryType == allowedType) return;
     }
