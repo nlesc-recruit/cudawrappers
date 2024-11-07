@@ -103,7 +103,7 @@ class Wrapper {
     // Check if the memoryType is one of the allowed memory types
     for (auto allowedType : {AllowedMemoryTypes...}) {
       if (memoryType == allowedType) {
-            return;
+        return;
       }
     }
 
