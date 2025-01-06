@@ -44,17 +44,18 @@ class Device {
     checkNvmlCall(nvmlDeviceGetHandleByUUID(uuid.c_str(), &device_));
   }
 
-  void getFieldValues(int valuesCount, nvmlFieldValue_t* values) {
+  void getFieldValues(int valuesCount, nvmlFieldValue_t* values) const {
     checkNvmlCall(nvmlDeviceGetFieldValues(device_, valuesCount, values));
   }
 
-  unsigned int getClock(nvmlClockType_t clockType, nvmlClockId_t clockId) {
+  unsigned int getClock(nvmlClockType_t clockType,
+                        nvmlClockId_t clockId) const {
     unsigned int clockMhz;
     checkNvmlCall(nvmlDeviceGetClock(device_, clockType, clockId, &clockMhz));
     return clockMhz;
   }
 
-  unsigned int getPower() {
+  unsigned int getPower() const {
     unsigned int power;
     checkNvmlCall(nvmlDeviceGetPowerUsage(device_, &power));
     return power;
