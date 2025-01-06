@@ -15,6 +15,7 @@ repos:
           - '--suppress=unreadVariable:tests/*'
           - '--suppress=missingIncludeSystem'
           - '--suppress=unmatchedSuppression'
+        pass_filenames: false
   - repo: https://github.com/cheshirekow/cmake-format-precommit
     rev: v0.6.13
     hooks:
