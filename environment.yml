@@ -7,7 +7,7 @@ dependencies:
   - clang-tools==14.0.0
   - cmake>=3.17
   - cppcheck==2.7.5
-  - cudatoolkit-dev==12.2.0
+  - cudatoolkit-dev==12.6.1
   - cxx-compiler
   - doxygen
   - gcovr

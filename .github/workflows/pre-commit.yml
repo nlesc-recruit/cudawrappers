@@ -14,7 +14,7 @@ jobs:
         # clang defaults to v14.0.0
         gcc-version: "12"  # = 12.1.0
         # cuda version to install with separate action
-        cuda-version: "12.2.0"
+        cuda-version: "12.6.1"
         # version for cmake-lint and cmake-format
         clang-format-version: "v18.1.4"
         cmake-format-version: "v0.6.13"
@@ -54,7 +54,7 @@ jobs:
           git checkout ${{ env.precommit_to_ref }}
 
       - name: Install cuda
-        uses: Jimver/cuda-toolkit@v0.2.11
+        uses: Jimver/cuda-toolkit@v0.2.19
         with:
           cuda: ${{ env.cuda-version }}
           method: "network"

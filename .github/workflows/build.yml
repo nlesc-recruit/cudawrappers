@@ -9,7 +9,7 @@ jobs:
     name: run
     runs-on: ubuntu-22.04
     env:
-        cuda-version: "12.2.0"
+        cuda-version: "12.6.1"
         hip-version: "6.1.3"
         amdgpu-version: "6.1.60103-1_all"
     steps:
@@ -26,7 +26,7 @@ jobs:
           echo "GITHUB_REF_NAME = $GITHUB_REF_NAME"
 
       - name: Install cuda
-        uses: Jimver/cuda-toolkit@v0.2.11
+        uses: Jimver/cuda-toolkit@v0.2.19
         with:
           cuda: ${{ env.cuda-version }}
           method: "network"
