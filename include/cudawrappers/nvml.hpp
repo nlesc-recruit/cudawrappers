@@ -35,11 +35,11 @@ class Context {
 
 class Device {
  public:
-  Device(Context& context, int index) {
+  Device(int index) {
     checkNvmlCall(nvmlDeviceGetHandleByIndex(index, &device_));
   }
 
-  Device(Context& context, cu::Device& device) {
+  Device(cu::Device& device) {
     const std::string uuid = device.getUuid();
     nvmlDeviceGetHandleByUUID(uuid.c_str(), &device_);
   }
