@@ -41,7 +41,7 @@ class Device {
 
   Device(cu::Device& device) {
     const std::string uuid = device.getUuid();
-    nvmlDeviceGetHandleByUUID(uuid.c_str(), &device_);
+    checkNvmlCall(nvmlDeviceGetHandleByUUID(uuid.c_str(), &device_));
   }
 
   void getFieldValues(int valuesCount, nvmlFieldValue_t* values) {
