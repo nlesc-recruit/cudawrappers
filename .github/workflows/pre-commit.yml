@@ -14,7 +14,7 @@ jobs:
         # clang defaults to v14.0.0
         gcc-version: "12"  # = 12.1.0
         # cuda version to install with separate action
-        cuda-version: "12.2.0"
+        cuda-version: "12.6.1"
         # version for cmake-lint and cmake-format
         clang-format-version: "v18.1.4"
         cmake-format-version: "v0.6.13"
