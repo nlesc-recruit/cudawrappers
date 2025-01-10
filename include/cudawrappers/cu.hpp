@@ -700,6 +700,7 @@ class GraphKernelNodeParams : public Wrapper<CUDA_KERNEL_NODE_PARAMS> {
 
 class Graph : public Wrapper<CUgraph> {
  public:
+  explicit Graph(CUgraph &graph) : Wrapper(graph) {};
   explicit Graph(unsigned int flags = CU_GRAPH_DEFAULT) {
     checkCudaCall(cuGraphCreate(&_obj, flags));
     manager = std::shared_ptr<CUgraph>(new CUgraph(_obj), [](CUgraph *ptr) {
@@ -724,13 +725,36 @@ class Graph : public Wrapper<CUgraph> {
   }
 };
 
-class WhileNode : public Wrapper<CUgraphNodeParams> {
+#if !defined(__HIP__)
+class GraphConditionalHandle : public Wrapper<CUgraphConditionalHandle> {
  public:
-  WhileNode() {
-    _obj.conditional = _obj.type =
-        CUgraphNodeType::CU_GRAPH_NODE_TYPE_CONDITIONAL;
+  explicit GraphConditionalHandle(Graph &graph, unsigned int default_value,
+                                  Context &context) {
+    checkCudaCall(cuGraphConditionalHandleCreate(
+        &_obj, graph, context, default_value, CU_GRAPH_COND_ASSIGN_DEFAULT));
   }
 };
+
+class WhileNodeParams : public Wrapper<CUgraphNodeParams> {
+ public:
+  explicit WhileNodeParams(GraphConditionalHandle &conditional) {
+    _obj.conditional.type = CU_GRAPH_COND_TYPE_WHILE;
+    _obj.conditional.handle = conditional;
+    _obj.conditional.size = 1;
+    _obj.type = CUgraphNodeType::CU_GRAPH_NODE_TYPE_CONDITIONAL;
+  }
+
+  Graph GetBodyGraph() { return Graph(*_obj.conditional.phGraph_out); }
+
+  void AddToGraph(Graph &graph, GraphNode &node,
+                  const std::vector<CUgraphNode> &dependencies) {
+    checkCudaCall(cuGraphAddNode((CUgraphNode *)&node, graph,
+                                 dependencies.data(), dependencies.size(),
+                                 &_obj));
+  }
+};
+
+#endif
 
 class GraphExec : public Wrapper<CUgraphExec> {
  public:
