@@ -686,12 +686,18 @@ class GraphKernelNodeParams : public Wrapper<CUDA_KERNEL_NODE_PARAMS> {
                         unsigned blockDimZ, unsigned sharedMemBytes,
                         const std::vector<const void *> &params) {
     _obj.func = function;
+#if defined(__HIP__)
+    _obj.blockDim = {blockDimX, blockDimY, blockDimZ};
+    _obj.gridDim = {gridDimX, gridDimY, gridDimZ};
+
+#else
     _obj.blockDimX = blockDimX;
     _obj.blockDimY = blockDimY;
     _obj.blockDimZ = blockDimZ;
     _obj.gridDimX = gridDimX;
     _obj.gridDimY = gridDimY;
     _obj.gridDimZ = gridDimZ;
+#endif
     _obj.sharedMemBytes = sharedMemBytes;
     _obj.kernelParams = const_cast<void **>(params.data());
     _obj.extra = nullptr;
@@ -763,7 +769,7 @@ class GraphExec : public Wrapper<CUgraphExec> {
 
   explicit GraphExec(const Graph &graph,
                      unsigned int flags = CU_GRAPH_DEFAULT) {
-    checkCudaCall(cuGraphInstantiate(&_obj, graph, flags));
+    checkCudaCall(cuGraphInstantiateWithFlags(&_obj, graph, flags));
   }
 };
 

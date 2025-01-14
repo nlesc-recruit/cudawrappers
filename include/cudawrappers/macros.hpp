@@ -661,6 +661,12 @@ typedef uint32_t cuuint32_t;
 #define cuGetErrorName hipDrvGetErrorName
 #define cuGetErrorString hipDrvGetErrorString
 #define cuGetProcAddress hipGetProcAddress
+#define cuGraphAddKernelNode hipGraphAddKernelNode
+#define cuGraphCreate hipGraphCreate
+#define cuGraphDestroy hipGraphDestroy
+#define cuGraphInstantiateWithFlags hipGraphInstantiateWithFlags
+#define cuGraphInstantiate hipGraphInstantiate
+#define cuGraphLaunch hipGraphLaunch
 #define cuInit hipInit
 #define cuIpcCloseMemHandle hipIpcCloseMemHandle
 #define cuIpcGetEventHandle hipIpcGetEventHandle
