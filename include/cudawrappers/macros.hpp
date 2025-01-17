@@ -94,6 +94,8 @@ typedef uint32_t cuuint32_t;
   hipGraphInstantiateFlagUseNodePriority
 #define CUDA_IPC_HANDLE_SIZE HIP_IPC_HANDLE_SIZE
 #define CUDA_KERNEL_NODE_PARAMS hipKernelNodeParams
+#define CUDA_HOST_NODE_PARAMS hipHostNodeParams
+#define CUDA_MEM_ALLOC_NODE_PARAMS hipMemAllocNodeParams
 #define CUDA_R_16BF HIP_R_16BF
 #define CUDA_R_16F HIP_R_16F
 #define CUDA_R_32F HIP_R_32F
@@ -662,6 +664,7 @@ typedef uint32_t cuuint32_t;
 #define cuGetErrorString hipDrvGetErrorString
 #define cuGetProcAddress hipGetProcAddress
 #define cuGraphAddKernelNode hipGraphAddKernelNode
+#define cuGraphAddHostNode hipGraphAddHostNode
 #define cuGraphCreate hipGraphCreate
 #define cuGraphDestroy hipGraphDestroy
 #define cuGraphInstantiateWithFlags hipGraphInstantiateWithFlags
