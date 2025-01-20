@@ -243,7 +243,9 @@ class Context : public Wrapper<CUcontext> {
  public:
   // Context Management
 
-  Context(int flags, Device &device) : _primaryContext(false), _device(device) {
+  [[deprecated("Context is deprecated since cudawrappers v0.9.0.")]]
+  Context(int flags, Device &device)
+      : _primaryContext(false), _device(device) {
 #if !defined(__HIP__)
     checkCudaCall(cuCtxCreate(&_obj, flags, device));
     manager =
