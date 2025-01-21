@@ -732,27 +732,23 @@ class GraphDevMemAllocNodeParams : public Wrapper<CUDA_MEM_ALLOC_NODE_PARAMS> {
 
 class GraphMemCopyToDeviceNodeParams : public Wrapper<CUDA_MEMCPY3D> {
  public:
-  GraphMemCopyToDeviceNodeParams(const DeviceMemory &memory, const void *src,
-                                 size_t size_x, size_t size_y, size_t size_z) {
-    memset(&_obj, 0, sizeof(CUDA_MEMCPY3D));
-    _obj.srcMemoryType = CU_MEMORYTYPE_HOST;
-    _obj.dstMemoryType = CU_MEMORYTYPE_DEVICE;
-    _obj.srcHost = src;
-    _obj.dstDevice = static_cast<CUdeviceptr>(memory);
-    _obj.srcXInBytes = 0;
-    _obj.srcY = 0;
-    _obj.srcZ = 0;
-    _obj.dstXInBytes = 0;
-    _obj.dstY = 0;
-    _obj.dstZ = 0;
-
-    _obj.WidthInBytes = size_x;
-    _obj.Height = size_y;
-    _obj.Depth = size_z;
-  }
-
   GraphMemCopyToDeviceNodeParams(const CUdeviceptr &dst, const void *src,
-                                 size_t size_x, size_t size_y, size_t size_z) {
+                                 size_t element_size, size_t size_x,
+                                 size_t size_y, size_t size_z,
+                                 size_t pitch = 0) {
+#if defined(__HIP__)
+    memset(&_obj, 0, sizeof(hipMemcpy3DParms));
+    if (pitch == 0) {
+      pitch = size_x * element_size;
+    }
+    _obj.srcPtr = make_hipPitchedPtr(const_cast<void *>(src),
+                                     element_size * size_x, size_x, size_y);
+    _obj.dstPtr =
+        make_hipPitchedPtr(const_cast<void *>(dst), pitch, size_x, size_y);
+
+    _obj.extent = make_hipExtent(size_x * element_size, size_y, size_z);
+    _obj.kind = hipMemcpyHostToDevice;
+#else
     memset(&_obj, 0, sizeof(CUDA_MEMCPY3D));
     _obj.srcMemoryType = CU_MEMORYTYPE_HOST;
     _obj.dstMemoryType = CU_MEMORYTYPE_DEVICE;
@@ -765,16 +761,31 @@ class GraphMemCopyToDeviceNodeParams : public Wrapper<CUDA_MEMCPY3D> {
     _obj.dstY = 0;
     _obj.dstZ = 0;
 
-    _obj.WidthInBytes = size_x;
+    _obj.WidthInBytes = size_x * element_size;
     _obj.Height = size_y;
     _obj.Depth = size_z;
+#endif
   }
 };
 
 class GraphMemCopyToHostNodeParams : public Wrapper<CUDA_MEMCPY3D> {
  public:
-  GraphMemCopyToHostNodeParams(void *dst, const CUdeviceptr &src, size_t size_x,
-                               size_t size_y, size_t size_z) {
+  GraphMemCopyToHostNodeParams(void *dst, const CUdeviceptr &src,
+                               size_t element_size, size_t size_x,
+                               size_t size_y, size_t size_z, size_t pitch = 0) {
+#if defined(__HIP__)
+    memset(&_obj, 0, sizeof(hipMemcpy3DParms));
+    if (pitch == 0) {
+      pitch = size_x * element_size;
+    }
+    _obj.srcPtr =
+        make_hipPitchedPtr(const_cast<void *>(src), pitch, size_x, size_y);
+    _obj.dstPtr = make_hipPitchedPtr(const_cast<void *>(dst),
+                                     element_size * size_x, size_x, size_y);
+
+    _obj.extent = make_hipExtent(size_x * element_size, size_y, size_z);
+    _obj.kind = hipMemcpyDeviceToHost;
+#else
     memset(&_obj, 0, sizeof(CUDA_MEMCPY3D));
     _obj.srcMemoryType = CU_MEMORYTYPE_DEVICE;
     _obj.dstMemoryType = CU_MEMORYTYPE_HOST;
@@ -789,6 +800,8 @@ class GraphMemCopyToHostNodeParams : public Wrapper<CUDA_MEMCPY3D> {
     _obj.WidthInBytes = size_x;
     _obj.Height = size_y;
     _obj.Depth = size_z;
+  }
+#endif
   }
 };
 
@@ -838,23 +851,44 @@ class Graph : public Wrapper<CUgraph> {
   void addHostToDeviceMemCopyNode(GraphNode &node,
                                   const std::vector<CUgraphNode> &dependencies,
                                   GraphMemCopyToDeviceNodeParams &params,
-                                  const Context &ctx) {
+                                  Context &ctx) {
+#if defined(__HIP__)
+    /*checkCudaCall(hipGraphAddMemcpyNode(
+        node.getNode(), _obj, dependencies.data(), dependencies.size(),
+        reinterpret_cast<hipMemcpy3DParms *>(&params)));*/
+    hipMemcpy3DParms par_ = params;
+
+    checkCudaCall(hipGraphAddMemcpyNode(
+        node.getNode(), _obj, dependencies.data(), dependencies.size(), &par_));
+
+#else
     checkCudaCall(cuGraphAddMemcpyNode(
         node.getNode(), _obj, dependencies.data(), dependencies.size(),
         reinterpret_cast<CUDA_MEMCPY3D *>(&params), ctx));
+#endif
   }
 
   void addDeviceToHostMemCopyNode(GraphNode &node,
                                   const std::vector<CUgraphNode> &dependencies,
                                   GraphMemCopyToHostNodeParams &params,
                                   const Context &ctx) {
+#if defined(__HIP__)
+    hipMemcpy3DParms par_ = params;
+
+    checkCudaCall(hipGraphAddMemcpyNode(
+        node.getNode(), _obj, dependencies.data(), dependencies.size(), &par_));
+
+#else
     checkCudaCall(cuGraphAddMemcpyNode(
         node.getNode(), _obj, dependencies.data(), dependencies.size(),
         reinterpret_cast<CUDA_MEMCPY3D *>(&params), ctx));
+#endif
   }
 
-  void exportDotFile(std::string path, CUgraphDebugDot_flags flags =
-                                           CU_GRAPH_DEBUG_DOT_FLAGS_VERBOSE) {
+  void exportDotFile(
+      std::string path,
+      CUgraphDebugDot_flags flags =
+          CUgraphDebugDot_flags::CU_GRAPH_DEBUG_DOT_FLAGS_VERBOSE) {
     checkCudaCall(cuGraphDebugDotPrint(_obj, path.c_str(), flags));
   }
 
