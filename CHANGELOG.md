@@ -7,6 +7,7 @@ project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 
+- Added support for cuda graph
 - Added compatibility with HIP
 - Added `cu::Device::getArch()`
 - Added `cu::DeviceMemory` constructor to create non-owning slice of another
