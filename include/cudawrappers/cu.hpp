@@ -802,197 +802,198 @@ class GraphMemCopyToHostNodeParams : public Wrapper<CUDA_MEMCPY3D> {
     _obj.Depth = size_z;
   }
 #endif
-  }
-};
+  };
 
-class Graph : public Wrapper<CUgraph> {
- public:
-  explicit Graph(CUgraph &graph) : Wrapper(graph) {};
-  explicit Graph(unsigned int flags = CU_GRAPH_DEFAULT) {
-    checkCudaCall(cuGraphCreate(&_obj, flags));
-    manager = std::shared_ptr<CUgraph>(new CUgraph(_obj), [](CUgraph *ptr) {
-      checkCudaCall(cuGraphDestroy(*ptr));
-      delete ptr;
-    });
-  }
+  class Graph : public Wrapper<CUgraph> {
+   public:
+    explicit Graph(CUgraph &graph) : Wrapper(graph) {};
+    explicit Graph(unsigned int flags = CU_GRAPH_DEFAULT) {
+      checkCudaCall(cuGraphCreate(&_obj, flags));
+      manager = std::shared_ptr<CUgraph>(new CUgraph(_obj), [](CUgraph *ptr) {
+        checkCudaCall(cuGraphDestroy(*ptr));
+        delete ptr;
+      });
+    }
 
-  void addKernelNode(GraphNode &node,
+    void addKernelNode(GraphNode &node,
+                       const std::vector<CUgraphNode> &dependencies,
+                       GraphKernelNodeParams &params) {
+      checkCudaCall(cuGraphAddKernelNode(
+          node.getNode(), _obj, dependencies.data(), dependencies.size(),
+          reinterpret_cast<CUDA_KERNEL_NODE_PARAMS *>(&params)));
+    }
+
+    void addHostNode(GraphNode &node,
                      const std::vector<CUgraphNode> &dependencies,
-                     GraphKernelNodeParams &params) {
-    checkCudaCall(cuGraphAddKernelNode(
-        node.getNode(), _obj, dependencies.data(), dependencies.size(),
-        reinterpret_cast<CUDA_KERNEL_NODE_PARAMS *>(&params)));
-  }
+                     GraphHostNodeParams &params) {
+      checkCudaCall(cuGraphAddHostNode(
+          node.getNode(), _obj, dependencies.data(), dependencies.size(),
+          reinterpret_cast<CUDA_HOST_NODE_PARAMS *>(&params)));
+    }
 
-  void addHostNode(GraphNode &node,
-                   const std::vector<CUgraphNode> &dependencies,
-                   GraphHostNodeParams &params) {
-    checkCudaCall(cuGraphAddHostNode(
-        node.getNode(), _obj, dependencies.data(), dependencies.size(),
-        reinterpret_cast<CUDA_HOST_NODE_PARAMS *>(&params)));
-  }
+    void addDevMemFreeNode(GraphNode &node,
+                           const std::vector<CUgraphNode> &dependencies,
+                           const CUdeviceptr &devPtr) {
+      checkCudaCall(cuGraphAddMemFreeNode(node.getNode(), _obj,
+                                          dependencies.data(),
+                                          dependencies.size(), devPtr));
+    }
 
-  void addDevMemFreeNode(GraphNode &node,
-                         const std::vector<CUgraphNode> &dependencies,
-                         const CUdeviceptr &devPtr) {
-    checkCudaCall(cuGraphAddMemFreeNode(node.getNode(), _obj,
-                                        dependencies.data(),
-                                        dependencies.size(), devPtr));
-  }
+    void addDevMemAllocNode(GraphNode &node,
+                            const std::vector<CUgraphNode> &dependencies,
+                            GraphDevMemAllocNodeParams &params) {
+      checkCudaCall(cuGraphAddMemAllocNode(
+          node.getNode(), _obj, dependencies.data(), dependencies.size(),
+          reinterpret_cast<CUDA_MEM_ALLOC_NODE_PARAMS *>(&params)));
+    }
 
-  void addDevMemAllocNode(GraphNode &node,
-                          const std::vector<CUgraphNode> &dependencies,
-                          GraphDevMemAllocNodeParams &params) {
-    checkCudaCall(cuGraphAddMemAllocNode(
-        node.getNode(), _obj, dependencies.data(), dependencies.size(),
-        reinterpret_cast<CUDA_MEM_ALLOC_NODE_PARAMS *>(&params)));
-  }
-
-  void addHostToDeviceMemCopyNode(GraphNode &node,
-                                  const std::vector<CUgraphNode> &dependencies,
-                                  GraphMemCopyToDeviceNodeParams &params,
-                                  Context &ctx) {
+    void addHostToDeviceMemCopyNode(
+        GraphNode &node, const std::vector<CUgraphNode> &dependencies,
+        GraphMemCopyToDeviceNodeParams &params, Context &ctx) {
 #if defined(__HIP__)
-    /*checkCudaCall(hipGraphAddMemcpyNode(
-        node.getNode(), _obj, dependencies.data(), dependencies.size(),
-        reinterpret_cast<hipMemcpy3DParms *>(&params)));*/
-    hipMemcpy3DParms par_ = params;
+      /*checkCudaCall(hipGraphAddMemcpyNode(
+          node.getNode(), _obj, dependencies.data(), dependencies.size(),
+          reinterpret_cast<hipMemcpy3DParms *>(&params)));*/
+      hipMemcpy3DParms par_ = params;
 
-    checkCudaCall(hipGraphAddMemcpyNode(
-        node.getNode(), _obj, dependencies.data(), dependencies.size(), &par_));
+      checkCudaCall(hipGraphAddMemcpyNode(node.getNode(), _obj,
+                                          dependencies.data(),
+                                          dependencies.size(), &par_));
 
 #else
     checkCudaCall(cuGraphAddMemcpyNode(
         node.getNode(), _obj, dependencies.data(), dependencies.size(),
         reinterpret_cast<CUDA_MEMCPY3D *>(&params), ctx));
 #endif
-  }
+    }
 
-  void addDeviceToHostMemCopyNode(GraphNode &node,
-                                  const std::vector<CUgraphNode> &dependencies,
-                                  GraphMemCopyToHostNodeParams &params,
-                                  const Context &ctx) {
+    void addDeviceToHostMemCopyNode(
+        GraphNode &node, const std::vector<CUgraphNode> &dependencies,
+        GraphMemCopyToHostNodeParams &params, const Context &ctx) {
 #if defined(__HIP__)
-    hipMemcpy3DParms par_ = params;
+      hipMemcpy3DParms par_ = params;
 
-    checkCudaCall(hipGraphAddMemcpyNode(
-        node.getNode(), _obj, dependencies.data(), dependencies.size(), &par_));
+      checkCudaCall(hipGraphAddMemcpyNode(node.getNode(), _obj,
+                                          dependencies.data(),
+                                          dependencies.size(), &par_));
 
 #else
     checkCudaCall(cuGraphAddMemcpyNode(
         node.getNode(), _obj, dependencies.data(), dependencies.size(),
         reinterpret_cast<CUDA_MEMCPY3D *>(&params), ctx));
 #endif
-  }
+    }
 
-  void exportDotFile(
-      std::string path,
-      CUgraphDebugDot_flags flags =
-          CUgraphDebugDot_flags::CU_GRAPH_DEBUG_DOT_FLAGS_VERBOSE) {
-    checkCudaCall(cuGraphDebugDotPrint(_obj, path.c_str(), flags));
-  }
+    void exportDotFile(
+        std::string path,
+        CUgraphDebugDot_flags flags =
+            CUgraphDebugDot_flags::CU_GRAPH_DEBUG_DOT_FLAGS_VERBOSE) {
+      checkCudaCall(cuGraphDebugDotPrint(_obj, path.c_str(), flags));
+    }
 
-  CUgraphExec Instantiate(unsigned int flags = CU_GRAPH_DEFAULT) {
-    CUgraphExec graph_instance;
-    cu::checkCudaCall(
-        cuGraphInstantiateWithFlags(&graph_instance, _obj, flags));
-    return graph_instance;
-  }
-};
+    CUgraphExec Instantiate(unsigned int flags = CU_GRAPH_DEFAULT) {
+      CUgraphExec graph_instance;
+      cu::checkCudaCall(
+          cuGraphInstantiateWithFlags(&graph_instance, _obj, flags));
+      return graph_instance;
+    }
+  };
 
 #if !defined(__HIP__)
-class GraphConditionalHandle : public Wrapper<CUgraphConditionalHandle> {
- public:
-  explicit GraphConditionalHandle(Graph &graph, unsigned int default_value,
-                                  Context &context) {
-    checkCudaCall(cuGraphConditionalHandleCreate(
-        &_obj, graph, context, default_value, CU_GRAPH_COND_ASSIGN_DEFAULT));
-  }
-};
+  class GraphConditionalHandle : public Wrapper<CUgraphConditionalHandle> {
+   public:
+    explicit GraphConditionalHandle(Graph &graph, unsigned int default_value,
+                                    Context &context) {
+      checkCudaCall(cuGraphConditionalHandleCreate(
+          &_obj, graph, context, default_value, CU_GRAPH_COND_ASSIGN_DEFAULT));
+    }
+  };
 
-class GraphWhileNodeParams : public Wrapper<CUgraphNodeParams> {
- public:
-  explicit GraphWhileNodeParams(GraphConditionalHandle &conditional) {
-    _obj.conditional.type = CU_GRAPH_COND_TYPE_WHILE;
-    _obj.conditional.handle = conditional;
-    _obj.conditional.size = 1;
-    _obj.type = CUgraphNodeType::CU_GRAPH_NODE_TYPE_CONDITIONAL;
-  }
+  class GraphWhileNodeParams : public Wrapper<CUgraphNodeParams> {
+   public:
+    explicit GraphWhileNodeParams(GraphConditionalHandle &conditional) {
+      _obj.conditional.type = CU_GRAPH_COND_TYPE_WHILE;
+      _obj.conditional.handle = conditional;
+      _obj.conditional.size = 1;
+      _obj.type = CUgraphNodeType::CU_GRAPH_NODE_TYPE_CONDITIONAL;
+    }
 
-  Graph GetBodyGraph() { return Graph(*_obj.conditional.phGraph_out); }
+    Graph GetBodyGraph() { return Graph(*_obj.conditional.phGraph_out); }
 
-  void AddToGraph(Graph &graph, GraphNode &node,
-                  const std::vector<CUgraphNode> &dependencies) {
-    checkCudaCall(cuGraphAddNode(reinterpret_cast<CUgraphNode *>(&node), graph,
-                                 dependencies.data(), dependencies.size(),
-                                 &_obj));
-  }
-};
+    void AddToGraph(Graph &graph, GraphNode &node,
+                    const std::vector<CUgraphNode> &dependencies) {
+      checkCudaCall(cuGraphAddNode(reinterpret_cast<CUgraphNode *>(&node),
+                                   graph, dependencies.data(),
+                                   dependencies.size(), &_obj));
+    }
+  };
 #endif
 
-class GraphExec : public Wrapper<CUgraphExec> {
- public:
-  explicit GraphExec(CUgraphExec &graph_exec) : Wrapper(graph_exec) {}
-  explicit GraphExec(GraphExec &graph_exec) = default;
+  class GraphExec : public Wrapper<CUgraphExec> {
+   public:
+    explicit GraphExec(CUgraphExec &graph_exec) : Wrapper(graph_exec) {}
+    explicit GraphExec(GraphExec &graph_exec) = default;
 
-  explicit GraphExec(const Graph &graph,
-                     unsigned int flags = CU_GRAPH_DEFAULT) {
-    checkCudaCall(cuGraphInstantiateWithFlags(&_obj, graph, flags));
-  }
-};
+    explicit GraphExec(const Graph &graph,
+                       unsigned int flags = CU_GRAPH_DEFAULT) {
+      checkCudaCall(cuGraphInstantiateWithFlags(&_obj, graph, flags));
+    }
+  };
 
-class Stream : public Wrapper<CUstream> {
-  friend class Event;
+  class Stream : public Wrapper<CUstream> {
+    friend class Event;
 
- public:
-  explicit Stream(unsigned int flags = CU_STREAM_DEFAULT) {
-    checkCudaCall(cuStreamCreate(&_obj, flags));
-    manager = std::shared_ptr<CUstream>(new CUstream(_obj), [](CUstream *ptr) {
-      checkCudaCall(cuStreamDestroy(*ptr));
-      delete ptr;
-    });
-  }
+   public:
+    explicit Stream(unsigned int flags = CU_STREAM_DEFAULT) {
+      checkCudaCall(cuStreamCreate(&_obj, flags));
+      manager =
+          std::shared_ptr<CUstream>(new CUstream(_obj), [](CUstream *ptr) {
+            checkCudaCall(cuStreamDestroy(*ptr));
+            delete ptr;
+          });
+    }
 
-  explicit Stream(CUstream stream) : Wrapper<CUstream>(stream) {}
+    explicit Stream(CUstream stream) : Wrapper<CUstream>(stream) {}
 
-  DeviceMemory memAllocAsync(size_t size) {
-    CUdeviceptr ptr;
-    checkCudaCall(cuMemAllocAsync(&ptr, size, _obj));
-    return DeviceMemory(ptr, size);
-  }
+    DeviceMemory memAllocAsync(size_t size) {
+      CUdeviceptr ptr;
+      checkCudaCall(cuMemAllocAsync(&ptr, size, _obj));
+      return DeviceMemory(ptr, size);
+    }
 
-  void memFreeAsync(DeviceMemory &devMem) {
-    checkCudaCall(cuMemFreeAsync(devMem, _obj));
-  }
+    void memFreeAsync(DeviceMemory &devMem) {
+      checkCudaCall(cuMemFreeAsync(devMem, _obj));
+    }
 
-  void memcpyHtoHAsync(void *dstPtr, const void *srcPtr, size_t size) {
+    void memcpyHtoHAsync(void *dstPtr, const void *srcPtr, size_t size) {
 #if defined(__HIP__)
-    checkCudaCall(hipMemcpyAsync(
-        reinterpret_cast<CUdeviceptr>(dstPtr),
-        reinterpret_cast<CUdeviceptr>(const_cast<void *>(srcPtr)), size,
-        hipMemcpyDefault, _obj));
+      checkCudaCall(hipMemcpyAsync(
+          reinterpret_cast<CUdeviceptr>(dstPtr),
+          reinterpret_cast<CUdeviceptr>(const_cast<void *>(srcPtr)), size,
+          hipMemcpyDefault, _obj));
 #else
     checkCudaCall(cuMemcpyAsync(reinterpret_cast<CUdeviceptr>(dstPtr),
                                 reinterpret_cast<CUdeviceptr>(srcPtr), size,
                                 _obj));
 #endif
-  }
+    }
 
-  void memcpyHtoDAsync(DeviceMemory &devPtr, const void *hostPtr, size_t size) {
+    void memcpyHtoDAsync(DeviceMemory &devPtr, const void *hostPtr,
+                         size_t size) {
 #if defined(__HIP__)
-    checkCudaCall(
-        hipMemcpyHtoDAsync(devPtr, const_cast<void *>(hostPtr), size, _obj));
+      checkCudaCall(
+          hipMemcpyHtoDAsync(devPtr, const_cast<void *>(hostPtr), size, _obj));
 #else
     checkCudaCall(cuMemcpyHtoDAsync(devPtr, hostPtr, size, _obj));
 #endif
-  }
+    }
 
-  void memcpyHtoD2DAsync(DeviceMemory &devPtr, size_t dpitch,
-                         const void *hostPtr, size_t spitch, size_t width,
-                         size_t height) {
+    void memcpyHtoD2DAsync(DeviceMemory &devPtr, size_t dpitch,
+                           const void *hostPtr, size_t spitch, size_t width,
+                           size_t height) {
 #if defined(__HIP__)
-    checkCudaCall(hipMemcpy2DAsync(devPtr, dpitch, hostPtr, spitch, width,
-                                   height, hipMemcpyHostToDevice, _obj));
+      checkCudaCall(hipMemcpy2DAsync(devPtr, dpitch, hostPtr, spitch, width,
+                                     height, hipMemcpyHostToDevice, _obj));
 #else
     // Initialize the CUDA_MEMCPY2D structure
     CUDA_MEMCPY2D copyParams = {0};
@@ -1019,14 +1020,14 @@ class Stream : public Wrapper<CUstream> {
     // Call the driver API function cuMemcpy2DAsync
     checkCudaCall(cuMemcpy2DAsync(&copyParams, _obj));
 #endif
-  }
+    }
 
-  void memcpyDtoH2DAsync(void *hostPtr, size_t dpitch,
-                         const DeviceMemory &devPtr, size_t spitch,
-                         size_t width, size_t height) {
+    void memcpyDtoH2DAsync(void *hostPtr, size_t dpitch,
+                           const DeviceMemory &devPtr, size_t spitch,
+                           size_t width, size_t height) {
 #if defined(__HIP__)
-    checkCudaCall(hipMemcpy2DAsync(hostPtr, dpitch, devPtr, spitch, width,
-                                   height, hipMemcpyDeviceToHost, _obj));
+      checkCudaCall(hipMemcpy2DAsync(hostPtr, dpitch, devPtr, spitch, width,
+                                     height, hipMemcpyDeviceToHost, _obj));
 #else
     // Initialize the CUDA_MEMCPY2D structure
     CUDA_MEMCPY2D copyParams = {0};
@@ -1053,154 +1054,165 @@ class Stream : public Wrapper<CUstream> {
     // Call the driver API function cuMemcpy2DAsync
     checkCudaCall(cuMemcpy2DAsync(&copyParams, _obj));
 #endif
-  }
+    }
 
-  void memcpyHtoDAsync(CUdeviceptr devPtr, const void *hostPtr, size_t size) {
+    void memcpyHtoDAsync(CUdeviceptr devPtr, const void *hostPtr, size_t size) {
 #if defined(__HIP__)
-    checkCudaCall(
-        hipMemcpyHtoDAsync(devPtr, const_cast<void *>(hostPtr), size, _obj));
+      checkCudaCall(
+          hipMemcpyHtoDAsync(devPtr, const_cast<void *>(hostPtr), size, _obj));
 #else
     checkCudaCall(cuMemcpyHtoDAsync(devPtr, hostPtr, size, _obj));
 #endif
-  }
+    }
 
-  void memcpyDtoHAsync(void *hostPtr, const DeviceMemory &devPtr, size_t size) {
-    checkCudaCall(cuMemcpyDtoHAsync(hostPtr, devPtr, size, _obj));
-  }
+    void memcpyDtoHAsync(void *hostPtr, const DeviceMemory &devPtr,
+                         size_t size) {
+      checkCudaCall(cuMemcpyDtoHAsync(hostPtr, devPtr, size, _obj));
+    }
 
-  void memcpyDtoHAsync(void *hostPtr, CUdeviceptr devPtr, size_t size) {
-    checkCudaCall(cuMemcpyDtoHAsync(hostPtr, devPtr, size, _obj));
-  }
+    void memcpyDtoHAsync(void *hostPtr, CUdeviceptr devPtr, size_t size) {
+      checkCudaCall(cuMemcpyDtoHAsync(hostPtr, devPtr, size, _obj));
+    }
 
-  void memcpyDtoDAsync(DeviceMemory &dstPtr, DeviceMemory &srcPtr,
-                       size_t size) {
+    void memcpyDtoDAsync(DeviceMemory &dstPtr, DeviceMemory &srcPtr,
+                         size_t size) {
 #if defined(__HIP__)
-    checkCudaCall(hipMemcpyAsync(dstPtr, srcPtr, size, hipMemcpyDefault, _obj));
+      checkCudaCall(
+          hipMemcpyAsync(dstPtr, srcPtr, size, hipMemcpyDefault, _obj));
 #else
     checkCudaCall(cuMemcpyAsync(dstPtr, srcPtr, size, _obj));
 #endif
-  }
+    }
 
-  void memPrefetchAsync(DeviceMemory &devPtr, size_t size) {
-    checkCudaCall(cuMemPrefetchAsync(devPtr, size, CU_DEVICE_CPU, _obj));
-  }
+    void memPrefetchAsync(DeviceMemory &devPtr, size_t size) {
+      checkCudaCall(cuMemPrefetchAsync(devPtr, size, CU_DEVICE_CPU, _obj));
+    }
 
-  void memPrefetchAsync(DeviceMemory &devPtr, size_t size, Device &dstDevice) {
-    checkCudaCall(cuMemPrefetchAsync(devPtr, size, dstDevice, _obj));
-  }
+    void memPrefetchAsync(DeviceMemory &devPtr, size_t size,
+                          Device &dstDevice) {
+      checkCudaCall(cuMemPrefetchAsync(devPtr, size, dstDevice, _obj));
+    }
 
-  void memsetAsync(DeviceMemory &devPtr, unsigned char value, size_t size) {
-    checkCudaCall(cuMemsetD8Async(devPtr, value, size, _obj));
-  }
+    void memsetAsync(DeviceMemory &devPtr, unsigned char value, size_t size) {
+      checkCudaCall(cuMemsetD8Async(devPtr, value, size, _obj));
+    }
 
-  void memsetAsync(DeviceMemory &devPtr, unsigned short value, size_t size) {
-    checkCudaCall(cuMemsetD16Async(devPtr, value, size, _obj));
-  }
+    void memsetAsync(DeviceMemory &devPtr, unsigned short value, size_t size) {
+      checkCudaCall(cuMemsetD16Async(devPtr, value, size, _obj));
+    }
 
-  void memsetAsync(DeviceMemory &devPtr, unsigned int value, size_t size) {
-    checkCudaCall(cuMemsetD32Async(devPtr, value, size, _obj));
-  }
+    void memsetAsync(DeviceMemory &devPtr, unsigned int value, size_t size) {
+      checkCudaCall(cuMemsetD32Async(devPtr, value, size, _obj));
+    }
 
-  void memset2DAsync(DeviceMemory &devPtr, unsigned char value, size_t pitch,
-                     size_t width, size_t height) {
+    void memset2DAsync(DeviceMemory &devPtr, unsigned char value, size_t pitch,
+                       size_t width, size_t height) {
 #if defined(__HIP__)
-    checkCudaCall(hipMemset2DAsync(devPtr, pitch, value, width, height, _obj));
+      checkCudaCall(
+          hipMemset2DAsync(devPtr, pitch, value, width, height, _obj));
 #else
     checkCudaCall(cuMemsetD2D8Async(devPtr, pitch, value, width, height, _obj));
 #endif
-  }
+    }
 
-  void memset2DAsync(DeviceMemory &devPtr, unsigned short value, size_t pitch,
-                     size_t width, size_t height) {
+    void memset2DAsync(DeviceMemory &devPtr, unsigned short value, size_t pitch,
+                       size_t width, size_t height) {
 #if defined(__HIP__)
-    checkCudaCall(hipMemset2DAsync(devPtr, pitch, value, width, height, _obj));
+      checkCudaCall(
+          hipMemset2DAsync(devPtr, pitch, value, width, height, _obj));
 #else
     checkCudaCall(
         cuMemsetD2D16Async(devPtr, pitch, value, width, height, _obj));
 #endif
-  }
+    }
 
-  void memset2DAsync(DeviceMemory &devPtr, unsigned int value, size_t pitch,
-                     size_t width, size_t height) {
+    void memset2DAsync(DeviceMemory &devPtr, unsigned int value, size_t pitch,
+                       size_t width, size_t height) {
 #if defined(__HIP__)
-    checkCudaCall(hipMemset2DAsync(devPtr, pitch, value, width, height, _obj));
+      checkCudaCall(
+          hipMemset2DAsync(devPtr, pitch, value, width, height, _obj));
 #else
     checkCudaCall(
         cuMemsetD2D32Async(devPtr, pitch, value, width, height, _obj));
 #endif
-  }
+    }
 
-  void zero(DeviceMemory &devPtr, size_t size) {
-    memsetAsync(devPtr, static_cast<unsigned char>(0), size);
-  }
+    void zero(DeviceMemory &devPtr, size_t size) {
+      memsetAsync(devPtr, static_cast<unsigned char>(0), size);
+    }
 
-  void zero2D(DeviceMemory &devPtr, size_t pitch, size_t width, size_t height) {
-    memset2DAsync(devPtr, static_cast<unsigned char>(0), pitch, width, height);
-  }
+    void zero2D(DeviceMemory &devPtr, size_t pitch, size_t width,
+                size_t height) {
+      memset2DAsync(devPtr, static_cast<unsigned char>(0), pitch, width,
+                    height);
+    }
 
-  void launchKernel(Function &function, unsigned gridX, unsigned gridY,
-                    unsigned gridZ, unsigned blockX, unsigned blockY,
-                    unsigned blockZ, unsigned sharedMemBytes,
-                    const std::vector<const void *> &parameters) {
-    checkCudaCall(cuLaunchKernel(function, gridX, gridY, gridZ, blockX, blockY,
-                                 blockZ, sharedMemBytes, _obj,
-                                 const_cast<void **>(&parameters[0]), nullptr));
-  }
+    void launchKernel(Function &function, unsigned gridX, unsigned gridY,
+                      unsigned gridZ, unsigned blockX, unsigned blockY,
+                      unsigned blockZ, unsigned sharedMemBytes,
+                      const std::vector<const void *> &parameters) {
+      checkCudaCall(cuLaunchKernel(
+          function, gridX, gridY, gridZ, blockX, blockY, blockZ, sharedMemBytes,
+          _obj, const_cast<void **>(&parameters[0]), nullptr));
+    }
 
 #if CUDART_VERSION >= 9000
-  void launchCooperativeKernel(Function &function, unsigned gridX,
-                               unsigned gridY, unsigned gridZ, unsigned blockX,
-                               unsigned blockY, unsigned blockZ,
-                               unsigned sharedMemBytes,
-                               const std::vector<const void *> &parameters) {
-    checkCudaCall(cuLaunchCooperativeKernel(
-        function, gridX, gridY, gridZ, blockX, blockY, blockZ, sharedMemBytes,
-        _obj, const_cast<void **>(&parameters[0])));
-  }
+    void launchCooperativeKernel(Function &function, unsigned gridX,
+                                 unsigned gridY, unsigned gridZ,
+                                 unsigned blockX, unsigned blockY,
+                                 unsigned blockZ, unsigned sharedMemBytes,
+                                 const std::vector<const void *> &parameters) {
+      checkCudaCall(cuLaunchCooperativeKernel(
+          function, gridX, gridY, gridZ, blockX, blockY, blockZ, sharedMemBytes,
+          _obj, const_cast<void **>(&parameters[0])));
+    }
 #endif
 
-  void lunchGraph(CUgraphExec &graph) {
-    checkCudaCall(cuGraphLaunch(graph, _obj));
-  }
+    void lunchGraph(CUgraphExec &graph) {
+      checkCudaCall(cuGraphLaunch(graph, _obj));
+    }
 
-  void lunchGraph(GraphExec &graph) {
-    checkCudaCall(cuGraphLaunch(graph, _obj));
-  }
+    void lunchGraph(GraphExec &graph) {
+      checkCudaCall(cuGraphLaunch(graph, _obj));
+    }
 
-  void query() {
-    checkCudaCall(cuStreamQuery(_obj));  // unsuccessful result throws cu::Error
-  }
+    void query() {
+      checkCudaCall(
+          cuStreamQuery(_obj));  // unsuccessful result throws cu::Error
+    }
 
-  void synchronize() { checkCudaCall(cuStreamSynchronize(_obj)); }
+    void synchronize() { checkCudaCall(cuStreamSynchronize(_obj)); }
 
-  void wait(Event &event) { checkCudaCall(cuStreamWaitEvent(_obj, event, 0)); }
+    void wait(Event &event) {
+      checkCudaCall(cuStreamWaitEvent(_obj, event, 0));
+    }
 
-  void addCallback(CUstreamCallback callback, void *userData,
-                   unsigned int flags = 0) {
-    checkCudaCall(cuStreamAddCallback(_obj, callback, userData, flags));
-  }
+    void addCallback(CUstreamCallback callback, void *userData,
+                     unsigned int flags = 0) {
+      checkCudaCall(cuStreamAddCallback(_obj, callback, userData, flags));
+    }
 
-  void record(Event &event) { checkCudaCall(cuEventRecord(event, _obj)); }
+    void record(Event &event) { checkCudaCall(cuEventRecord(event, _obj)); }
 
 #if !defined(__HIP__)
-  void batchMemOp(unsigned count, CUstreamBatchMemOpParams *paramArray,
-                  unsigned flags) {
-    checkCudaCall(cuStreamBatchMemOp(_obj, count, paramArray, flags));
-  }
+    void batchMemOp(unsigned count, CUstreamBatchMemOpParams *paramArray,
+                    unsigned flags) {
+      checkCudaCall(cuStreamBatchMemOp(_obj, count, paramArray, flags));
+    }
 #endif
 
-  void waitValue32(CUdeviceptr addr, cuuint32_t value, unsigned flags) const {
-    checkCudaCall(cuStreamWaitValue32(_obj, addr, value, flags));
-  }
+    void waitValue32(CUdeviceptr addr, cuuint32_t value, unsigned flags) const {
+      checkCudaCall(cuStreamWaitValue32(_obj, addr, value, flags));
+    }
 
-  void writeValue32(CUdeviceptr addr, cuuint32_t value, unsigned flags) {
-    checkCudaCall(cuStreamWriteValue32(_obj, addr, value, flags));
-  }
-};
+    void writeValue32(CUdeviceptr addr, cuuint32_t value, unsigned flags) {
+      checkCudaCall(cuStreamWriteValue32(_obj, addr, value, flags));
+    }
+  };
 
-inline void Event::record(Stream &stream) {
-  checkCudaCall(cuEventRecord(_obj, stream._obj));
-}
+  inline void Event::record(Stream &stream) {
+    checkCudaCall(cuEventRecord(_obj, stream._obj));
+  }
 
 }  // namespace cu
 
