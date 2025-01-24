@@ -698,7 +698,7 @@ typedef uint32_t cuuint32_t;
 #define cuGraphAddHostNode hipGraphAddHostNode
 #define cuGraphAddMemAllocNode hipGraphAddMemAllocNode
 #define cuGraphAddMemcpyNode hipGraphAddMemcpyNode
-#define cuGraphAddMemFreeNode hipDrvGraphAddMemFreeNode
+#define cuGraphAddMemFreeNode hipGraphAddMemFreeNode
 #define cuGraphCreate hipGraphCreate
 #define cuGraphDebugDotPrint hipGraphDebugDotPrint
 #define cuGraphDestroy hipGraphDestroy
