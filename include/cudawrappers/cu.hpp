@@ -899,36 +899,6 @@ class GraphMemCopyToHostNodeParams : public Wrapper<CUDA_MEMCPY3D> {
     }
   };
 
-#if !defined(__HIP__)
-  class GraphConditionalHandle : public Wrapper<CUgraphConditionalHandle> {
-   public:
-    explicit GraphConditionalHandle(Graph &graph, unsigned int default_value,
-                                    Context &context) {
-      checkCudaCall(cuGraphConditionalHandleCreate(
-          &_obj, graph, context, default_value, CU_GRAPH_COND_ASSIGN_DEFAULT));
-    }
-  };
-
-  class GraphWhileNodeParams : public Wrapper<CUgraphNodeParams> {
-   public:
-    explicit GraphWhileNodeParams(GraphConditionalHandle &conditional) {
-      _obj.conditional.type = CU_GRAPH_COND_TYPE_WHILE;
-      _obj.conditional.handle = conditional;
-      _obj.conditional.size = 1;
-      _obj.type = CUgraphNodeType::CU_GRAPH_NODE_TYPE_CONDITIONAL;
-    }
-
-    Graph GetBodyGraph() { return Graph(*_obj.conditional.phGraph_out); }
-
-    void AddToGraph(Graph &graph, GraphNode &node,
-                    const std::vector<CUgraphNode> &dependencies) {
-      checkCudaCall(cuGraphAddNode(reinterpret_cast<CUgraphNode *>(&node),
-                                   graph, dependencies.data(),
-                                   dependencies.size(), &_obj));
-    }
-  };
-#endif
-
   class GraphExec : public Wrapper<CUgraphExec> {
    public:
     explicit GraphExec(CUgraphExec &graph_exec) : Wrapper(graph_exec) {}
