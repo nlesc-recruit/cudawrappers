@@ -88,7 +88,8 @@ To enable HIP:
     CXX=hipcc cmake -B build
     ```
 
-**Note**: When building for both NVIDIA and AMD HIP, using **seperate** build folders (e.g, `build_nvidia` and `build_amd`) is encouraged.
+**Note**: When building for both NVIDIA and AMD HIP, using **seperate** build folders (e.g, `build_nvidia` and `build_amd`) is encouraged. Additionally, please note that HIP deprecated support for so-called GPU 'contexts'. Therefore, the usage of cudawrappers' `cu::Context` is discouraged and marked deprecated since cudawrappers version `0.9.0`.
+
 
 ### Code Examples
 
