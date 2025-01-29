@@ -43,7 +43,7 @@ or newer|
 
 ## Usage
 
-We use CMake in this project, so you can clone and build this library with the following steps:
+CMake is used to build cudawrappers. To compile the library, run:
 
 ```shell
 git clone https://github.com/nlesc-recruit/cudawrappers
@@ -52,13 +52,11 @@ cmake -S . -B build
 make -C build
 ```
 
-This command will create a `build` directory. Cudawrappers is header only, so no library objects are being built.
-For more details on the building requirements and on testing, check the [developer documentation](README.dev.md).
+This creates a `build` directory. Since cudawrappers is header-only, no library objects will be built. 
+For more details on the building requirements and testing, see the [developer documentation](README.dev.md).
 
-To install to `~/.local`, use
+To install cudawrappers at a specific location (e.g., ~/.local), use:
 ```shell
-git clone https://github.com/nlesc-recruit/cudawrappers
-cd cudawrappers
 cmake -DCMAKE_INSTALL_PREFIX=$HOME/.local -S . -B build
 make -C build
 make -C build install
@@ -66,15 +64,32 @@ make -C build install
 
 ## Usage (HIP)
 
-To enable HIP, make sure to build cudawrappers with
-`-DCUDAWRAPPERS_BACKEND=HIP`, or when using `FetchContent`, use
-`set(CUDAWRAPPERS_BACKEND "HIP")`.  In your project's `CMakeLists.txt`, add
-`enable_language(HIP)`. Furthermore, every target that includes a cudawrappers
-header file needs to be 'hipified', to this end, add
-`set_source_files_properties(source.cpp PROPERTIES LANGUAGE HIP)` for every
-relevant `source.cpp` file. Some CUDA specific features may not be available or
-not work on non-NVIDIA GPUs, in those cases use `#ifdef(__HIP__)` guards to
-patch your code wherever this is needed.
+To enable HIP support:
+
+1. Add the following code to your project's `CMakeLists.txt` file:
+
+```cmake
+enable_language(HIP)
+set(CUDAWRAPPERS_BACKEND "HIP")
+```
+
+Alternatively, use the `-DCUDAWRAPPERS_BACKEND=HIP` argument when building.
+
+2. Ensure that every target your project builds is 'hipfied'. This is done by marking relevant source files as 'HIP' compatible:
+
+```cmake
+set_source_files_properties(source.cpp PROPERTIES LANGUAGE HIP)
+```
+
+3. Optionally, use `#ifdef (__HIP__)` directives in your source code to enable/disable certain sections for HIP.
+
+4. *Build* while ensuring that the `hipcc` compiler is selected. This can be done via the command line:
+
+```shell
+CXX=hipcc cmake -B build
+```
+
+*Note*: When building for both NVIDIA and AMD HIP, using *seperate* build folders (e.g, `build_nvidia` and `build_amd`) is encouraged.
 
 ### Usage examples
 
