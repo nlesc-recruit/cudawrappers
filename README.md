@@ -43,7 +43,7 @@ or newer|
 
 ## Usage
 
-CMake is used to build cudawrappers. To compile the library, run:
+CMake is used to build cudawrappers. To build the library, run:
 
 ```shell
 git clone https://github.com/nlesc-recruit/cudawrappers
@@ -55,7 +55,7 @@ make -C build
 This creates a `build` directory. Since cudawrappers is header-only, no library objects will be built.
 For more details on the building requirements and testing, see the [developer documentation](README.dev.md).
 
-To install cudawrappers at a specific location (e.g., ~/.local), use:
+To install cudawrappers to a specific location (e.g., ~/.local), use:
 ```shell
 cmake -DCMAKE_INSTALL_PREFIX=$HOME/.local -S . -B build
 make -C build
@@ -84,7 +84,7 @@ To enable HIP:
 
 3. Optionally, use `#ifdef (__HIP__)` directives in your source code to enable/disable certain sections for HIP.
 
-4. **Build** while ensuring that the `hipcc` compiler is selected.
+4. **Build** ensure that the `hipcc` compiler is selected.
     This can be done via the command line:
 
     ```shell
