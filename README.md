@@ -52,7 +52,7 @@ cmake -S . -B build
 make -C build
 ```
 
-This creates a `build` directory. Since cudawrappers is header-only, no library objects will be built. 
+This creates a `build` directory. Since cudawrappers is header-only, no library objects will be built.
 For more details on the building requirements and testing, see the [developer documentation](README.dev.md).
 
 To install cudawrappers at a specific location (e.g., ~/.local), use:
@@ -72,9 +72,11 @@ To enable HIP:
     enable_language(HIP)
     set(CUDAWRAPPERS_BACKEND "HIP")
     ```
+
     Alternatively, use the `-DCUDAWRAPPERS_BACKEND=HIP` argument when running CMake.
 
-2. Ensure that every target your project builds is 'hipfied'. This is done by marking relevant source files as 'HIP' compatible:
+2. Ensure that every target your project builds is 'hipfied'.
+    This is done by marking relevant source files as 'HIP' compatible:
 
     ```cmake
     set_source_files_properties(source.cpp PROPERTIES LANGUAGE HIP)
@@ -82,18 +84,22 @@ To enable HIP:
 
 3. Optionally, use `#ifdef (__HIP__)` directives in your source code to enable/disable certain sections for HIP.
 
-4. **Build** while ensuring that the `hipcc` compiler is selected. This can be done via the command line:
+4. **Build** while ensuring that the `hipcc` compiler is selected.
+    This can be done via the command line:
 
     ```shell
     CXX=hipcc cmake -B build
     ```
 
-**Note**: When building for both NVIDIA and AMD HIP, using **seperate** build folders (e.g, `build_nvidia` and `build_amd`) is encouraged. Additionally, please note that HIP deprecated support for so-called GPU 'contexts'. Therefore, the usage of cudawrappers' `cu::Context` is discouraged and marked deprecated since cudawrappers version `0.9.0`.
-
+**Note**: When building for both NVIDIA and AMD HIP,
+using **seperate** build folders (e.g, `build_nvidia` and `build_amd`) is encouraged.
+Additionally, please note that HIP deprecated support for so-called GPU 'contexts'.
+Therefore, the usage of cudawrappers' `cu::Context` is discouraged and marked deprecated since cudawrappers version `0.9.0`.
 
 ### Code Examples
 
-You can include the cudawrappers library in your own projects in various ways. We have created a few repositories with example setups to get you started:
+You can include the cudawrappers library in your own projects in various ways.
+We have created a few repositories with example setups to get you started:
 
 1. [cudawrappers-usage-example-git-submodules](https://github.com/nlesc-recruit/cudawrappers-usage-example-git-submodules) Example project that uses the cudawrappers library as a dependency by using git submodules on its source tree.
 1. [cudawrappers-usage-example-locally-installed](https://github.com/nlesc-recruit/cudawrappers-usage-example-locally-installed) Example project that uses the cudawrappers library as a dependency by having it locally installed.
