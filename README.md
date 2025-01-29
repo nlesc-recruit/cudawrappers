@@ -93,8 +93,8 @@ To enable HIP:
 
 **Note**: When building for both NVIDIA and AMD HIP,
 using **seperate** build folders (e.g, `build_nvidia` and `build_amd`) is encouraged.
-Additionally, please note that contrary to CUDA, HIP does not support GPU 'contexts'.
-Therefore, the usage of `cu::Context` is strongly discouraged, and has been marked deprecated since cudawrappers version `0.9.0`. Support will likely be dropped in a future release.
+Additionally, please note that contrary to CUDA, HIP does not implement GPU contexts. For library interoperability, it provides a (non-functioning) mock implementation.
+Still, the usage of `cu::Context` is strongly discouraged, and has been marked deprecated since cudawrappers version `0.9.0`. Support will likely be dropped in a future release.
 ### Code Examples
 
 You can include the cudawrappers library in your own projects in various ways.
