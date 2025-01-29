@@ -62,36 +62,35 @@ make -C build
 make -C build install
 ```
 
-## Usage (HIP)
+### Enabling HIP Support
 
-To enable HIP support:
+To enable HIP:
 
 1. Add the following code to your project's `CMakeLists.txt` file:
 
-```cmake
-enable_language(HIP)
-set(CUDAWRAPPERS_BACKEND "HIP")
-```
-
-Alternatively, use the `-DCUDAWRAPPERS_BACKEND=HIP` argument when building.
+    ```cmake
+    enable_language(HIP)
+    set(CUDAWRAPPERS_BACKEND "HIP")
+    ```
+    Alternatively, use the `-DCUDAWRAPPERS_BACKEND=HIP` argument when running CMake.
 
 2. Ensure that every target your project builds is 'hipfied'. This is done by marking relevant source files as 'HIP' compatible:
 
-```cmake
-set_source_files_properties(source.cpp PROPERTIES LANGUAGE HIP)
-```
+    ```cmake
+    set_source_files_properties(source.cpp PROPERTIES LANGUAGE HIP)
+    ```
 
 3. Optionally, use `#ifdef (__HIP__)` directives in your source code to enable/disable certain sections for HIP.
 
 4. *Build* while ensuring that the `hipcc` compiler is selected. This can be done via the command line:
 
-```shell
-CXX=hipcc cmake -B build
-```
+    ```shell
+    CXX=hipcc cmake -B build
+    ```
 
-*Note*: When building for both NVIDIA and AMD HIP, using *seperate* build folders (e.g, `build_nvidia` and `build_amd`) is encouraged.
+**Note**: When building for both NVIDIA and AMD HIP, using **seperate** build folders (e.g, `build_nvidia` and `build_amd`) is encouraged.
 
-### Usage examples
+### Code Examples
 
 You can include the cudawrappers library in your own projects in various ways. We have created a few repositories with example setups to get you started:
 
