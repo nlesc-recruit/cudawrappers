@@ -82,7 +82,7 @@ To enable HIP:
 
 3. Optionally, use `#ifdef (__HIP__)` directives in your source code to enable/disable certain sections for HIP.
 
-4. *Build* while ensuring that the `hipcc` compiler is selected. This can be done via the command line:
+4. **Build** while ensuring that the `hipcc` compiler is selected. This can be done via the command line:
 
     ```shell
     CXX=hipcc cmake -B build
