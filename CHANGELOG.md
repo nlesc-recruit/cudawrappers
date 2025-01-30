@@ -19,6 +19,7 @@ project adheres to [Semantic Versioning](http://semver.org/).
 - Added `cu::DeviceMemory::memset2D()` and `cu::Stream::memset2DAsync()`
 - Added `cufft::FFT1DR2C` and `cufft::FFT1DC2R`
 - Added `cu::Device::getOrdinal()`
+- Added deprecated warning to `cu::Context` constructor
 
 ### Changed
 
