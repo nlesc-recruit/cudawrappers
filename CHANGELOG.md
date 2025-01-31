@@ -22,7 +22,6 @@ project adheres to [Semantic Versioning](http://semver.org/).
 - Added deprecated warning to `cu::Context` constructor
 - Improved HIP documentation and building instructions
 
-
 ### Changed
 
 - `cu::Context::{getCurrent, popCurrent, getDevice}` are no longer static
