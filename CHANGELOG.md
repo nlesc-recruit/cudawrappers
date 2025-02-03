@@ -33,7 +33,7 @@ project adheres to [Semantic Versioning](http://semver.org/).
 - Expanded tests to cover the new 2D memory operations and FFT support
 - Removed the `context` from `nvml::Device` constructors
 
-## \[0.8.0\] - 2024-07-05
+## [0.8.0] - 2024-07-05
 
 ### Added
 
@@ -51,7 +51,7 @@ project adheres to [Semantic Versioning](http://semver.org/).
 
 - Removed deprecated `cu::Context::setSharedMemConfig`
 
-## \[0.7.0\] - 2024-03-08
+## [0.7.0] - 2024-03-08
 
 ### Added
 
@@ -79,7 +79,7 @@ project adheres to [Semantic Versioning](http://semver.org/).
 - Fix `cu::Stream::memAllocAsync` returns `cu::DeviceMemory` with initialized
   size
 
-## \[0.6.0\] - 2023-10-06
+## [0.6.0] - 2023-10-06
 
 ### Changed
 
@@ -89,7 +89,7 @@ project adheres to [Semantic Versioning](http://semver.org/).
 - Replaced `include_cuda_code` helper with `target_embed_source`
 - Changed some arguments from native to wrapped type
 
-## \[0.5.0\] - 2023-09-25
+## [0.5.0] - 2023-09-25
 
 ### Added
 
@@ -109,7 +109,7 @@ project adheres to [Semantic Versioning](http://semver.org/).
 
 - `getDevice` function of `cu::Context`, use `cu::Device` constructor instead
 
-## \[0.4.0\] - 2023-06-23
+## [0.4.0] - 2023-06-23
 
 ### Added
 
@@ -126,7 +126,7 @@ project adheres to [Semantic Versioning](http://semver.org/).
 - `cu::Source` class. Use `nvrtc::Program` instead.
 - Commented out code that was not used (anymore)
 
-## \[0.3.0\] - 2022-03-08
+## [0.3.0] - 2022-03-08
 
 ### Added
 
@@ -141,7 +141,7 @@ project adheres to [Semantic Versioning](http://semver.org/).
 
 - Moved usage examples to separate repositories
 
-## \[0.2.0\] - 2022-03-02
+## [0.2.0] - 2022-03-02
 
 ### Added
 
@@ -154,7 +154,7 @@ project adheres to [Semantic Versioning](http://semver.org/).
 - The name of the repository and the library are now `cudawrappers`.
 - The folder structure has changed to better separate header and source files.
 
-## \[0.1.0\] - 2022-02-14
+## [0.1.0] - 2022-02-14
 
 ### Added
 
