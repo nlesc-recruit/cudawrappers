@@ -207,34 +207,6 @@ class Device : public Wrapper<CUdevice> {
 
   int getOrdinal() const { return _ordinal; }
 
-  // Primary Context Management
-  std::pair<unsigned, bool> primaryCtxGetState() const {
-    unsigned flags{};
-    int active{};
-#if !defined(__HIP__)
-    checkCudaCall(cuDevicePrimaryCtxGetState(_obj, &flags, &active));
-#endif
-    return {flags, active};
-  }
-
-  // void primaryCtxRelease() not available; it is released on destruction of
-  // the Context returned by Device::primaryContextRetain()
-
-  void primaryCtxReset() {
-#if !defined(__HIP__)
-    checkCudaCall(cuDevicePrimaryCtxReset(_obj));
-#endif
-  }
-
-  Context primaryCtxRetain();  // retain this context until the primary context
-                               // can be released
-
-  void primaryCtxSetFlags(unsigned flags) {
-#if !defined(__HIP__)
-    checkCudaCall(cuDevicePrimaryCtxSetFlags(_obj, flags));
-#endif
-  }
-
  private:
   int _ordinal;
 };
