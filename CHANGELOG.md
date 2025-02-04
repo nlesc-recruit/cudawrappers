@@ -35,6 +35,7 @@ project adheres to [Semantic Versioning](http://semver.org/).
 ### Removed
 
 - Removed the `context` from `nvml::Device` constructors
+- Removed the Primary Context related functions from `cu::Device`
 
 ## \[0.8.0\] - 2024-07-05
 
