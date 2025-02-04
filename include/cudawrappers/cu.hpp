@@ -207,34 +207,6 @@ class Device : public Wrapper<CUdevice> {
 
   int getOrdinal() const { return _ordinal; }
 
-  // Primary Context Management
-  std::pair<unsigned, bool> primaryCtxGetState() const {
-    unsigned flags{};
-    int active{};
-#if !defined(__HIP__)
-    checkCudaCall(cuDevicePrimaryCtxGetState(_obj, &flags, &active));
-#endif
-    return {flags, active};
-  }
-
-  // void primaryCtxRelease() not available; it is released on destruction of
-  // the Context returned by Device::primaryContextRetain()
-
-  void primaryCtxReset() {
-#if !defined(__HIP__)
-    checkCudaCall(cuDevicePrimaryCtxReset(_obj));
-#endif
-  }
-
-  Context primaryCtxRetain();  // retain this context until the primary context
-                               // can be released
-
-  void primaryCtxSetFlags(unsigned flags) {
-#if !defined(__HIP__)
-    checkCudaCall(cuDevicePrimaryCtxSetFlags(_obj, flags));
-#endif
-  }
-
  private:
   int _ordinal;
 };
@@ -245,7 +217,7 @@ class Context : public Wrapper<CUcontext> {
 
   [[deprecated("cu::Context is deprecated since cudawrappers version 0.9.0.")]]
   Context(int flags, Device &device)
-      : _primaryContext(false), _device(device) {
+      : _device(device) {
 #if !defined(__HIP__)
     checkCudaCall(cuCtxCreate(&_obj, flags, device));
     manager =
@@ -359,9 +331,8 @@ class Context : public Wrapper<CUcontext> {
  private:
   friend class Device;
   Context(CUcontext context, Device &device)
-      : Wrapper<CUcontext>(context), _primaryContext(true), _device(device) {}
+      : Wrapper<CUcontext>(context), _device(device) {}
 
-  bool _primaryContext;
   cu::Device &_device;
 };
 
