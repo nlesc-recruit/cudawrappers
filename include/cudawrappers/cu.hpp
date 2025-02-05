@@ -882,7 +882,7 @@ class Graph : public Wrapper<CUgraph> {
 #endif
   }
 
-  void exportDotFile(
+  void debugDotFile(
       std::string path,
       CUgraphDebugDot_flags flags =
           CUgraphDebugDot_flags::CU_GRAPH_DEBUG_DOT_FLAGS_VERBOSE) {
