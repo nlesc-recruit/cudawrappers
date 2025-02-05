@@ -47,7 +47,7 @@ TEST_CASE("Test cu::Graph", "[graph]") {
 
     cu::GraphExec graph_exec(graph);
     cu::Stream stream;
-    stream.launchGraph(graph_exec);
+    stream.graphLaunch(graph_exec);
     stream.synchronize();
 
     CHECK(data == 44);
@@ -88,7 +88,7 @@ TEST_CASE("Test cu::Graph", "[graph]") {
         device, sizeof(float) * data_in.size()};
 
     graph.addHostNode(host_set, {}, host_set_params);
-    graph.addDevMemAllocNode(dev_alloc, {host_set}, dev_alloc_params);
+    graph.addMemAllocNode(dev_alloc, {host_set}, dev_alloc_params);
     cu::GraphMemCopyToDeviceNodeParams copy_to_dev_params{
         dev_alloc_params.getDevPtr(),
         data_in.data(),
@@ -97,8 +97,7 @@ TEST_CASE("Test cu::Graph", "[graph]") {
         1,
         1};
 
-    graph.addHostToDeviceMemCopyNode(copy_to_dev, {dev_alloc},
-                                     copy_to_dev_params);
+    graph.addMemCpyNode(copy_to_dev, {dev_alloc}, copy_to_dev_params);
 
     cu::GraphMemCopyToHostNodeParams copy_to_host_params{
         data_out.data(),
@@ -116,16 +115,14 @@ TEST_CASE("Test cu::Graph", "[graph]") {
 
     graph.addKernelNode(execute_kernel, {copy_to_dev}, kernel_params);
 
-    graph.addDeviceToHostMemCopyNode(copy_to_host, {execute_kernel},
-                                     copy_to_host_params);
+    graph.addMemCpyNode(copy_to_host, {execute_kernel}, copy_to_host_params);
 
     graph.addDevMemFreeNode(device_free, {copy_to_host},
                             dev_alloc_params.getDevPtr());
 
     cu::GraphExec graph_exec(graph);
-    stream.launchGraph(graph_exec);
+    stream.graphLaunch(graph_exec);
     stream.synchronize();
-    graph.exportDotFile("graph_out.dot");
 
     CHECK(data_in[0] == 42.0f);
     CHECK(data_in[1] == 42.0f);
@@ -154,7 +151,7 @@ TEST_CASE("Test cu::Graph", "[graph]") {
     cu::GraphDevMemAllocNodeParams dev_alloc_params{device, sizeof(data_in)};
 
     graph.addHostNode(host_set, {}, host_set_params);
-    graph.addDevMemAllocNode(dev_alloc, {}, dev_alloc_params);
+    graph.addMemAllocNode(dev_alloc, {}, dev_alloc_params);
     graph.addHostNode(host_set2, {dev_alloc}, host_set_params);
 
     cu::GraphMemCopyToDeviceNodeParams copy_to_dev_params{
@@ -180,13 +177,11 @@ TEST_CASE("Test cu::Graph", "[graph]") {
     cu::GraphKernelNodeParams kernel_params{
         vector_print_fn, 3, 1, 1, 1, 1, 1, 0, params};
 
-    graph.addHostToDeviceMemCopyNode(copy_to_dev, {host_set2},
-                                     copy_to_dev_params);
+    graph.addMemCpyNode(copy_to_dev, {host_set2}, copy_to_dev_params);
     graph.addKernelNode(execute_kernel, {copy_to_dev}, kernel_params);
 
-    graph.addDeviceToHostMemCopyNode(copy_to_host, {execute_kernel},
-                                     copy_to_host_params);
-    graph.exportDotFile("graph.dot");
+    graph.addMemCpyNode(copy_to_host, {execute_kernel}, copy_to_host_params);
+    graph.debugDotFile("graph.dot");
     std::ifstream f("graph.dot");
     CHECK(f.good());
     f.close();
