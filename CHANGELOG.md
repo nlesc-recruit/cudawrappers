@@ -19,7 +19,6 @@ project adheres to [Semantic Versioning](http://semver.org/).
 - Added `cu::DeviceMemory::memset2D()` and `cu::Stream::memset2DAsync()`
 - Added `cufft::FFT1DR2C` and `cufft::FFT1DC2R`
 - Added `cu::Device::getOrdinal()`
-- Added deprecated warning to `cu::Context` constructor
 
 ### Changed
 
@@ -36,6 +35,7 @@ project adheres to [Semantic Versioning](http://semver.org/).
 
 - Removed the `context` from `nvml::Device` constructors
 - Removed the Primary Context related functions from `cu::Device`
+- Remove the `cu::Context` class
 
 ## \[0.8.0\] - 2024-07-05
 

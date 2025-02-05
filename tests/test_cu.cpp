@@ -10,7 +10,6 @@
 TEST_CASE("Test cu::Device", "[device]") {
   cu::init();
   cu::Device device(0);
-  cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, device);
 
   SECTION("Test Device.getName", "[device]") {
     const std::string name = device.getName();
@@ -37,22 +36,10 @@ TEST_CASE("Test cu::Device", "[device]") {
   }
 }
 
-TEST_CASE("Test context::getDevice", "[device]") {
-  cu::init();
-
-  cu::Device device(0);
-  cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, device);
-
-  SECTION("Test getName from context") {
-    CHECK(device.getName() == context.getCurrent().getDevice().getName());
-  }
-}
-
 TEST_CASE("Test copying cu::DeviceMemory and cu::HostMemory using cu::Stream",
           "[memcpy]") {
   cu::init();
   cu::Device device(0);
-  cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, device);
 
   SECTION("Test copying a std::array to the device and back") {
     const std::array<int, 3> src = {1, 2, 3};
@@ -142,7 +129,6 @@ TEST_CASE("Test copying cu::DeviceMemory and cu::HostMemory using cu::Stream",
 TEST_CASE("Test cu::DeviceMemory", "[devicememory]") {
   cu::init();
   cu::Device device(0);
-  cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, device);
 
   SECTION("Test zeroing cu::DeviceMemory asynchronously") {
     const size_t N = 3;
@@ -267,7 +253,6 @@ using TestTypes = std::tuple<unsigned char, unsigned short, unsigned int>;
 TEMPLATE_LIST_TEST_CASE("Test memset 1D", "[memset]", TestTypes) {
   cu::init();
   cu::Device device(0);
-  cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, device);
 
   SECTION("Test memset cu::DeviceMemory asynchronously") {
     const size_t N = 3;
@@ -325,7 +310,6 @@ using TestTypes = std::tuple<unsigned char, unsigned short, unsigned int>;
 TEMPLATE_LIST_TEST_CASE("Test memset 2D", "[memset]", TestTypes) {
   cu::init();
   cu::Device device(0);
-  cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, device);
 
   SECTION("Test memset2D cu::DeviceMemory asynchronously") {
     const size_t width = 3;
@@ -389,7 +373,6 @@ TEMPLATE_LIST_TEST_CASE("Test memset 2D", "[memset]", TestTypes) {
 TEST_CASE("Test cu::Stream", "[stream]") {
   cu::init();
   cu::Device device(0);
-  cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, device);
   cu::Stream stream;
 
   SECTION("Test memAllocAsync") {
