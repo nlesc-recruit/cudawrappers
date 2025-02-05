@@ -862,7 +862,7 @@ class Graph : public Wrapper<CUgraph> {
     checkCudaCall(cuGraphDebugDotPrint(_obj, path.c_str(), flags));
   }
 
-  CUgraphExec Instantiate(unsigned int flags = CU_GRAPH_DEFAULT) {
+  CUgraphExec instantiateWithFlags(unsigned int flags = CU_GRAPH_DEFAULT) {
     CUgraphExec graph_instance;
     cu::checkCudaCall(
         cuGraphInstantiateWithFlags(&graph_instance, _obj, flags));
