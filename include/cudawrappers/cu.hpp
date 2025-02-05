@@ -815,17 +815,17 @@ class Graph : public Wrapper<CUgraph> {
                                         dependencies.size(), devPtr));
   }
 
-  void addDevMemAllocNode(GraphNode &node,
-                          const std::vector<CUgraphNode> &dependencies,
-                          GraphDevMemAllocNodeParams &params) {
+  void addMemAllocNode(GraphNode &node,
+                       const std::vector<CUgraphNode> &dependencies,
+                       GraphDevMemAllocNodeParams &params) {
     checkCudaCall(cuGraphAddMemAllocNode(
         node.getNode(), _obj, dependencies.data(), dependencies.size(),
         reinterpret_cast<CUDA_MEM_ALLOC_NODE_PARAMS *>(&params)));
   }
 
-  void addHostToDeviceMemCopyNode(GraphNode &node,
-                                  const std::vector<CUgraphNode> &dependencies,
-                                  GraphMemCopyToDeviceNodeParams &params) {
+  void addMemCpyNode(GraphNode &node,
+                     const std::vector<CUgraphNode> &dependencies,
+                     GraphMemCopyToDeviceNodeParams &params) {
 #if defined(__HIP__)
     hipMemcpy3DParms par_ = params;
 
@@ -839,9 +839,9 @@ class Graph : public Wrapper<CUgraph> {
 #endif
   }
 
-  void addDeviceToHostMemCopyNode(GraphNode &node,
-                                  const std::vector<CUgraphNode> &dependencies,
-                                  GraphMemCopyToHostNodeParams &params) {
+  void addMemCpyNode(GraphNode &node,
+                     const std::vector<CUgraphNode> &dependencies,
+                     GraphMemCopyToHostNodeParams &params) {
 #if defined(__HIP__)
     hipMemcpy3DParms par_ = params;
 
