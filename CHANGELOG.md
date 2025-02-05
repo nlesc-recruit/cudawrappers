@@ -19,7 +19,6 @@ project adheres to [Semantic Versioning](http://semver.org/).
 - Added `cu::DeviceMemory::memset2D()` and `cu::Stream::memset2DAsync()`
 - Added `cufft::FFT1DR2C` and `cufft::FFT1DC2R`
 - Added `cu::Device::getOrdinal()`
-- Added deprecated warning to `cu::Context` constructor
 
 ### Changed
 
@@ -31,11 +30,13 @@ project adheres to [Semantic Versioning](http://semver.org/).
 - `target_embed_source` is now more robust: it properly tracks dependencies and
   runs again whenever any of them changes
 - Expanded tests to cover the new 2D memory operations and FFT support
+- Move `getFreeMemory` and `getTotalMemory` to the `cu` namespace
 
 ### Removed
 
 - Removed the `context` from `nvml::Device` constructors
 - Removed the Primary Context related functions from `cu::Device`
+- Remove the `cu::Context` class
 
 ## \[0.8.0\] - 2024-07-05
 
