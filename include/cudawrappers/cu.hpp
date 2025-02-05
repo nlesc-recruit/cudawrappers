@@ -1102,10 +1102,6 @@ class Stream : public Wrapper<CUstream> {
   }
 #endif
 
-  void launchGraph(CUgraphExec &graph) {
-    checkCudaCall(cuGraphLaunch(graph, _obj));
-  }
-
   void graphLaunch(GraphExec &graph) {
     checkCudaCall(cuGraphLaunch(graph, _obj));
   }
