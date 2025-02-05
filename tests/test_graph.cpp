@@ -1,9 +1,8 @@
 #include <array>
+#include <string>
+
 #include <catch2/catch_template_test_macros.hpp>
 #include <catch2/catch_test_macros.hpp>
-#include <cstring>
-#include <iostream>
-#include <string>
 
 #include <cudawrappers/cu.hpp>
 #include <cudawrappers/nvrtc.hpp>
@@ -34,7 +33,6 @@ TEST_CASE("Test cu::Graph", "[graph]") {
   SECTION("Test cu::hostNode single value") {
     auto fn = [](void* data) {
       int* ptr = static_cast<int*>(data);
-      std::cout << "Host node content: " << *ptr << std::endl;
       *ptr += 1;
     };
     cu::Graph graph;
@@ -76,9 +74,6 @@ TEST_CASE("Test cu::Graph", "[graph]") {
       set_value_parameter* par = static_cast<set_value_parameter*>(data);
       for (int i = 0; i < par->size; i++) {
         par->ptr[i] = 42;
-#ifdef DEBUG
-        std::cout << "Host node content: " << par->ptr[i] << std::endl;
-#endif
       }
     };
 
@@ -135,7 +130,6 @@ TEST_CASE("Test cu::Graph", "[graph]") {
     constexpr size_t array_size = 3;
     std::array<float, array_size> data_in{3, 3, 3};
     std::array<float, array_size> data_out{0, 0, 0};
-    std::cout << " Running on device : " << device.getOrdinal() << std::endl;
     cu::Graph graph;
     cu::GraphNode dev_alloc, host_set, copy_to_dev, execute_kernel, device_free,
         copy_to_host, host_set2;
