@@ -24,6 +24,7 @@ TEST_CASE("Test cu::Graph", "[graph]") {
   cu::init();
   cu::Device device(0);
   cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, device);
+  context.setCurrent();
   nvrtc::Program program(kernel, "kernel.cu");
   program.compile({});
   cu::Module module(static_cast<const void*>(program.getPTX().data()));
@@ -97,7 +98,7 @@ TEST_CASE("Test cu::Graph", "[graph]") {
         1};
 
     graph.addHostToDeviceMemCopyNode(copy_to_dev, {dev_alloc},
-                                     copy_to_dev_params, context);
+                                     copy_to_dev_params);
 
     cu::GraphMemCopyToHostNodeParams copy_to_host_params{
         data_out.data(),
@@ -116,7 +117,7 @@ TEST_CASE("Test cu::Graph", "[graph]") {
     graph.addKernelNode(execute_kernel, {copy_to_dev}, kernel_params);
 
     graph.addDeviceToHostMemCopyNode(copy_to_host, {execute_kernel},
-                                     copy_to_host_params, context);
+                                     copy_to_host_params);
 
     graph.addDevMemFreeNode(device_free, {copy_to_host},
                             dev_alloc_params.getDevPtr());
@@ -180,11 +181,11 @@ TEST_CASE("Test cu::Graph", "[graph]") {
         vector_print_fn, 3, 1, 1, 1, 1, 1, 0, params};
 
     graph.addHostToDeviceMemCopyNode(copy_to_dev, {host_set2},
-                                     copy_to_dev_params, context);
+                                     copy_to_dev_params);
     graph.addKernelNode(execute_kernel, {copy_to_dev}, kernel_params);
 
     graph.addDeviceToHostMemCopyNode(copy_to_host, {execute_kernel},
-                                     copy_to_host_params, context);
+                                     copy_to_host_params);
     graph.exportDotFile("graph.dot");
     std::ifstream f("graph.dot");
     CHECK(f.good());

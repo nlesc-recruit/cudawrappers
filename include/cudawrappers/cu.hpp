@@ -778,13 +778,17 @@ class GraphMemCopyToHostNodeParams : public Wrapper<CUDA_MEMCPY3D> {
 
 class Graph : public Wrapper<CUgraph> {
  public:
-  explicit Graph(CUgraph &graph) : Wrapper(graph) {};
+  explicit Graph(CUgraph &graph) : Wrapper(graph) {
+    checkCudaCall(cuCtxGetCurrent(&_context));
+  };
+
   explicit Graph(unsigned int flags = CU_GRAPH_DEFAULT) {
     checkCudaCall(cuGraphCreate(&_obj, flags));
     manager = std::shared_ptr<CUgraph>(new CUgraph(_obj), [](CUgraph *ptr) {
       checkCudaCall(cuGraphDestroy(*ptr));
       delete ptr;
     });
+    cuCtxGetCurrent(&_context);
   }
 
   void addKernelNode(GraphNode &node,
@@ -821,8 +825,7 @@ class Graph : public Wrapper<CUgraph> {
 
   void addHostToDeviceMemCopyNode(GraphNode &node,
                                   const std::vector<CUgraphNode> &dependencies,
-                                  GraphMemCopyToDeviceNodeParams &params,
-                                  Context &ctx) {
+                                  GraphMemCopyToDeviceNodeParams &params) {
 #if defined(__HIP__)
     hipMemcpy3DParms par_ = params;
 
@@ -832,14 +835,13 @@ class Graph : public Wrapper<CUgraph> {
 #else
     checkCudaCall(cuGraphAddMemcpyNode(
         node.getNode(), _obj, dependencies.data(), dependencies.size(),
-        reinterpret_cast<CUDA_MEMCPY3D *>(&params), ctx));
+        reinterpret_cast<CUDA_MEMCPY3D *>(&params), _context));
 #endif
   }
 
   void addDeviceToHostMemCopyNode(GraphNode &node,
                                   const std::vector<CUgraphNode> &dependencies,
-                                  GraphMemCopyToHostNodeParams &params,
-                                  const Context &ctx) {
+                                  GraphMemCopyToHostNodeParams &params) {
 #if defined(__HIP__)
     hipMemcpy3DParms par_ = params;
 
@@ -849,7 +851,7 @@ class Graph : public Wrapper<CUgraph> {
 #else
     checkCudaCall(cuGraphAddMemcpyNode(
         node.getNode(), _obj, dependencies.data(), dependencies.size(),
-        reinterpret_cast<CUDA_MEMCPY3D *>(&params), ctx));
+        reinterpret_cast<CUDA_MEMCPY3D *>(&params), _context));
 #endif
   }
 
@@ -866,6 +868,9 @@ class Graph : public Wrapper<CUgraph> {
         cuGraphInstantiateWithFlags(&graph_instance, _obj, flags));
     return graph_instance;
   }
+
+ private:
+  CUcontext _context;
 };
 
 class GraphExec : public Wrapper<CUgraphExec> {
