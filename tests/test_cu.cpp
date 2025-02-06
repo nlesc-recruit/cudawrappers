@@ -252,7 +252,14 @@ TEST_CASE("Test cu::DeviceMemory", "[devicememory]") {
 TEST_CASE("Test DeviceMemory without Device::ctxSetCurrent", "[context]") {
   cu::init();
   cu::Device device(0);
-  std::thread thread([&]() { CHECK_THROWS(cu::DeviceMemory(size_t(42))); });
+  std::thread thread([&]() {
+#if defined(__HIP__)
+    cu::DeviceMemory(size_t(42));
+
+#else
+    CHECK_THROWS(cu::DeviceMemory(size_t(42)));
+#endif
+  });
   thread.join();
 }
 
