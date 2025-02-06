@@ -138,10 +138,18 @@ class Device : public Wrapper<CUdevice> {
     unsigned int flags;
     int active;
     checkCudaCall(cuDevicePrimaryCtxGetState(_obj, &flags, &active));
+    CUcontext _pctx;
     if (active) {
       checkCudaCall(cuDevicePrimaryCtxRetain(&_pctx, _obj));
+      manager =
+          std::shared_ptr<CUdevice>(new CUdevice(_obj), [](CUdevice *ptr) {
+            checkCudaCall(cuDevicePrimaryCtxRelease(*ptr));
+          });
     } else {
       checkCudaCall(cuCtxCreate(&_pctx, flags, _obj));
+      _context_manager = std::shared_ptr<CUcontext>(
+          new CUcontext(_pctx),
+          [](CUcontext *ptr) { checkCudaCall(cuCtxDestroy(*ptr)); });
     }
 #endif
   }
@@ -232,7 +240,7 @@ class Device : public Wrapper<CUdevice> {
 
  private:
 #if !defined(__HIP__)
-  CUcontext _pctx;
+  std::shared_ptr<CUcontext> _context_manager;
 #endif
   int _ordinal;
 };
