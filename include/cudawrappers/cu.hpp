@@ -120,19 +120,25 @@ class Device : public Wrapper<CUdevice> {
     unsigned int flags;
     int active;
     checkCudaCall(cuDevicePrimaryCtxGetState(_obj, &flags, &active));
-    CUcontext _pctx;
     if (active) {
-      checkCudaCall(cuDevicePrimaryCtxRetain(&_pctx, _obj));
       manager =
           std::shared_ptr<CUdevice>(new CUdevice(_obj), [](CUdevice *ptr) {
             checkCudaCall(cuDevicePrimaryCtxRelease(*ptr));
           });
-      _context_manager = std::shared_ptr<CUcontext>(new CUcontext(_pctx),
-                                                    [](CUcontext *ptr) {});
-    } else {
-      checkCudaCall(cuCtxCreate(&_pctx, flags, _obj));
       _context_manager = std::shared_ptr<CUcontext>(
-          new CUcontext(_pctx),
+          new CUcontext([&]() {
+            CUcontext pctx;
+            checkCudaCall(cuDevicePrimaryCtxRetain(&pctx, _obj));
+            return pctx;
+          }()),
+          [](CUcontext *ptr) {});
+    } else {
+      _context_manager = std::shared_ptr<CUcontext>(
+          new CUcontext([&]() {
+            CUcontext pctx;
+            checkCudaCall(cuCtxCreate(&pctx, flags, _obj));
+            return pctx;
+          }()),
           [](CUcontext *ptr) { checkCudaCall(cuCtxDestroy(*ptr)); });
     }
   }
