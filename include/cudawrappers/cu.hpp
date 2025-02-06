@@ -145,6 +145,8 @@ class Device : public Wrapper<CUdevice> {
           std::shared_ptr<CUdevice>(new CUdevice(_obj), [](CUdevice *ptr) {
             checkCudaCall(cuDevicePrimaryCtxRelease(*ptr));
           });
+      _context_manager = std::shared_ptr<CUcontext>(new CUcontext(_pctx),
+                                                    [](CUcontext *ptr) {});
     } else {
       checkCudaCall(cuCtxCreate(&_pctx, flags, _obj));
       _context_manager = std::shared_ptr<CUcontext>(
@@ -167,6 +169,12 @@ class Device : public Wrapper<CUdevice> {
         _ordinal = ordinal;
       }
     }
+  }
+
+  void ctxSetCurrent() {
+#if !defined(__HIP__)
+    checkCudaCall(cuCtxSetCurrent(*_context_manager));
+#endif
   }
 
   int getAttribute(CUdevice_attribute attribute) const {
