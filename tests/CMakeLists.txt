@@ -10,7 +10,10 @@ FetchContent_MakeAvailable(Catch2)
 list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/contrib)
 include(Catch)
 
+find_package(Threads REQUIRED)
+
 set(COMPONENTS cu nvrtc cufft vector_add graph)
+
 if(${CUDAWRAPPERS_BACKEND_CUDA})
   list(APPEND COMPONENTS nvml)
 endif()
@@ -26,7 +29,7 @@ foreach(component ${COMPONENTS})
   catch_discover_tests(test_${component})
 endforeach()
 
-set(LINK_LIBRARIES Catch2::Catch2WithMain cudawrappers::cu)
+set(LINK_LIBRARIES Catch2::Catch2WithMain cudawrappers::cu Threads::Threads)
 
 target_link_libraries(test_cu PUBLIC ${LINK_LIBRARIES})
 

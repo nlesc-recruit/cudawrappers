@@ -4,6 +4,7 @@
 #include <cstring>
 #include <iostream>
 #include <string>
+#include <thread>
 
 #include <cudawrappers/cu.hpp>
 
@@ -35,7 +36,6 @@ TEST_CASE("Test cu::Device", "[device]") {
     CHECK(dev_ordinal >= 0);
   }
 }
-
 TEST_CASE("Test copying cu::DeviceMemory and cu::HostMemory using cu::Stream",
           "[memcpy]") {
   cu::init();
@@ -247,6 +247,23 @@ TEST_CASE("Test cu::DeviceMemory", "[devicememory]") {
     cu::DeviceMemory mem(size);
     CHECK_THROWS(cu::DeviceMemory(mem, offset, slice_size));
   }
+}
+
+TEST_CASE("Test DeviceMemory without Device::ctxSetCurrent", "[context]") {
+  cu::init();
+  cu::Device device(0);
+  std::thread thread([&]() { CHECK_THROWS(cu::DeviceMemory(size_t(42))); });
+  thread.join();
+}
+
+TEST_CASE("Test DeviceMemory with Device::ctxSetCurrent", "[context]") {
+  cu::init();
+  cu::Device device(0);
+  std::thread thread([&]() {
+    device.ctxSetCurrent();
+    cu::DeviceMemory(size_t(42));
+  });
+  thread.join();
 }
 
 using TestTypes = std::tuple<unsigned char, unsigned short, unsigned int>;
