@@ -174,7 +174,7 @@ TEST_CASE("Test cu::Graph", "[graph]") {
     graph.addKernelNode(execute_kernel, {copy_to_dev}, kernel_params);
 
     graph.addMemCpyNode(copy_to_host, {execute_kernel}, copy_to_host_params);
-    graph.debugDotFile("graph.dot");
+    graph.debugDotPrint("graph.dot");
     std::ifstream f("graph.dot");
     CHECK(f.good());
     f.close();

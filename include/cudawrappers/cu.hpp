@@ -709,7 +709,8 @@ class GraphMemCopyToDeviceNodeParams : public Wrapper<CUDA_MEMCPY3D> {
                                  size_t size_y, size_t size_z,
                                  size_t pitch = 0) {
 #if defined(__HIP__)
-    memset(&_obj, 0, sizeof(hipMemcpy3DParms));
+
+    std::fill(&_obj, 0, sizeof(hipMemcpy3DParms));
     if (pitch == 0) {
       pitch = size_x * element_size;
     }
@@ -855,7 +856,7 @@ class Graph : public Wrapper<CUgraph> {
 #endif
   }
 
-  void debugDotFile(
+  void debugDotPrint(
       std::string path,
       CUgraphDebugDot_flags flags =
           CUgraphDebugDot_flags::CU_GRAPH_DEBUG_DOT_FLAGS_VERBOSE) {
