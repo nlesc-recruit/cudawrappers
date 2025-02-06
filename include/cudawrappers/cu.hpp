@@ -80,7 +80,6 @@ inline void memcpyDtoH(void *dst, CUdeviceptr src, size_t size) {
   checkCudaCall(cuMemcpyDtoH(dst, src, size));
 }
 
-class Context;
 class Stream;
 
 template <typename T>
