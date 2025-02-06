@@ -107,23 +107,6 @@ class Wrapper {
 
   explicit Wrapper(T &obj) : _obj(obj) {}
 
-  template <CUmemorytype... AllowedMemoryTypes>
-  inline void checkPointerAccess(const CUdeviceptr &pointer) const {
-    CUmemorytype memoryType;
-    checkCudaCall(cuPointerGetAttribute(
-        &memoryType, CU_POINTER_ATTRIBUTE_MEMORY_TYPE, pointer));
-
-    // Check if the memoryType is one of the allowed memory types
-    for (auto allowedType : {AllowedMemoryTypes...}) {
-      if (memoryType == allowedType) {
-        return;
-      }
-    }
-
-    throw std::runtime_error(
-        "Invalid memory type: allowed types are not matched.");
-  }
-
   T _obj{};
   std::shared_ptr<T> manager;
 };
@@ -538,13 +521,11 @@ class DeviceMemory : public Wrapper<CUdeviceptr> {
 
   template <typename T>
   operator T *() {
-    checkPointerAccess<CU_MEMORYTYPE_DEVICE, CU_MEMORYTYPE_UNIFIED>(_obj);
     return reinterpret_cast<T *>(_obj);
   }
 
   template <typename T>
   operator T *() const {
-    checkPointerAccess<CU_MEMORYTYPE_DEVICE, CU_MEMORYTYPE_UNIFIED>(_obj);
     return reinterpret_cast<T const *>(_obj);
   }
 
