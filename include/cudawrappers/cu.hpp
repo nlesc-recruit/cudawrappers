@@ -708,9 +708,9 @@ class GraphMemCopyToDeviceNodeParams : public Wrapper<CUDA_MEMCPY3D> {
                                  size_t element_size, size_t size_x,
                                  size_t size_y, size_t size_z,
                                  size_t pitch = 0) {
-#if defined(__HIP__)
+    _obj = {0};
 
-    std::fill(&_obj, 0, sizeof(hipMemcpy3DParms));
+#if defined(__HIP__)
     if (pitch == 0) {
       pitch = size_x * element_size;
     }
@@ -722,7 +722,6 @@ class GraphMemCopyToDeviceNodeParams : public Wrapper<CUDA_MEMCPY3D> {
     _obj.extent = make_hipExtent(size_x * element_size, size_y, size_z);
     _obj.kind = hipMemcpyHostToDevice;
 #else
-    memset(&_obj, 0, sizeof(CUDA_MEMCPY3D));
     _obj.srcMemoryType = CU_MEMORYTYPE_HOST;
     _obj.dstMemoryType = CU_MEMORYTYPE_DEVICE;
     _obj.srcHost = src;
@@ -746,8 +745,9 @@ class GraphMemCopyToHostNodeParams : public Wrapper<CUDA_MEMCPY3D> {
   GraphMemCopyToHostNodeParams(void *dst, const CUdeviceptr &src,
                                size_t element_size, size_t size_x,
                                size_t size_y, size_t size_z, size_t pitch = 0) {
+    _obj = {0};
+
 #if defined(__HIP__)
-    memset(&_obj, 0, sizeof(hipMemcpy3DParms));
     if (pitch == 0) {
       pitch = size_x * element_size;
     }
@@ -759,7 +759,6 @@ class GraphMemCopyToHostNodeParams : public Wrapper<CUDA_MEMCPY3D> {
     _obj.extent = make_hipExtent(size_x * element_size, size_y, size_z);
     _obj.kind = hipMemcpyDeviceToHost;
 #else
-    memset(&_obj, 0, sizeof(CUDA_MEMCPY3D));
     _obj.srcMemoryType = CU_MEMORYTYPE_DEVICE;
     _obj.dstMemoryType = CU_MEMORYTYPE_HOST;
     _obj.srcDevice = src;
