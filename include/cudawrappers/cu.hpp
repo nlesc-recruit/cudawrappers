@@ -134,7 +134,6 @@ class Device : public Wrapper<CUdevice> {
 
   explicit Device(int ordinal) : _ordinal(ordinal) {
     checkCudaCall(cuDeviceGet(&_obj, ordinal));
-#if !defined(__HIP__)
     unsigned int flags;
     int active;
     checkCudaCall(cuDevicePrimaryCtxGetState(_obj, &flags, &active));
@@ -153,7 +152,6 @@ class Device : public Wrapper<CUdevice> {
           new CUcontext(_pctx),
           [](CUcontext *ptr) { checkCudaCall(cuCtxDestroy(*ptr)); });
     }
-#endif
   }
 
   struct CUdeviceArg {
@@ -247,9 +245,7 @@ class Device : public Wrapper<CUdevice> {
   int getOrdinal() const { return _ordinal; }
 
  private:
-#if !defined(__HIP__)
   std::shared_ptr<CUcontext> _context_manager;
-#endif
   int _ordinal;
 };
 
