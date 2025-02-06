@@ -158,9 +158,7 @@ class Device : public Wrapper<CUdevice> {
     }
   }
 
-  void ctxSetCurrent() {
-    checkCudaCall(cuCtxSetCurrent(*_context_manager));
-  }
+  void ctxSetCurrent() { checkCudaCall(cuCtxSetCurrent(*_context_manager)); }
 
   int getAttribute(CUdevice_attribute attribute) const {
     int value{};
