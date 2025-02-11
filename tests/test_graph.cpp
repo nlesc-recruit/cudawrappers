@@ -21,8 +21,6 @@ TEST_CASE("Test cu::Graph", "[graph]") {
 
   cu::init();
   cu::Device device(0);
-  cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, device);
-  context.setCurrent();
   nvrtc::Program program(kernel, "kernel.cu");
   program.compile({});
   cu::Module module(static_cast<const void*>(program.getPTX().data()));

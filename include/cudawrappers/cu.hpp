@@ -53,6 +53,20 @@ inline int driverGetVersion() {
   return version;
 }
 
+size_t getFreeMemory() {
+  size_t free;
+  size_t total;
+  checkCudaCall(cuMemGetInfo(&free, &total));
+  return free;
+}
+
+size_t getTotalMemory() {
+  size_t free;
+  size_t total;
+  checkCudaCall(cuMemGetInfo(&free, &total));
+  return total;
+}
+
 inline void memcpyHtoD(CUdeviceptr dst, const void *src, size_t size) {
 #if defined(__HIP__)
   // const_cast is a temp fix for https://github.com/ROCm/ROCm/issues/2977
@@ -66,7 +80,6 @@ inline void memcpyDtoH(void *dst, CUdeviceptr src, size_t size) {
   checkCudaCall(cuMemcpyDtoH(dst, src, size));
 }
 
-class Context;
 class Stream;
 
 template <typename T>
@@ -94,23 +107,6 @@ class Wrapper {
 
   explicit Wrapper(T &obj) : _obj(obj) {}
 
-  template <CUmemorytype... AllowedMemoryTypes>
-  inline void checkPointerAccess(const CUdeviceptr &pointer) const {
-    CUmemorytype memoryType;
-    checkCudaCall(cuPointerGetAttribute(
-        &memoryType, CU_POINTER_ATTRIBUTE_MEMORY_TYPE, pointer));
-
-    // Check if the memoryType is one of the allowed memory types
-    for (auto allowedType : {AllowedMemoryTypes...}) {
-      if (memoryType == allowedType) {
-        return;
-      }
-    }
-
-    throw std::runtime_error(
-        "Invalid memory type: allowed types are not matched.");
-  }
-
   T _obj{};
   std::shared_ptr<T> manager;
 };
@@ -121,6 +117,30 @@ class Device : public Wrapper<CUdevice> {
 
   explicit Device(int ordinal) : _ordinal(ordinal) {
     checkCudaCall(cuDeviceGet(&_obj, ordinal));
+    unsigned int flags;
+    int active;
+    checkCudaCall(cuDevicePrimaryCtxGetState(_obj, &flags, &active));
+    if (active) {
+      manager =
+          std::shared_ptr<CUdevice>(new CUdevice(_obj), [](CUdevice *ptr) {
+            checkCudaCall(cuDevicePrimaryCtxRelease(*ptr));
+          });
+      _context_manager = std::shared_ptr<CUcontext>(
+          new CUcontext([&]() {
+            CUcontext pctx;
+            checkCudaCall(cuDevicePrimaryCtxRetain(&pctx, _obj));
+            return pctx;
+          }()),
+          [](CUcontext *ptr) {});
+    } else {
+      _context_manager = std::shared_ptr<CUcontext>(
+          new CUcontext([&]() {
+            CUcontext pctx;
+            checkCudaCall(cuCtxCreate(&pctx, flags, _obj));
+            return pctx;
+          }()),
+          [](CUcontext *ptr) { checkCudaCall(cuCtxDestroy(*ptr)); });
+    }
   }
 
   struct CUdeviceArg {
@@ -137,6 +157,8 @@ class Device : public Wrapper<CUdevice> {
       }
     }
   }
+
+  void ctxSetCurrent() { checkCudaCall(cuCtxSetCurrent(*_context_manager)); }
 
   int getAttribute(CUdevice_attribute attribute) const {
     int value{};
@@ -208,132 +230,8 @@ class Device : public Wrapper<CUdevice> {
   int getOrdinal() const { return _ordinal; }
 
  private:
+  std::shared_ptr<CUcontext> _context_manager;
   int _ordinal;
-};
-
-class Context : public Wrapper<CUcontext> {
- public:
-  // Context Management
-
-  [[deprecated("cu::Context is deprecated since cudawrappers version 0.9.0.")]]
-  Context(int flags, Device &device)
-      : _device(device) {
-#if !defined(__HIP__)
-    checkCudaCall(cuCtxCreate(&_obj, flags, device));
-    manager =
-        std::shared_ptr<CUcontext>(new CUcontext(_obj), [](CUcontext *ptr) {
-          if (*ptr) cuCtxDestroy(*ptr);
-          delete ptr;
-        });
-#endif
-  }
-
-  unsigned getApiVersion() const {
-    unsigned version{};
-#if !defined(__HIP__)
-    checkCudaCall(cuCtxGetApiVersion(_obj, &version));
-#endif
-    return version;
-  }
-
-  static CUfunc_cache getCacheConfig() {
-    CUfunc_cache config{};
-#if !defined(__HIP__)
-    checkCudaCall(cuCtxGetCacheConfig(&config));
-#endif
-    return config;
-  }
-
-  static void setCacheConfig(CUfunc_cache config) {
-#if !defined(__HIP__)
-    checkCudaCall(cuCtxSetCacheConfig(config));
-#endif
-  }
-
-  Context getCurrent() {
-    CUcontext context{};
-#if !defined(__HIP__)
-    checkCudaCall(cuCtxGetCurrent(&context));
-#endif
-    return Context(context, _device);
-  }
-
-  void setCurrent() const {
-#if !defined(__HIP__)
-    checkCudaCall(cuCtxSetCurrent(_obj));
-#endif
-  }
-
-  Context popCurrent() {
-    CUcontext context{};
-#if !defined(__HIP__)
-    checkCudaCall(cuCtxPopCurrent(&context));
-#endif
-    return Context(context, _device);
-  }
-
-  void pushCurrent() {
-#if !defined(__HIP__)
-    checkCudaCall(cuCtxPushCurrent(_obj));
-#endif
-  }
-
-  Device getDevice() {
-    CUdevice device;
-#if !defined(__HIP__)
-    checkCudaCall(cuCtxGetDevice(&device));
-#else
-    device = _device;
-#endif
-    return Device(Device::CUdeviceArg(), device);
-  }
-
-  static size_t getLimit(CUlimit limit) {
-    size_t value{};
-    checkCudaCall(cuCtxGetLimit(&value, limit));
-    return value;
-  }
-
-  template <CUlimit limit>
-  static size_t getLimit() {
-    return getLimit(limit);
-  }
-
-  static void setLimit(CUlimit limit, size_t value) {
-    checkCudaCall(cuCtxSetLimit(limit, value));
-  }
-
-  template <CUlimit limit>
-  static void setLimit(size_t value) {
-    setLimit(limit, value);
-  }
-
-  size_t getFreeMemory() const {
-    size_t free;
-    size_t total;
-    checkCudaCall(cuMemGetInfo(&free, &total));
-    return free;
-  }
-
-  size_t getTotalMemory() const {
-    size_t free;
-    size_t total;
-    checkCudaCall(cuMemGetInfo(&free, &total));
-    return total;
-  }
-
-  static void synchronize() {
-#if !defined(__HIP__)
-    checkCudaCall(cuCtxSynchronize());
-#endif
-  }
-
- private:
-  friend class Device;
-  Context(CUcontext context, Device &device)
-      : Wrapper<CUcontext>(context), _device(device) {}
-
-  cu::Device &_device;
 };
 
 class HostMemory : public Wrapper<void *> {
@@ -625,13 +523,11 @@ class DeviceMemory : public Wrapper<CUdeviceptr> {
 
   template <typename T>
   operator T *() {
-    checkPointerAccess<CU_MEMORYTYPE_DEVICE, CU_MEMORYTYPE_UNIFIED>(_obj);
     return reinterpret_cast<T *>(_obj);
   }
 
   template <typename T>
   operator T *() const {
-    checkPointerAccess<CU_MEMORYTYPE_DEVICE, CU_MEMORYTYPE_UNIFIED>(_obj);
     return reinterpret_cast<T const *>(_obj);
   }
 
