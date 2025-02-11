@@ -8,7 +8,7 @@
 
 **Instructions to review the pull request**
 
-- Check that CHANGELOG.md has been updated if necessary
+- Check that `CHANGELOG.md` has been updated if necessary
 
 <!--
 Clone and verify
