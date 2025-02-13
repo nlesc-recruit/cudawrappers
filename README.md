@@ -34,9 +34,7 @@ Originally, the API enforced RAII to even further reduce the risk of faulty code
 
 | Hardware    | Type |
 | ----------- | ----------- |
-| NVIDIA GPU  |
-[Pascal](https://www.nvidia.com/en-in/geforce/products/10series/architecture/)
-or newer|
+| NVIDIA GPU  | [Pascal](https://www.nvidia.com/en-in/geforce/products/10series/architecture/) or newer|
 | AMD GPU     | RDNA2 or newer, CDNA2 or newer |
 
 
