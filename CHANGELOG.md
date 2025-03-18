@@ -3,32 +3,28 @@
 All notable changes to this project will be documented in this file. This
 project adheres to [Semantic Versioning](http://semver.org/).
 
-## Unreleased
+## [0.9.0] - 2025-03-18
 
 ### Added
 
-- Added compatibility with HIP
-- Added `cu::Device::getArch()`
+- Added HIP compatibility
+- Added `cu::Device::getArch()` and `cu::Device::getOrdinal()`
 - Added `cu::DeviceMemory` constructor to create non-owning slice of another
   `cu::DeviceMemory` object
-- Added `cu::DeviceMemory::memset()`
-- Added `cu::Stream::memsetAsync()`
-- Added `nvml::Device::getPower()`
+- Added `cu::DeviceMemory::memset()`,`cu::DeviceMemory::memset2D()`
+- Added `cu::Stream::memsetAsync()` and `cu::Stream::memset2DAsync()`
 - Added `cu::Stream::memcpyHtoD2DAsync()`, `cu::Stream::memcpyDtoHD2Async()`,
   and `cu::Stream::memcpyDtoD2DAsync()`
-- Added `cu::DeviceMemory::memset2D()` and `cu::Stream::memset2DAsync()`
 - Added `cufft::FFT1DR2C` and `cufft::FFT1DC2R`
-- Added `cu::Device::getOrdinal()`
-- Added deprecated warning to `cu::Context` constructor
-- Improved HIP documentation and building instructions
+- Added `nvml::Device::getPower()`
 
 ### Changed
 
 - `cu::Context::{getCurrent, popCurrent, getDevice}` are no longer static
-- `inline_local_includes` is now more robust: it properly handles commented
-  includes and respects the location of an include in the original source file
 - Upgrade C++ standard to C++14
 - Upgrade Catch2 to version v3.6.0
+- `inline_local_includes` is now more robust: it properly handles commented
+  includes and respects the location of an include in the original source file
 - `target_embed_source` is now more robust: it properly tracks dependencies and
   runs again whenever any of them changes
 - Expanded tests to cover the new 2D memory operations and FFT support
