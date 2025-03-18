@@ -131,8 +131,8 @@ class Device : public Wrapper<CUdevice> {
   explicit Device(int ordinal) : _ordinal(ordinal) {
     checkCudaCall(cuDeviceGet(&_obj, ordinal));
 #if defined(__HIP__)
-    // the device is not set through context management in HIP,
-    // so set it explicitly here
+    // The device is not set through context management in HIP,
+    // so it is set explicitly here.
     checkCudaCall(hipSetDevice(ordinal));
 #endif
   }
