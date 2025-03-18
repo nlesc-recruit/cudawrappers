@@ -41,7 +41,6 @@ TEST_CASE("Vector add") {
   const size_t bytesize = N * sizeof(float);
 
   cu::Device device(0);
-  cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, device);
 
   cu::Stream stream;
 
@@ -138,7 +137,7 @@ TEST_CASE("Vector add") {
     initialize_arrays(static_cast<float *>(h_a), static_cast<float *>(h_b),
                       static_cast<float *>(h_c), reference_c.data(), N);
 
-    const size_t memory_free = context.getFreeMemory();
+    const size_t memory_free = cu::getFreeMemory();
 
     cu::DeviceMemory d_a = stream.memAllocAsync(bytesize);
     cu::DeviceMemory d_b = stream.memAllocAsync(bytesize);

@@ -53,6 +53,20 @@ inline int driverGetVersion() {
   return version;
 }
 
+size_t getFreeMemory() {
+  size_t free;
+  size_t total;
+  checkCudaCall(cuMemGetInfo(&free, &total));
+  return free;
+}
+
+size_t getTotalMemory() {
+  size_t free;
+  size_t total;
+  checkCudaCall(cuMemGetInfo(&free, &total));
+  return total;
+}
+
 inline void memcpyHtoD(CUdeviceptr dst, const void *src, size_t size) {
 #if defined(__HIP__)
   // const_cast is a temp fix for https://github.com/ROCm/ROCm/issues/2977
@@ -121,6 +135,16 @@ class Device : public Wrapper<CUdevice> {
 
   explicit Device(int ordinal) : _ordinal(ordinal) {
     checkCudaCall(cuDeviceGet(&_obj, ordinal));
+#if !defined(__HIP__)
+    unsigned int flags;
+    int active;
+    checkCudaCall(cuDevicePrimaryCtxGetState(_obj, &flags, &active));
+    if (active) {
+      checkCudaCall(cuDevicePrimaryCtxRetain(&_pctx, _obj));
+    } else {
+      checkCudaCall(cuCtxCreate(&_pctx, flags, _obj));
+    }
+#endif
   }
 
   struct CUdeviceArg {
@@ -208,130 +232,10 @@ class Device : public Wrapper<CUdevice> {
   int getOrdinal() const { return _ordinal; }
 
  private:
+#if !defined(__HIP__)
+  CUcontext _pctx;
+#endif
   int _ordinal;
-};
-
-class Context : public Wrapper<CUcontext> {
- public:
-  // Context Management
-
-  Context(int flags, Device &device) : _device(device) {
-#if !defined(__HIP__)
-    checkCudaCall(cuCtxCreate(&_obj, flags, device));
-    manager =
-        std::shared_ptr<CUcontext>(new CUcontext(_obj), [](CUcontext *ptr) {
-          if (*ptr) cuCtxDestroy(*ptr);
-          delete ptr;
-        });
-#endif
-  }
-
-  unsigned getApiVersion() const {
-    unsigned version{};
-#if !defined(__HIP__)
-    checkCudaCall(cuCtxGetApiVersion(_obj, &version));
-#endif
-    return version;
-  }
-
-  static CUfunc_cache getCacheConfig() {
-    CUfunc_cache config{};
-#if !defined(__HIP__)
-    checkCudaCall(cuCtxGetCacheConfig(&config));
-#endif
-    return config;
-  }
-
-  static void setCacheConfig(CUfunc_cache config) {
-#if !defined(__HIP__)
-    checkCudaCall(cuCtxSetCacheConfig(config));
-#endif
-  }
-
-  Context getCurrent() {
-    CUcontext context{};
-#if !defined(__HIP__)
-    checkCudaCall(cuCtxGetCurrent(&context));
-#endif
-    return Context(context, _device);
-  }
-
-  void setCurrent() const {
-#if !defined(__HIP__)
-    checkCudaCall(cuCtxSetCurrent(_obj));
-#endif
-  }
-
-  Context popCurrent() {
-    CUcontext context{};
-#if !defined(__HIP__)
-    checkCudaCall(cuCtxPopCurrent(&context));
-#endif
-    return Context(context, _device);
-  }
-
-  void pushCurrent() {
-#if !defined(__HIP__)
-    checkCudaCall(cuCtxPushCurrent(_obj));
-#endif
-  }
-
-  Device getDevice() {
-    CUdevice device;
-#if !defined(__HIP__)
-    checkCudaCall(cuCtxGetDevice(&device));
-#else
-    device = _device;
-#endif
-    return Device(Device::CUdeviceArg(), device);
-  }
-
-  static size_t getLimit(CUlimit limit) {
-    size_t value{};
-    checkCudaCall(cuCtxGetLimit(&value, limit));
-    return value;
-  }
-
-  template <CUlimit limit>
-  static size_t getLimit() {
-    return getLimit(limit);
-  }
-
-  static void setLimit(CUlimit limit, size_t value) {
-    checkCudaCall(cuCtxSetLimit(limit, value));
-  }
-
-  template <CUlimit limit>
-  static void setLimit(size_t value) {
-    setLimit(limit, value);
-  }
-
-  size_t getFreeMemory() const {
-    size_t free;
-    size_t total;
-    checkCudaCall(cuMemGetInfo(&free, &total));
-    return free;
-  }
-
-  size_t getTotalMemory() const {
-    size_t free;
-    size_t total;
-    checkCudaCall(cuMemGetInfo(&free, &total));
-    return total;
-  }
-
-  static void synchronize() {
-#if !defined(__HIP__)
-    checkCudaCall(cuCtxSynchronize());
-#endif
-  }
-
- private:
-  friend class Device;
-  Context(CUcontext context, Device &device)
-      : Wrapper<CUcontext>(context), _device(device) {}
-
-  cu::Device &_device;
 };
 
 class HostMemory : public Wrapper<void *> {
