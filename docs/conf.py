@@ -18,11 +18,11 @@
 # -- Project information -----------------------------------------------------
 
 project = 'cudawrappers'
-copyright = '2022, cudawrappers developers'
+copyright = '2025, cudawrappers developers'
 author = 'cudawrappers developers'
 
 # The full version, including alpha/beta/rc tags
-release = '0.8.0'
+release = '0.9.0'
 
 
 # -- General configuration ---------------------------------------------------

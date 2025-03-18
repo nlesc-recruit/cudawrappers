@@ -11,7 +11,7 @@ endif()
 project(
   cudawrappers
   DESCRIPTION "C++ Wrappers for the CUDA Driver API"
-  VERSION 0.8.0
+  VERSION 0.9.0
   HOMEPAGE_URL https://github.com/nlesc-recruit/cudawrappers
   LANGUAGES CXX
 )
