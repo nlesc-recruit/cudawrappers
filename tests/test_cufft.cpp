@@ -57,7 +57,6 @@ void compare(T *a, T *b, size_t n) {
 TEST_CASE("Test 1D FFT", "[FFT1D]") {
   cu::init();
   cu::Device device(0);
-  cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, device);
   cu::Stream stream;
 
   const size_t size = 256;
@@ -147,7 +146,6 @@ TEST_CASE("Test 1D FFT", "[FFT1D]") {
 TEST_CASE("Test 2D FFT", "[FFT2D]") {
   cu::init();
   cu::Device device(0);
-  cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, device);
   cu::Stream stream;
 
   const size_t height = 256;
