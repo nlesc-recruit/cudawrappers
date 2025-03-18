@@ -304,7 +304,7 @@ typedef uint32_t cuuint32_t;
 #define CU_MEMORYTYPE_ARRAY hipMemoryTypeArray
 #define CU_MEMORYTYPE_DEVICE hipMemoryTypeDevice
 #define CU_MEMORYTYPE_HOST hipMemoryTypeHost
-#define CU_MEMORYTYPE_UNIFIED hipMemoryTypeUnified
+#define CU_MEMORYTYPE_UNIFIED hipMemoryTypeManaged
 #define CU_MEMPOOL_ATTR_RELEASE_THRESHOLD hipMemPoolAttrReleaseThreshold
 #define CU_MEMPOOL_ATTR_RESERVED_MEM_CURRENT hipMemPoolAttrReservedMemCurrent
 #define CU_MEMPOOL_ATTR_RESERVED_MEM_HIGH hipMemPoolAttrReservedMemHigh
@@ -654,7 +654,7 @@ typedef uint32_t cuuint32_t;
 #define cuOccupancyMaxPotentialBlockSize hipModuleOccupancyMaxPotentialBlockSize
 #define cuOccupancyMaxPotentialBlockSizeWithFlags hipModuleOccupancyMaxPotentialBlockSizeWithFlags
 #define cuPointerGetAttribute hipPointerGetAttribute
-#define cuPointerGetAttributes hipDrvPointerGetAttributes
+#define cuPointerGetAttributes hipPointerGetAttributes
 #define cuPointerSetAttribute hipPointerSetAttribute
 #define cuStreamAddCallback hipStreamAddCallback
 #define cuStreamAttachMemAsync hipStreamAttachMemAsync

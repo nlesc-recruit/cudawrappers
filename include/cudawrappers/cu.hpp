@@ -97,8 +97,17 @@ class Wrapper {
   template <CUmemorytype... AllowedMemoryTypes>
   inline void checkPointerAccess(const CUdeviceptr &pointer) const {
     CUmemorytype memoryType;
+#if defined(__HIP__)
+    // There is also a hipPointerGetAttribute to get a single attribute,
+    // but it is in beta as of rocm 6.3 and gives the wrong
+    // result for managed memory.
+    hipPointerAttribute_t attrs;
+    checkCudaCall(cuPointerGetAttributes(&attrs, pointer));
+    memoryType = attrs.type;
+#else
     checkCudaCall(cuPointerGetAttribute(
         &memoryType, CU_POINTER_ATTRIBUTE_MEMORY_TYPE, pointer));
+#endif
 
     // Check if the memoryType is one of the allowed memory types
     for (auto allowedType : {AllowedMemoryTypes...}) {
