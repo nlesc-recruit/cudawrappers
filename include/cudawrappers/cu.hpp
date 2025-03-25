@@ -790,17 +790,16 @@ class GraphMemCopyToHostNodeParams : public Wrapper<CUDA_MEMCPY3D> {
 
 class Graph : public Wrapper<CUgraph> {
  public:
-  explicit Graph(CUgraph &graph) : Wrapper(graph) {
-    checkCudaCall(cuCtxGetCurrent(&_context));
-  };
+  explicit Graph(cu::Context &context, CUgraph &graph)
+      : Wrapper(graph), _context(context) {};
 
-  explicit Graph(unsigned int flags = CU_GRAPH_DEFAULT) {
+  explicit Graph(cu::Context &context, unsigned int flags = CU_GRAPH_DEFAULT)
+      : _context(context) {
     checkCudaCall(cuGraphCreate(&_obj, flags));
     manager = std::shared_ptr<CUgraph>(new CUgraph(_obj), [](CUgraph *ptr) {
       checkCudaCall(cuGraphDestroy(*ptr));
       delete ptr;
     });
-    cuCtxGetCurrent(&_context);
   }
 
   void addKernelNode(GraphNode &node,
@@ -882,7 +881,7 @@ class Graph : public Wrapper<CUgraph> {
   }
 
  private:
-  CUcontext _context;
+  cu::Context _context;
 };
 
 class GraphExec : public Wrapper<CUgraphExec> {
