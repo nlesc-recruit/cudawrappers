@@ -34,7 +34,7 @@ TEST_CASE("Test cu::Graph", "[graph]") {
       int* ptr = static_cast<int*>(data);
       *ptr += 1;
     };
-    cu::Graph graph;
+    cu::Graph graph(context);
     int data = 42;
     cu::GraphHostNodeParams node_params(fn, &data);
 
@@ -62,7 +62,7 @@ TEST_CASE("Test cu::Graph", "[graph]") {
       data_in[i] = 3;
     }
 
-    cu::Graph graph;
+    cu::Graph graph(context);
     cu::GraphNode dev_alloc, host_set, copy_to_dev, execute_kernel, device_free,
         copy_to_host;
     struct set_value_parameter {
@@ -129,7 +129,7 @@ TEST_CASE("Test cu::Graph", "[graph]") {
     constexpr size_t array_size = 3;
     std::array<float, array_size> data_in{3, 3, 3};
     std::array<float, array_size> data_out{0, 0, 0};
-    cu::Graph graph;
+    cu::Graph graph(context);
     cu::GraphNode dev_alloc, host_set, copy_to_dev, execute_kernel, device_free,
         copy_to_host, host_set2;
 
