@@ -152,6 +152,16 @@ class Program {
     return log;
   }
 
+  void addNameExpression(const std::string &name) {
+    checkNvrtcCall(nvrtcAddNameExpression(program, name.c_str()));
+  }
+
+  const char *getLoweredName(const std::string &name) {
+    const char *lowered_name;
+    checkNvrtcCall(nvrtcGetLoweredName(program, name.c_str(), &lowered_name));
+    return lowered_name;
+  }
+
  private:
   nvrtcProgram program{};
 };

@@ -8,7 +8,7 @@
 
 TEST_CASE("Test cu::Graph", "[graph]") {
   const std::string kernel = R"(
-    extern "C" __global__ void vector_print(float *a, size_t array_size) {
+    __global__ void vector_print(float *a, size_t array_size) {
       int i = blockIdx.x * blockDim.x + threadIdx.x;
       if (i < array_size) {
 #ifdef DEBUG
@@ -24,6 +24,7 @@ TEST_CASE("Test cu::Graph", "[graph]") {
   cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, device);
   context.setCurrent();
   nvrtc::Program program(kernel, "kernel.cu");
+  program.addNameExpression("vector_print");
   program.compile({});
   cu::Module module(static_cast<const void*>(program.getPTX().data()));
 
@@ -103,7 +104,8 @@ TEST_CASE("Test cu::Graph", "[graph]") {
 
     cu::DeviceMemory mem(dev_alloc_params.getDeviceMemory());
     std::vector<const void*> params = {mem.parameter(), &array_size};
-    cu::Function vector_print_fn(module, "vector_print");
+    cu::Function vector_print_fn(module,
+                                 program.getLoweredName("vector_print"));
     cu::GraphKernelNodeParams kernel_params{
         vector_print_fn, 3, 1, 1, 3, 1, 1, 0, params};
 
@@ -166,7 +168,8 @@ TEST_CASE("Test cu::Graph", "[graph]") {
     cu::DeviceMemory mem(dev_alloc_params.getDeviceMemory());
 
     std::vector<const void*> params = {mem.parameter(), &array_size};
-    cu::Function vector_print_fn(module, "vector_print");
+    cu::Function vector_print_fn(module,
+                                 program.getLoweredName("vector_print"));
     cu::GraphKernelNodeParams kernel_params{
         vector_print_fn, 3, 1, 1, 1, 1, 1, 0, params};
 
