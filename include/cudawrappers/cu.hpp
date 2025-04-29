@@ -571,10 +571,17 @@ class DeviceMemory : public Wrapper<CUdeviceptr> {
                                            });
   }
 
-  explicit DeviceMemory(CUdeviceptr ptr) : Wrapper(ptr) {}
+  explicit DeviceMemory(CUdeviceptr ptr) {
+    _obj = ptr;
+    manager = std::shared_ptr<CUdeviceptr>(&ptr, [](CUdeviceptr *ptr) {});
+  }
 
-  explicit DeviceMemory(CUdeviceptr ptr, size_t size)
-      : Wrapper(ptr), _size(size) {}
+  explicit DeviceMemory(CUdeviceptr ptr, size_t size) : _size(size) {
+    _obj = ptr;
+    manager = std::shared_ptr<CUdeviceptr>(&ptr, [](CUdeviceptr *ptr) {
+
+    });
+  }
 
   explicit DeviceMemory(const HostMemory &hostMemory) {
     checkCudaCall(cuMemHostGetDevicePointer(&_obj, hostMemory, 0));
