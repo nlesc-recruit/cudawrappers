@@ -7,7 +7,7 @@ project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Changed
 
-- Bugfix `cu::DeviceMemory` constructors with `CUdeviceptr` argument.
+- Changed `cu::Device` constructor to accept `unsigned int` instead of `int`
 
 ## [0.9.0] - 2025-03-18
 
