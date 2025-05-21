@@ -2,7 +2,7 @@
 # includes inlined. Local includes are assumed to have ""'s, e.g. having a line
 # '#include "helper.h"` will lead to `helper.h` being inlined. Only files in the
 # root directory will be considered.
-function(inline_local_includes input_file output_file root_dir)
+function(inline_local_includes input_file output_string root_dir)
   file(READ ${input_file} input_file_contents)
   set(include_regex "(^|\r?\n)(#include[ \t]*\"([^\"]+)\")")
   string(REGEX MATCHALL ${include_regex} includes ${input_file_contents})
@@ -17,13 +17,16 @@ function(inline_local_includes input_file output_file root_dir)
       list(SORT INCLUDE_PATHS ORDER DESCENDING)
       list(GET INCLUDE_PATHS 0 include_PATH)
       list(APPEND include_files ${include_PATH})
-      file(READ ${include_PATH} include_contents)
+      set(include_contents "")
+      inline_local_includes(${include_PATH} include_contents ${root_dir})
       string(REPLACE "${include_line}" "${include_contents}"
                      input_file_contents "${input_file_contents}"
       )
     endif()
   endforeach()
-  file(WRITE ${output_file} "${input_file_contents}")
+  set(${output_string} "${input_file_contents}" PARENT_SCOPE)
 endfunction()
 
-inline_local_includes(${input_file} ${output_file} ${root_dir})
+set(output_string "")
+inline_local_includes(${input_file} output_string ${root_dir})
+file(WRITE ${output_file} "${output_string}")
