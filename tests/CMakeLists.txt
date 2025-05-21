@@ -41,8 +41,8 @@ target_include_directories(
 )
 
 target_embed_source(test_nvrtc kernels/vector_add_kernel.cu)
-target_embed_source(test_nvrtc kernels/kernel_single_include.cu)
-target_embed_source(test_nvrtc kernels/kernel_recursive_include.cu)
+target_embed_source(test_nvrtc kernels/single_include_kernel.cu)
+target_embed_source(test_nvrtc kernels/recursive_include_kernel.cu)
 
 target_link_libraries(test_cufft PUBLIC ${LINK_LIBRARIES} cudawrappers::cufft)
 
