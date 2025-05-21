@@ -22,7 +22,10 @@ function(inline_local_includes input_file output_string root_dir)
       )
     endif()
   endforeach()
-  set(${output_string} "${input_file_contents}" PARENT_SCOPE)
+  set(${output_string}
+      "${input_file_contents}"
+      PARENT_SCOPE
+  )
 endfunction()
 
 set(output_string "")
