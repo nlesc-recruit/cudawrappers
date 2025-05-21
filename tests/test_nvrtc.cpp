@@ -54,30 +54,28 @@ TEST_CASE("Test nvrtc::Program embedded source", "[program]") {
   }
 }
 
-extern const char
-    _binary_tests_kernels_vector_add_kernel_single_include_cu_start,
-    _binary_tests_kernels_vector_add_kernel_single_include_cu_end;
+extern const char _binary_tests_kernels_kernel_single_include_cu_start,
+    _binary_tests_kernels_kernel_single_include_cu_end;
 
 TEST_CASE("Test nvrtc::Program inlined header", "[program]") {
   const std::string kernel(
-      &_binary_tests_kernels_vector_add_kernel_single_include_cu_start,
-      &_binary_tests_kernels_vector_add_kernel_single_include_cu_end);
-  nvrtc::Program program(kernel, "vector_add_kernel_single_include.cu");
+      &_binary_tests_kernels_kernel_single_include_cu_start,
+      &_binary_tests_kernels_kernel_single_include_cu_end);
+  nvrtc::Program program(kernel, "kernel_single_include.cu");
 
   const std::vector<std::string> options = {};
 
   SECTION("Test Program.compile") { CHECK_NOTHROW(program.compile(options)); }
 }
 
-extern const char
-    _binary_tests_kernels_vector_add_kernel_recursive_include_cu_start,
-    _binary_tests_kernels_vector_add_kernel_recursive_include_cu_end;
+extern const char _binary_tests_kernels_kernel_recursive_include_cu_start,
+    _binary_tests_kernels_kernel_recursive_include_cu_end;
 
 TEST_CASE("Test nvrtc::Program recursively inlined header", "[program]") {
   const std::string kernel(
-      &_binary_tests_kernels_vector_add_kernel_recursive_include_cu_start,
-      &_binary_tests_kernels_vector_add_kernel_recursive_include_cu_end);
-  nvrtc::Program program(kernel, "vector_add_kernel_recursive_include.cu");
+      &_binary_tests_kernels_kernel_recursive_include_cu_start,
+      &_binary_tests_kernels_kernel_recursive_include_cu_end);
+  nvrtc::Program program(kernel, "ector_add_kernel_recursive_include.cu");
 
   const std::vector<std::string> options = {};
 
