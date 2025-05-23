@@ -25,20 +25,16 @@ function(inline_local_includes input_file output_string root_dir)
       list(SORT INCLUDE_PATHS ORDER DESCENDING)
       list(GET INCLUDE_PATHS 0 include_PATH)
       list(FIND ALREADY_INCLUDED ${INCLUDE_PATHS} found_index)
+      set(include_contents "")
       if(found_index EQUAL -1)
         list(APPEND ALREADY_INCLUDED ${include_PATH})
-        set(include_contents "")
         inline_local_includes(${include_PATH} include_contents ${root_dir})
-        # Replace the include line with the include file contents
-        string(REPLACE "${include_line}" "${include_contents}"
-                       input_file_contents "${input_file_contents}"
-        )
-      else()
-        # Remove the include line
-        string(REPLACE "${include_line}" "" input_file_contents
-                       "${input_file_contents}"
-        )
       endif()
+      # Replace the include line with the include file contents or
+      # remove it if the file was already included
+      string(REPLACE "${include_line}" "${include_contents}"
+                     input_file_contents "${input_file_contents}"
+      )
     endif()
   endforeach()
 
