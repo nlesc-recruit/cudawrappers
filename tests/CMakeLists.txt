@@ -36,7 +36,13 @@ endif()
 
 target_link_libraries(test_nvrtc PUBLIC ${LINK_LIBRARIES} cudawrappers::nvrtc)
 
+target_include_directories(
+  test_nvrtc PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/kernels"
+)
+
 target_embed_source(test_nvrtc kernels/vector_add_kernel.cu)
+target_embed_source(test_nvrtc kernels/single_include_kernel.cu)
+target_embed_source(test_nvrtc kernels/recursive_include_kernel.cu)
 
 target_link_libraries(test_cufft PUBLIC ${LINK_LIBRARIES} cudawrappers::cufft)
 

@@ -54,6 +54,34 @@ TEST_CASE("Test nvrtc::Program embedded source", "[program]") {
   }
 }
 
+extern const char _binary_tests_kernels_single_include_kernel_cu_start,
+    _binary_tests_kernels_single_include_kernel_cu_end;
+
+TEST_CASE("Test nvrtc::Program inlined header", "[program]") {
+  const std::string kernel(
+      &_binary_tests_kernels_single_include_kernel_cu_start,
+      &_binary_tests_kernels_single_include_kernel_cu_end);
+  nvrtc::Program program(kernel, "single_include_kernel.cu");
+
+  const std::vector<std::string> options = {};
+
+  SECTION("Test Program.compile") { CHECK_NOTHROW(program.compile(options)); }
+}
+
+extern const char _binary_tests_kernels_recursive_include_kernel_cu_start,
+    _binary_tests_kernels_recursive_include_kernel_cu_end;
+
+TEST_CASE("Test nvrtc::Program recursively inlined header", "[program]") {
+  const std::string kernel(
+      &_binary_tests_kernels_recursive_include_kernel_cu_start,
+      &_binary_tests_kernels_recursive_include_kernel_cu_end);
+  nvrtc::Program program(kernel, "recursive_include_kernel.cu");
+
+  const std::vector<std::string> options = {};
+
+  SECTION("Test Program.compile") { CHECK_NOTHROW(program.compile(options)); }
+}
+
 TEST_CASE("Test nvrtc::findIncludePath", "[helper]") {
   const std::string path = nvrtc::findIncludePath();
   CHECK(path.find("include") != std::string::npos);
