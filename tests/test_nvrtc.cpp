@@ -75,7 +75,7 @@ TEST_CASE("Test nvrtc::Program recursively inlined header", "[program]") {
   const std::string kernel(
       &_binary_tests_kernels_recursive_include_kernel_cu_start,
       &_binary_tests_kernels_recursive_include_kernel_cu_end);
-  nvrtc::Program program(kernel, "ector_add_recursive_include_kernel.cu");
+  nvrtc::Program program(kernel, "recursive_include_kernel.cu");
 
   const std::vector<std::string> options = {};
 
