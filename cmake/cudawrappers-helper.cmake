@@ -1,6 +1,6 @@
 # Return a list of absolute file names for all the local includes of the
 # input_file.  Only files in the root directory will be considered.
-function(get_local_includes input_file root_dir parent_include_files)
+function(get_local_includes input_file root_dir)
   file(READ ${input_file} input_file_contents)
   set(include_regex "(^|\r?\n)(#include[ \t]*\"([^\"]+)\")")
   string(REGEX MATCHALL ${include_regex} includes ${input_file_contents})
@@ -17,10 +17,6 @@ function(get_local_includes input_file root_dir parent_include_files)
       list(APPEND include_files ${include_PATH})
     endif()
   endforeach()
-  set(${parent_include_files}
-      ${include_files}
-      PARENT_SCOPE
-  )
 endfunction()
 
 # Make it possible to embed a source file in a library, and link it to a target.
