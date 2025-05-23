@@ -30,8 +30,8 @@ function(inline_local_includes input_file output_string root_dir)
         list(APPEND ALREADY_INCLUDED ${include_PATH})
         inline_local_includes(${include_PATH} include_contents ${root_dir})
       endif()
-      # Replace the include line with the include file contents or
-      # remove it if the file was already included
+      # Replace the include line with the include file contents or remove it if
+      # the file was already included
       string(REPLACE "${include_line}" "${include_contents}"
                      input_file_contents "${input_file_contents}"
       )
