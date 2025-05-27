@@ -28,7 +28,7 @@ void initialize_arrays(float *a, float *b, float *c, float *r, int N) {
 
 TEST_CASE("Vector add") {
   const std::string kernel = R"(
-    extern "C" __global__ void vector_add(float *c, float *a, float *b, int n) {
+    __global__ void vector_add(float *c, float *a, float *b, int n) {
       int i = blockIdx.x * blockDim.x + threadIdx.x;
       if (i < n) {
         c[i] = a[i] + b[i];
@@ -47,6 +47,7 @@ TEST_CASE("Vector add") {
 
   std::vector<std::string> options = {};
   nvrtc::Program program(kernel, "vector_add_kernel.cu");
+  program.addNameExpression("vector_add");
   try {
     program.compile(options);
   } catch (nvrtc::Error &error) {
@@ -55,7 +56,7 @@ TEST_CASE("Vector add") {
   }
 
   cu::Module module(static_cast<const void *>(program.getPTX().data()));
-  cu::Function function(module, "vector_add");
+  cu::Function function(module, program.getLoweredName("vector_add"));
 
   SECTION("Run kernel") {
     cu::HostMemory h_a(bytesize);
