@@ -13,13 +13,10 @@ function(get_local_includes input_file root_dir)
     if(NOT INCLUDE_PATHS STREQUAL "")
       list(SORT INCLUDE_PATHS ORDER DESCENDING)
       list(GET INCLUDE_PATHS 0 include_PATH)
+      get_local_includes(${include_PATH} ${root_dir} include_files)
       list(APPEND include_files ${include_PATH})
     endif()
   endforeach()
-  set(include_files
-      ${include_files}
-      PARENT_SCOPE
-  )
 endfunction()
 
 # Make it possible to embed a source file in a library, and link it to a target.
@@ -37,7 +34,8 @@ function(target_embed_source target input_file)
                  input_file_inlined ${input_file_absolute}
   )
   # Get a list of all local includes so that they can be added as dependencies
-  get_local_includes(${input_file} ${PROJECT_SOURCE_DIR})
+  set(include_files "")
+  get_local_includes(${input_file} ${PROJECT_SOURCE_DIR} include_files)
   # Create a copy of the input file with all local headers inlined
   add_custom_command(
     OUTPUT ${input_file_inlined}

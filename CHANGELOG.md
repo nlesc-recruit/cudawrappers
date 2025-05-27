@@ -9,6 +9,10 @@ project adheres to [Semantic Versioning](http://semver.org/).
 
 - Added `nvrtc::addNameExpression` and `nvrtc::getLoweredName`
 
+### Changed
+
+- Changed `cu::Device` constructor to accept `unsigned int` instead of `int`
+
 ## [0.9.0] - 2025-03-18
 
 ### Added

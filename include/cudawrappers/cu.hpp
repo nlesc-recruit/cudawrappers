@@ -128,7 +128,7 @@ class Device : public Wrapper<CUdevice> {
  public:
   // Device Management
 
-  explicit Device(int ordinal) : _ordinal(ordinal) {
+  explicit Device(unsigned int ordinal) : _ordinal(ordinal) {
     checkCudaCall(cuDeviceGet(&_obj, ordinal));
 #if defined(__HIP__)
     // The device is not set through context management in HIP,
@@ -137,9 +137,7 @@ class Device : public Wrapper<CUdevice> {
 #endif
   }
 
-  struct CUdeviceArg {
-  };  // int and CUdevice are the same type, but we need two constructors
-  Device(CUdeviceArg, CUdevice device) : Wrapper(device) {
+  explicit Device(CUdevice device) : Wrapper<CUdevice>(device) {
     int count = 0;
     checkCudaCall(cuDeviceGetCount(&count));
 
@@ -297,7 +295,7 @@ class Context : public Wrapper<CUcontext> {
 #else
     device = _device;
 #endif
-    return Device(Device::CUdeviceArg(), device);
+    return Device(device);
   }
 
   static size_t getLimit(CUlimit limit) {
