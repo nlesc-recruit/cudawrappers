@@ -23,9 +23,9 @@
 # cmake-format: on
 # get_local_includes
 function(get_local_includes input_file root_dir out_var)
-  file(READ "${input_file}" input_file_contents)
+  file(READ "${input_file}" input_file_content)
   set(include_regex "(^|\r?\n)(#include[ \t]*\"([^\"]+)\")")
-  string(REGEX MATCHALL "${include_regex}" includes "${input_file_contents}")
+  string(REGEX MATCHALL "${include_regex}" includes "${input_file_content}")
 
   set(include_files_local "")
 
@@ -59,24 +59,26 @@ endfunction()
 # Parameters:
 #   input_file:     Absolute path to main source file
 #   output_file:    File to write the resulting inlined source
-#   include_files:  List of header files (absolute paths) to inline
+#   include_files:  List of absolute paths to the files to inline
 # cmake-format: on
 # inline_local_includes
 function(inline_local_includes input_file output_file include_files)
-  file(READ "${input_file}" input_contents)
+  file(READ "${input_file}" input_file_content)
   set(include_regex "(^|\r?\n)(#include[ \t]*\"([^\"]+)\")")
-  string(REGEX REPLACE "${include_regex}" "" input_contents "${input_contents}")
+  string(REGEX REPLACE "${include_regex}" "" input_file_content
+                       "${input_file_content}"
+  )
 
   set(output_content "")
   foreach(include_file ${include_files})
-    file(READ "${include_file}" header_contents)
-    string(REGEX REPLACE "${include_regex}" "" header_contents
-                         "${header_contents}"
+    file(READ "${include_file}" include_file_content)
+    string(REGEX REPLACE "${include_regex}" "" include_file_content
+                         "${include_file_content}"
     )
-    set(output_content "${output_content}\n${header_contents}")
+    set(output_content "${output_content}\n${include_file_content}")
   endforeach()
 
-  set(output_content "${output_content}\n${input_contents}")
+  set(output_content "${output_content}\n${input_file_content}")
   file(WRITE "${output_file}" "${output_content}")
 endfunction()
 
