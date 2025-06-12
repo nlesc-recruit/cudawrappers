@@ -1,69 +1,152 @@
+# =============================================================================
+# cmake-format: off
+# This module enables embedding kernel or source files (e.g. .cu) into targets
+# by linking their binary representation as static libraries. It also inlines
+# any local includes (#include "...") in the source file.
+#
+# Functions:
+#   - get_local_includes: Recursively collect local includes.
+#   - inline_local_includes: Prepend headers and remove #include "..."
+#   - target_embed_source: Embed a source file as binary and link to a target.
+#
+# cmake-format: on
+# =============================================================================
+
+# cmake-format: off
 # Return a list of absolute file names for all the local includes of the
-# input_file.  Only files in the root directory will be considered.
-function(get_local_includes input_file root_dir)
-  file(READ ${input_file} input_file_contents)
+# input_file. Only files in the root_dir will be considered.
+#
+# Parameters:
+#   input_file: The file to scan for includes
+#   root_dir:   The root directory in which to search for include files
+#   out_var:    Output variable name to receive the list of include files (absolute paths)
+# cmake-format: on
+# get_local_includes
+function(get_local_includes input_file root_dir out_var)
+  file(READ "${input_file}" input_file_content)
   set(include_regex "(^|\r?\n)(#include[ \t]*\"([^\"]+)\")")
-  string(REGEX MATCHALL ${include_regex} includes ${input_file_contents})
-  set(include_files "")
+  string(REGEX MATCHALL "${include_regex}" includes "${input_file_content}")
+
+  set(include_files_local "")
+
   foreach(include ${includes})
-    # Get the name of the file to include, e.g. 'helper.h'
-    string(REGEX REPLACE ${include_regex} "\\3" include_name ${include})
-    # Get the complete line of the include, e.g.  '#include <helper.h>'
-    file(GLOB_RECURSE INCLUDE_PATHS "${root_dir}/*/${include_name}")
-    if(NOT INCLUDE_PATHS STREQUAL "")
-      list(SORT INCLUDE_PATHS ORDER DESCENDING)
-      list(GET INCLUDE_PATHS 0 include_PATH)
-      get_local_includes(${include_PATH} ${root_dir} include_files)
-      list(APPEND include_files ${include_PATH})
+    # Extract the filename from the include directive
+    string(REGEX REPLACE "${include_regex}" "\\3" include_name "${include}")
+    file(GLOB_RECURSE include_paths "${root_dir}/*/${include_name}")
+    if(include_paths)
+      list(SORT include_paths ORDER DESCENDING)
+      list(GET include_paths 0 include_path)
+      get_local_includes("${include_path}" "${root_dir}" recursive_includes)
+      list(APPEND include_files_local ${recursive_includes} "${include_path}")
+    else()
+      message(
+        WARNING "Could not find include: ${include_name} in ${input_file}"
+      )
     endif()
   endforeach()
+
+  list(REMOVE_DUPLICATES include_files_local)
+  set(${out_var}
+      "${include_files_local}"
+      PARENT_SCOPE
+  )
 endfunction()
 
-# Make it possible to embed a source file in a library, and link it to a target.
-# E.g. to link <kernel.cu> into target <example_program>, use
-# target_embed_source(example_program, kernel.cu). This will expose symbols
-# _binary_kernel_cu_start and _binary_kernel_cu_end.
+# cmake-format: off
+# Create a new file with inlined (prepended) headers and local #include "..."
+# lines removed from the input file.
+#
+# Parameters:
+#   input_file:     Absolute path to main source file
+#   output_file:    File to write the resulting inlined source
+#   include_files:  List of absolute paths to the files to inline
+# cmake-format: on
+# inline_local_includes
+function(inline_local_includes input_file output_file include_files)
+  file(READ "${input_file}" input_file_content)
+  set(include_regex "(^|\r?\n)(#include[ \t]*\"([^\"]+)\")")
+  string(REGEX REPLACE "${include_regex}" "" input_file_content
+                       "${input_file_content}"
+  )
+
+  set(output_content "")
+  foreach(include_file ${include_files})
+    file(READ "${include_file}" include_file_content)
+    string(REGEX REPLACE "${include_regex}" "" include_file_content
+                         "${include_file_content}"
+    )
+    set(output_content "${output_content}\n${include_file_content}")
+  endforeach()
+
+  set(output_content "${output_content}\n${input_file_content}")
+  file(WRITE "${output_file}" "${output_content}")
+endfunction()
+
+# cmake-format: off
+# Embed a source file in a static library and link it to a target. It inlines
+# any local includes (#include "...")
+#
+# Parameters:
+#   target:     CMake target to link to
+#   input_file: Path to the file to embed
+# cmake-format: on
+# target_embed_source
 function(target_embed_source target input_file)
   include(CMakeDetermineSystem)
-  # Strip the path and extension from input_file
-  get_filename_component(NAME ${input_file} NAME_WLE)
-  # Get absolute path for input file
-  get_filename_component(input_file_absolute ${input_file} ABSOLUTE)
-  # Make a copy of the input file in the binary dir with inlined header files
+
+  get_filename_component(name "${input_file}" NAME_WLE)
+  get_filename_component(input_file_absolute "${input_file}" REALPATH)
+
   string(REPLACE "${PROJECT_SOURCE_DIR}" "${CMAKE_BINARY_DIR}"
-                 input_file_inlined ${input_file_absolute}
+                 input_file_inlined "${input_file_absolute}"
   )
-  # Get a list of all local includes so that they can be added as dependencies
-  set(include_files "")
-  get_local_includes(${input_file} ${PROJECT_SOURCE_DIR} include_files)
-  # Create a copy of the input file with all local headers inlined
+
+  get_filename_component(
+    input_file_inlined_dir "${input_file_inlined}" DIRECTORY
+  )
+  file(MAKE_DIRECTORY "${input_file_inlined_dir}")
+
+  get_local_includes(
+    "${input_file_absolute}" "${PROJECT_SOURCE_DIR}" include_files
+  )
+
+  if("${include_files}" STREQUAL "")
+    configure_file("${input_file_absolute}" "${input_file_inlined}" COPYONLY)
+  else()
+    inline_local_includes(
+      "${input_file_absolute}" "${input_file_inlined}" "${include_files}"
+    )
+  endif()
+
+  file(RELATIVE_PATH input_file_inlined_relative "${PROJECT_SOURCE_DIR}"
+       "${input_file_absolute}"
+  )
+
+  set(embed_object_file "${CMAKE_CURRENT_BINARY_DIR}/${name}.o")
+  set(embed_tool ld)
+  set(embed_tool_args
+      -r
+      -b
+      binary
+      -A
+      ${CMAKE_SYSTEM_PROCESSOR}
+      -o
+      "${embed_object_file}"
+      "${input_file_inlined_relative}"
+  )
+
   add_custom_command(
-    OUTPUT ${input_file_inlined}
-    COMMAND
-      ${CMAKE_COMMAND} -Dinput_file=${input_file_absolute}
-      -Doutput_file=${input_file_inlined} -Droot_dir=${PROJECT_SOURCE_DIR} -P
-      "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/cudawrappers-inline-local-includes.cmake"
-    DEPENDS "${input_file_absolute};${include_files}"
-    COMMENT "Inlining all includes of ${input_file}"
-  )
-  # Link the input_file into an object file
-  string(REPLACE "${PROJECT_SOURCE_DIR}/" "" input_file_inlined_relative
-                 ${input_file_absolute}
-  )
-  add_custom_command(
-    OUTPUT ${NAME}.o
-    COMMAND
-      ld ARGS -r -b binary -A ${CMAKE_SYSTEM_PROCESSOR} -o
-      "${CMAKE_CURRENT_BINARY_DIR}/${NAME}.o" ${input_file_inlined_relative}
-    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-    DEPENDS ${input_file_inlined}
+    OUTPUT "${embed_object_file}"
+    COMMAND ${embed_tool} ARGS ${embed_tool_args}
+    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
+    DEPENDS "${input_file_absolute}" "${input_file_inlined}" ${include_files}
     COMMENT "Creating object file for ${input_file}"
   )
-  if(NOT TARGET ${NAME})
-    # Create a proper static library for the .o file
-    add_library(${NAME} STATIC ${NAME}.o)
-    set_target_properties(${NAME} PROPERTIES LINKER_LANGUAGE CXX)
+
+  if(NOT TARGET ${name})
+    add_library(${name} STATIC "${embed_object_file}")
+    set_target_properties(${name} PROPERTIES LINKER_LANGUAGE CXX)
   endif()
-  # Link the static library to the target
-  target_link_libraries(${target} PRIVATE ${NAME})
+
+  target_link_libraries(${target} PRIVATE ${name})
 endfunction()
