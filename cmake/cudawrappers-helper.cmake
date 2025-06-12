@@ -70,10 +70,14 @@ function(inline_local_includes input_file output_file include_files)
   set(output_content "")
   foreach(include_file ${include_files})
     file(READ "${include_file}" header_contents)
+    string(REGEX REPLACE "${include_regex}" "" header_contents
+                         "${header_contents}"
+    )
     set(output_content "${output_content}\n${header_contents}")
   endforeach()
 
   set(output_content "${output_content}\n${input_contents}")
+
   file(WRITE "${output_file}" "${output_content}")
 endfunction()
 
@@ -134,7 +138,7 @@ function(target_embed_source target input_file)
     OUTPUT "${embed_object_file}"
     COMMAND ${embed_tool} ARGS ${embed_tool_args}
     WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-    DEPENDS "${input_file_absolute}" ${include_files}
+    DEPENDS "${input_file_absolute}" "${input_file_inlined}" ${include_files}
     COMMENT "Embedding binary source: ${input_file}"
   )
 
