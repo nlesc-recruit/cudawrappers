@@ -140,7 +140,7 @@ function(target_embed_source target input_file)
     COMMAND ${embed_tool} ARGS ${embed_tool_args}
     WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
     DEPENDS "${input_file_absolute}" "${input_file_inlined}" ${include_files}
-    COMMENT "Embedding binary source: ${input_file}"
+    COMMENT "Creating object file for ${input_file}"
   )
 
   if(NOT TARGET ${name})
