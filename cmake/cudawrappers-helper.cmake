@@ -77,7 +77,6 @@ function(inline_local_includes input_file output_file include_files)
   endforeach()
 
   set(output_content "${output_content}\n${input_contents}")
-
   file(WRITE "${output_file}" "${output_content}")
 endfunction()
 
