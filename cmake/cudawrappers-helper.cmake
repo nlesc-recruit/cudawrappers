@@ -62,11 +62,9 @@ extern const unsigned char _binary_${symbol_base}_start[];
 extern const unsigned char _binary_${symbol_base}_end[];
 extern const unsigned int  _binary_${symbol_base}_size;
 
-inline std::string ${input_basename}_source() {
-    return std::string(
+const std::string ${input_basename}_source = std::string(
         reinterpret_cast<const char*>(_binary_${symbol_base}_start),
         reinterpret_cast<const char*>(_binary_${symbol_base}_end));
-}
 
 #endif // ${include_guard}
 "

@@ -34,7 +34,7 @@ TEST_CASE("Test nvrtc::Program", "[program]") {
 #include "tests/kernels/vector_add_kernel.cu.o.h"
 
 TEST_CASE("Test nvrtc::Program embedded source", "[program]") {
-  nvrtc::Program program(vector_add_kernel_source(), "vector_add_kernel.cu");
+  nvrtc::Program program(vector_add_kernel_source, "vector_add_kernel.cu");
 
 #if defined(__HIP__)
   const std::vector<std::string> options = {"-ffast-math"};
