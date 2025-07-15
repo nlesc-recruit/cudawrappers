@@ -10,7 +10,7 @@ include("${CMAKE_CURRENT_LIST_DIR}/inline-common.cmake")
 # Produces:
 #   - A generated inlined source file with all local includes
 #   - A binary object (.o) compiled from it
-#   - A header file exposing _start, _end, _size symbols
+#   - A header file exposing _start, _end, _size symbols and a helper function
 #   - A static library target named after the input file's basename
 #   - Links this static library to the provided target
 #
@@ -58,6 +58,12 @@ function(target_embed_source target_name input_file)
 extern const unsigned char _binary_${symbol_base}_start[];
 extern const unsigned char _binary_${symbol_base}_end[];
 extern const unsigned int  _binary_${symbol_base}_size;
+
+inline std::string ${input_basename}_source() {
+    return std::string(
+        reinterpret_cast<const char*>(_binary_${symbol_base}_start),
+        reinterpret_cast<const char*>(_binary_${symbol_base}_end));
+}
 "
   )
 
