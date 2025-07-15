@@ -51,10 +51,13 @@ function(target_embed_source target_name input_file)
   string(REPLACE "." "_" symbol_base "${output_source_file}")
   string(REPLACE "/" "_" symbol_base "${symbol_base}")
 
+  string(TOUPPER "${input_basename}_H_" include_guard)
   set(header_file "${output_object_file}.h")
   set(header_file "${CMAKE_BINARY_DIR}/${header_file}")
   set(header_content
-      "
+      "#ifndef ${include_guard}
+#define ${include_guard}
+
 extern const unsigned char _binary_${symbol_base}_start[];
 extern const unsigned char _binary_${symbol_base}_end[];
 extern const unsigned int  _binary_${symbol_base}_size;
@@ -64,6 +67,8 @@ inline std::string ${input_basename}_source() {
         reinterpret_cast<const char*>(_binary_${symbol_base}_start),
         reinterpret_cast<const char*>(_binary_${symbol_base}_end));
 }
+
+#endif // ${include_guard}
 "
   )
 
