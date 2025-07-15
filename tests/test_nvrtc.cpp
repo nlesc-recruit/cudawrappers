@@ -31,13 +31,10 @@ TEST_CASE("Test nvrtc::Program", "[program]") {
   }
 }
 
-extern const char _binary_tests_kernels_vector_add_kernel_cu_start,
-    _binary_tests_kernels_vector_add_kernel_cu_end;
+#include "tests/kernels/vector_add_kernel.cu.o.h"
 
 TEST_CASE("Test nvrtc::Program embedded source", "[program]") {
-  const std::string kernel(&_binary_tests_kernels_vector_add_kernel_cu_start,
-                           &_binary_tests_kernels_vector_add_kernel_cu_end);
-  nvrtc::Program program(kernel, "vector_add_kernel.cu");
+  nvrtc::Program program(vector_add_kernel_source, "vector_add_kernel.cu");
 
 #if defined(__HIP__)
   const std::vector<std::string> options = {"-ffast-math"};

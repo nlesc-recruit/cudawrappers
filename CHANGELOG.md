@@ -8,6 +8,7 @@ project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 
 - Added `nvrtc::addNameExpression` and `nvrtc::getLoweredName`
+- Added header file to ease the use of embedded kernel sources
 
 ### Changed
 
