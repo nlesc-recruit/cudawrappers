@@ -39,9 +39,6 @@ function(target_embed_source target_name input_file)
     COMMENT "Inlining all includes of ${input_file}"
   )
 
-  string(REPLACE "." "_" symbol_base "${output_source_file}")
-  string(REPLACE "/" "_" symbol_base "${symbol_base}")
-
   add_custom_command(
     OUTPUT "${output_object_file}"
     COMMAND ${CMAKE_LINKER} -r -b binary -A ${CMAKE_SYSTEM_PROCESSOR} -o
@@ -51,7 +48,11 @@ function(target_embed_source target_name input_file)
     VERBATIM
   )
 
-  set(header_file "${CMAKE_BINARY_DIR}/${output_source_file}.h")
+  string(REPLACE "." "_" symbol_base "${output_source_file}")
+  string(REPLACE "/" "_" symbol_base "${symbol_base}")
+
+  set(header_file "${output_object_file}.h")
+  set(header_file "${CMAKE_BINARY_DIR}/${header_file}")
   set(header_content
       "
 extern const unsigned char _binary_${symbol_base}_start[];
@@ -65,6 +66,6 @@ extern const unsigned int  _binary_${symbol_base}_size;
 
   add_library(${input_basename} STATIC "${output_object_file}")
   set_target_properties(${input_basename} PROPERTIES LINKER_LANGUAGE CXX)
-  target_include_directories(${input_basename} PUBLIC "${CMAKE_BINARY_DIR}")
+  target_include_directories(${target_name} PUBLIC ${CMAKE_BINARY_DIR})
   target_link_libraries(${target_name} PRIVATE ${input_basename})
 endfunction()
