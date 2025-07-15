@@ -30,7 +30,7 @@ function(target_embed_source target_name input_file)
   get_dependencies("${input_path}" all_deps processed_files)
 
   add_custom_command(
-    OUTPUT "${CMAKE_BINARY_DIR}/${output_source_file}"
+    OUTPUT "${output_source_file}"
     COMMAND
       ${CMAKE_COMMAND} -Dinput_file="${input_path}"
       -Doutput_file="${output_source_file}" -Droot_dir="${PROJECT_SOURCE_DIR}"
