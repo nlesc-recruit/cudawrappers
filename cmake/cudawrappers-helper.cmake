@@ -20,7 +20,7 @@ include("${CMAKE_CURRENT_LIST_DIR}/inline-common.cmake")
 function(target_embed_source target_name input_file)
   get_filename_component(input_name "${input_file}" NAME)
   get_filename_component(input_basename "${input_file}" NAME_WE)
-  get_filename_component(input_path "${input_file}" REALPATH)
+  get_filename_component(input_path "${input_file}" ABSOLUTE)
 
   file(RELATIVE_PATH output_source_file "${PROJECT_SOURCE_DIR}" "${input_path}")
   set(output_object_file "${output_source_file}.o")
