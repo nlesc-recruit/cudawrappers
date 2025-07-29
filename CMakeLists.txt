@@ -52,10 +52,12 @@ set(CUDAWRAPPERS_ALL_COMPONENTS cu cufft nvml nvrtc nvtx)
 set(CUDAWRAPPERS_MANDATORY_COMPONENTS cu)
 set(CUDAWRAPPERS_DEFAULT_COMPONENTS cu nvrtc)
 
-set(CUDAWRAPPERS_COMPONENTS
-    "${CUDAWRAPPERS_DEFAULT_COMPONENTS}"
-    CACHE STRING "List of components to build"
-)
+if(NOT DEFINED CUDAWRAPPERS_COMPONENTS)
+  set(CUDAWRAPPERS_COMPONENTS
+      "${CUDAWRAPPERS_DEFAULT_COMPONENTS}"
+      CACHE STRING "List of components to build"
+  )
+endif()
 
 # If 'all' is specified, set to all known components
 list(FIND CUDAWRAPPERS_COMPONENTS "all" _found)
