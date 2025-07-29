@@ -113,12 +113,12 @@ if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
   )
 
   install(
-    FILES
-      ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config-version.cmake
-      ${CMAKE_CURRENT_BINARY_DIR}/cudawrappers-config.cmake
-      ${CMAKE_CURRENT_SOURCE_DIR}/cmake/cudawrappers-helper.cmake
-      ${CMAKE_CURRENT_SOURCE_DIR}/cmake/cudawrappers-dependencies.cmake
-      ${CMAKE_CURRENT_SOURCE_DIR}/cmake/cudawrappers-inline-local-includes.cmake
+    FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config-version.cmake
+          ${CMAKE_CURRENT_BINARY_DIR}/cudawrappers-config.cmake
+          ${CMAKE_CURRENT_SOURCE_DIR}/cmake/cudawrappers-helper.cmake
+          ${CMAKE_CURRENT_SOURCE_DIR}/cmake/cudawrappers-dependencies.cmake
+          ${CMAKE_CURRENT_SOURCE_DIR}/cmake/inline-common.cmake
+          ${CMAKE_CURRENT_SOURCE_DIR}/cmake/inline-local-includes.cmake
     DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
   )
 
