@@ -18,6 +18,8 @@ foreach(component ${CUDAWRAPPERS_COMPONENTS})
   endif()
 endforeach()
 
+set(LINK_LIBRARIES Catch2::Catch2WithMain cudawrappers::cu cudawrappers::nvrtc)
+
 foreach(component ${COMPONENTS})
   if(${CUDAWRAPPERS_BACKEND_HIP})
     set_source_files_properties(test_${component}.cpp PROPERTIES LANGUAGE HIP)
@@ -27,14 +29,11 @@ foreach(component ${COMPONENTS})
     test_${component} PRIVATE "${CMAKE_SOURCE_DIR}/include"
   )
   catch_discover_tests(test_${component})
+  target_link_libraries(test_${component} PUBLIC ${LINK_LIBRARIES})
 endforeach()
 
-set(LINK_LIBRARIES Catch2::Catch2WithMain cudawrappers::cu)
-
-target_link_libraries(test_cu PUBLIC ${LINK_LIBRARIES})
-
 if(CUDAWRAPPERS_BUILD_NVML AND CUDAWRAPPERS_BACKEND_CUDA)
-  target_link_libraries(test_nvml PUBLIC ${LINK_LIBRARIES} cudawrappers::nvml)
+  target_link_libraries(test_nvml PUBLIC cudawrappers::nvml)
 endif()
 
 target_include_directories(
@@ -46,20 +45,9 @@ target_embed_source(test_nvrtc kernels/single_include_kernel.cu)
 target_embed_source(test_nvrtc kernels/recursive_include_kernel.cu)
 
 if(CUDAWRAPPERS_BUILD_CUFFT)
-  target_link_libraries(test_cufft PUBLIC ${LINK_LIBRARIES} cudawrappers::cufft)
-endif()
-
-if(CUDAWRAPPERS_BUILD_NVRTC)
-  target_link_libraries(test_nvrtc PUBLIC ${LINK_LIBRARIES} cudawrappers::nvrtc)
-  target_link_libraries(
-    test_vector_add PUBLIC ${LINK_LIBRARIES} cudawrappers::nvrtc
-  )
-endif()
-
-if(CUDAWRAPPERS_BUILD_NVRTC)
-  target_link_libraries(test_graph PUBLIC ${LINK_LIBRARIES} cudawrappers::nvrtc)
+  target_link_libraries(test_cufft PUBLIC cudawrappers::cufft)
 endif()
 
 if(CUDAWRAPPERS_BUILD_NVTX)
-  target_link_libraries(test_nvtx PUBLIC ${LINK_LIBRARIES} cudawrappers::nvtx)
+  target_link_libraries(test_cufft PUBLIC cudawrappers::nvtx)
 endif()
