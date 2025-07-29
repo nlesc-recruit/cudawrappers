@@ -60,6 +60,12 @@ make -C build
 make -C build install
 ```
 
+You can optionally select what cudawrappers components should be enabled by
+specifying the `CUDAWRAPPERS_COMPONENTS` option. To build all components,
+specify: `-DCUDAWRAPPERS_COMPONENTS=all`. By default, only the `cu` and `nvrtc`
+components are enabled. The other components include: `cufft`, `nvml` (CUDA
+only) and `nvtx`.
+
 ### Enabling HIP Support
 
 To enable HIP:

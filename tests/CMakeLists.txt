@@ -10,10 +10,15 @@ FetchContent_MakeAvailable(Catch2)
 list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/contrib)
 include(Catch)
 
-set(COMPONENTS cu nvrtc cufft vector_add graph nvtx)
-if(${CUDAWRAPPERS_BACKEND_CUDA})
-  list(APPEND COMPONENTS nvml)
-endif()
+set(COMPONENTS ${CUDAWRAPPERS_MANDATORY_COMPONENTS} vector_add graph)
+foreach(component ${CUDAWRAPPERS_COMPONENTS})
+  list(FIND COMPONENTS ${component} _found)
+  if(_found EQUAL -1)
+    list(APPEND COMPONENTS "${component}")
+  endif()
+endforeach()
+
+set(LINK_LIBRARIES Catch2::Catch2WithMain cudawrappers::cu cudawrappers::nvrtc)
 
 foreach(component ${COMPONENTS})
   if(${CUDAWRAPPERS_BACKEND_HIP})
@@ -24,17 +29,12 @@ foreach(component ${COMPONENTS})
     test_${component} PRIVATE "${CMAKE_SOURCE_DIR}/include"
   )
   catch_discover_tests(test_${component})
+  target_link_libraries(test_${component} PUBLIC ${LINK_LIBRARIES})
 endforeach()
 
-set(LINK_LIBRARIES Catch2::Catch2WithMain cudawrappers::cu)
-
-target_link_libraries(test_cu PUBLIC ${LINK_LIBRARIES})
-
-if(${CUDAWRAPPERS_BACKEND_CUDA})
-  target_link_libraries(test_nvml PUBLIC ${LINK_LIBRARIES} cudawrappers::nvml)
+if(CUDAWRAPPERS_BUILD_NVML AND CUDAWRAPPERS_BACKEND_CUDA)
+  target_link_libraries(test_nvml PUBLIC cudawrappers::nvml)
 endif()
-
-target_link_libraries(test_nvrtc PUBLIC ${LINK_LIBRARIES} cudawrappers::nvrtc)
 
 target_include_directories(
   test_nvrtc PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/kernels"
@@ -44,12 +44,10 @@ target_embed_source(test_nvrtc kernels/vector_add_kernel.cu)
 target_embed_source(test_nvrtc kernels/single_include_kernel.cu)
 target_embed_source(test_nvrtc kernels/recursive_include_kernel.cu)
 
-target_link_libraries(test_cufft PUBLIC ${LINK_LIBRARIES} cudawrappers::cufft)
+if(CUDAWRAPPERS_BUILD_CUFFT)
+  target_link_libraries(test_cufft PUBLIC cudawrappers::cufft)
+endif()
 
-target_link_libraries(
-  test_vector_add PUBLIC ${LINK_LIBRARIES} cudawrappers::nvrtc
-)
-
-target_link_libraries(test_graph PUBLIC ${LINK_LIBRARIES} cudawrappers::nvrtc)
-
-target_link_libraries(test_nvtx PUBLIC ${LINK_LIBRARIES} cudawrappers::nvtx)
+if(CUDAWRAPPERS_BUILD_NVTX)
+  target_link_libraries(test_cufft PUBLIC cudawrappers::nvtx)
+endif()

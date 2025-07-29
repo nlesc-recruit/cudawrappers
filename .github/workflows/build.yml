@@ -52,11 +52,13 @@ jobs:
       - name: Build the code in CUDA mode
         shell: bash -el {0}
         run: |
-          cmake -DCUDAWRAPPERS_BUILD_TESTING=True -S . -B build
+          cmake -DCUDAWRAPPERS_BUILD_TESTING=True -S . -B build -DCMAKE_INSTALL_PREFIX=install
           make -C build -j
+          make -C build install
 
       - name: Build the code in HIP mode
         shell: bash -el {0}
         run: |
-          cmake -DCUDAWRAPPERS_BUILD_TESTING=True -DCUDAWRAPPERS_BACKEND=HIP -DAMDGPU_TARGETS=gfx1101 -S . -B build
+          cmake -DCUDAWRAPPERS_BUILD_TESTING=True -DCUDAWRAPPERS_BACKEND=HIP -DAMDGPU_TARGETS=gfx1101 -S . -B build -DCMAKE_INSTALL_PREFIX=install
           make -C build -j
+          make -C build install
