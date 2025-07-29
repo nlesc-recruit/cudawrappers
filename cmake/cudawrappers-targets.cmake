@@ -4,7 +4,6 @@ get_filename_component(
 )
 
 # Define all the individual components that cudawrappers provides
-set(CUDAWRAPPERS_COMPONENTS cu cufft nvml nvrtc nvtx)
 if(${CUDAWRAPPERS_BACKEND_HIP})
   list(APPEND CUDAWRAPPERS_COMPONENTS macros)
   set(LINK_macros hip::host)
