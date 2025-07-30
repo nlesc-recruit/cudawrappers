@@ -67,8 +67,11 @@ endif()
 
 # If HIP backend is used, remove NVML
 if(CUDAWRAPPERS_BACKEND_HIP)
-  message(WARNING "HIP backend is used, removing nvml component.")
-  list(REMOVE_ITEM CUDAWRAPPERS_COMPONENTS nvml)
+  list(FIND CUDAWRAPPERS_COMPONENTS "nvml" _found)
+  if(_found GREATER -1)
+    message(WARNING "HIP backend is used, removing nvml component.")
+    list(REMOVE_ITEM CUDAWRAPPERS_COMPONENTS nvml)
+  endif()
 endif()
 
 # Make sure the mandatory components are always built
