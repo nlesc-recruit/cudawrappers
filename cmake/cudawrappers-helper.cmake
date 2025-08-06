@@ -75,6 +75,8 @@ const std::string ${input_basename}_source = std::string(
 
   add_library(${input_basename} STATIC "${output_object_file}")
   set_target_properties(${input_basename} PROPERTIES LINKER_LANGUAGE CXX)
-  target_include_directories(${target_name} PUBLIC ${CMAKE_BINARY_DIR})
+  target_include_directories(
+    ${target_name} PUBLIC $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}>
+  )
   target_link_libraries(${target_name} PRIVATE ${input_basename})
 endfunction()
