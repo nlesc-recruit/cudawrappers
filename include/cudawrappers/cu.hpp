@@ -1128,6 +1128,10 @@ class Stream : public Wrapper<CUstream> {
     checkCudaCall(cuStreamAddCallback(_obj, callback, userData, flags));
   }
 
+  void launchHostFunc(CUhostFn fn, void *userData = nullptr) {
+    checkCudaCall(cuLaunchHostFunc(_obj, fn, userData));
+  }
+
   void record(Event &event) { checkCudaCall(cuEventRecord(event, _obj)); }
 
 #if !defined(__HIP__)
