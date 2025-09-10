@@ -399,4 +399,12 @@ TEST_CASE("Test cu::Stream", "[stream]") {
     CHECK_NOTHROW(stream.memFreeAsync(mem));
     CHECK_NOTHROW(stream.synchronize());
   }
+
+  SECTION("Test launchHostFunc") {
+    int value = 0;
+    stream.launchHostFunc(
+        +[](void* data) { *static_cast<int*>(data) = 42; }, &value);
+    stream.synchronize();
+    CHECK(value == 42);
+  }
 }
