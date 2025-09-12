@@ -31,7 +31,8 @@ else()
   if(CUDAWRAPPERS_BUILD_NVRTC)
     set(LINK_nvrtc CUDA::cuda_driver CUDA::nvrtc)
   endif()
-  if(CUDAWRAPPERS_BUILD_NVTX)
+  # NVTX 3 is header only, so don't link nvToolsExt
+  if(CUDAWRAPPERS_BUILD_NVTX AND NOT CUDAWRAPPERS_USE_NVTX3)
     set(LINK_nvtx CUDA::nvToolsExt)
   endif()
 endif()
@@ -56,6 +57,10 @@ foreach(component ${CUDAWRAPPERS_COMPONENTS})
     )
   endif()
 endforeach()
+
+if(CUDAWRAPPERS_BUILD_NVTX AND CUDAWRAPPERS_USE_NVTX3)
+  target_compile_definitions(nvtx INTERFACE USE_NVTX3)
+endif()
 
 # Install the header files and export the configuration
 install(
