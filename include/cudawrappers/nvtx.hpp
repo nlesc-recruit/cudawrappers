@@ -2,7 +2,11 @@
 #define NVTX_H
 
 #if !defined(__HIP__)
+#if defined(USE_NVTX3)
+#include <nvtx3/nvToolsExt.h>
+#else
 #include <nvToolsExt.h>
+#endif
 #endif
 
 namespace nvtx {

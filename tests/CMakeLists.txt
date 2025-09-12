@@ -49,5 +49,5 @@ if(CUDAWRAPPERS_BUILD_CUFFT)
 endif()
 
 if(CUDAWRAPPERS_BUILD_NVTX)
-  target_link_libraries(test_cufft PUBLIC cudawrappers::nvtx)
+  target_link_libraries(test_nvtx PUBLIC cudawrappers::nvtx)
 endif()
