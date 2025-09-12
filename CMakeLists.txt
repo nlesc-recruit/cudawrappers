@@ -120,6 +120,7 @@ set(CUDAWRAPPERS_INSTALLED ${CMAKE_PROJECT_NAME} STREQUAL cudawrappers)
 include(cmake/cudawrappers-dependencies.cmake)
 
 # NVTX 2 is deprecated since CUDA 12.8, so we use NVTX 3 instead
+set(CUDAWRAPPERS_USE_NVTX3 False)
 if(CUDAToolkit_VERSION VERSION_GREATER_EQUAL "12.8")
   set(CUDAWRAPPERS_USE_NVTX3 True)
 endif()
