@@ -52,7 +52,16 @@ if(${CUDAWRAPPERS_BACKEND_HIP})
   # Step 4.
   list(APPEND CMAKE_PREFIX_PATH ${HIP_ROOT_DIR})
   set(HIP_MIN_VERSION 6.1)
-  find_package(hip ${HIP_MIN_VERSION} REQUIRED)
+  find_package(hip REQUIRED)
+  # HIP major versions are not necessarily compatible with each other, hence
+  # cmake may not accept a newer major version cudawrappers _is_ compatible, so
+  # the version check is done here instead of inside find_package
+  if(${hip_VERSION_MAJOR}.${hip_VERSION_MINOR} VERSION_LESS ${HIP_MIN_VERSION})
+    message(
+      FATAL_ERROR
+        "cudawrappers requires at least HIP version ${HIP_MIN_VERSION}, found version ${hip_VERSION_MAJOR}.${hip_VERSION_MINOR}.${hip_VERSION_PATCH}"
+    )
+  endif()
   if(CUDAWRAPPERS_BUILD_CUFFT)
     find_package(hipfft QUIET)
     if(NOT hipfft_FOUND)
