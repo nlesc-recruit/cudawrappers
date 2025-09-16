@@ -54,7 +54,7 @@ if(${CUDAWRAPPERS_BACKEND_HIP})
   set(HIP_MIN_VERSION 6.1)
   find_package(hip REQUIRED)
   # HIP major versions are not necessarily compatible with each other, hence
-  # cmake may not accept a newer major version cudawrappers _is_ compatible, so
+  # cmake may not accept a newer major version. cudawrappers _is_ compatible, so
   # the version check is done here instead of inside find_package
   if(${hip_VERSION_MAJOR}.${hip_VERSION_MINOR} VERSION_LESS ${HIP_MIN_VERSION})
     message(
