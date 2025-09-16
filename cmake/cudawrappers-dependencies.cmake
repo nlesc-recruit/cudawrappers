@@ -59,8 +59,16 @@ if(${CUDAWRAPPERS_BACKEND_HIP})
   if(${hip_VERSION_MAJOR}.${hip_VERSION_MINOR} VERSION_LESS ${HIP_MIN_VERSION})
     message(
       FATAL_ERROR
-        "cudawrappers requires at least HIP version ${HIP_MIN_VERSION}, found version ${hip_VERSION_MAJOR}.${hip_VERSION_MINOR}.${hip_VERSION_PATCH}"
+        "cudawrappers requires at least HIP version ${HIP_MIN_VERSION}, "
+        "found version ${hip_VERSION_MAJOR}.${hip_VERSION_MINOR}.${hip_VERSION_PATCH}"
     )
+  endif()
+  # hiprtc is a separate library starting with HIP 7
+  if(${hip_VERSION_MAJOR} GREATER_EQUAL 7)
+    find_package(hiprtc REQUIRED)
+    set(CUDAWRAPPERS_LINK_HIPRTC True)
+  else()
+    set(CUDAWRAPPERS_LINK_HIPRTC False)
   endif()
   if(CUDAWRAPPERS_BUILD_CUFFT)
     find_package(hipfft QUIET)
