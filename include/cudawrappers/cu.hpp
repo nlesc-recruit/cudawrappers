@@ -54,7 +54,7 @@ inline int driverGetVersion() {
 }
 
 inline void memcpyHtoD(CUdeviceptr dst, const void *src, size_t size) {
-#if defined(__HIP__)
+#if defined(__HIP__) && HIP_VERSION_MAJOR < 7
   // const_cast is a temp fix for https://github.com/ROCm/ROCm/issues/2977
   checkCudaCall(cuMemcpyHtoD(dst, const_cast<void *>(src), size));
 #else
@@ -919,10 +919,7 @@ class Stream : public Wrapper<CUstream> {
 
   void memcpyHtoHAsync(void *dstPtr, const void *srcPtr, size_t size) {
 #if defined(__HIP__)
-    checkCudaCall(hipMemcpyAsync(
-        reinterpret_cast<CUdeviceptr>(dstPtr),
-        reinterpret_cast<CUdeviceptr>(const_cast<void *>(srcPtr)), size,
-        hipMemcpyDefault, _obj));
+    checkCudaCall(hipMemcpyAsync(dstPtr, srcPtr, size, hipMemcpyDefault, _obj));
 #else
     checkCudaCall(cuMemcpyAsync(reinterpret_cast<CUdeviceptr>(dstPtr),
                                 reinterpret_cast<CUdeviceptr>(srcPtr), size,
@@ -931,7 +928,7 @@ class Stream : public Wrapper<CUstream> {
   }
 
   void memcpyHtoDAsync(DeviceMemory &devPtr, const void *hostPtr, size_t size) {
-#if defined(__HIP__)
+#if defined(__HIP__) && HIP_VERSION_MAJOR < 7
     checkCudaCall(
         hipMemcpyHtoDAsync(devPtr, const_cast<void *>(hostPtr), size, _obj));
 #else
