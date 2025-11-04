@@ -1052,13 +1052,8 @@ class Stream : public Wrapper<CUstream> {
     memLocation.type = CU_MEM_LOCATION_TYPE_DEVICE;
     memLocation.id = 0;
 
-    CUdevice device;
-    CUcontext context;
-    checkCudaCall(cuCtxGetCurrent(&context));
-    checkCudaCall(cuCtxGetDevice(&device));
-
     int ordinal;
-    checkCudaCall(cuDeviceGet(&ordinal, device));
+    checkCudaCall(cuDeviceGet(&ordinal, dstDevice));
     checkCudaCall(cuMemPrefetchAsync(devPtr, size, memLocation, 0, _obj));
 #else
     checkCudaCall(cuMemPrefetchAsync(devPtr, size, dstDevice, _obj));
