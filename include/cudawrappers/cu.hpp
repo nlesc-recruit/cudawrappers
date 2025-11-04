@@ -229,7 +229,12 @@ class Context : public Wrapper<CUcontext> {
 
   Context(int flags, Device &device) : _device(device) {
 #if !defined(__HIP__)
+#if CUDA_VERSION >= 13000
+    CUctxCreateParams ctxCreateParams{0};
+    checkCudaCall(cuCtxCreate(&_obj, &ctxCreateParams, flags, device));
+#else
     checkCudaCall(cuCtxCreate(&_obj, flags, device));
+#endif
     manager =
         std::shared_ptr<CUcontext>(new CUcontext(_obj), [](CUcontext *ptr) {
           if (*ptr) cuCtxDestroy(*ptr);
@@ -1031,11 +1036,25 @@ class Stream : public Wrapper<CUstream> {
   }
 
   void memPrefetchAsync(DeviceMemory &devPtr, size_t size) {
+#if CUDA_VERSION >= 13000
+    CUmemLocation memLocation;
+    memLocation.type = CU_MEM_LOCATION_TYPE_HOST;
+    memLocation.id = 0;
+    checkCudaCall(cuMemPrefetchAsync(devPtr, size, memLocation, 0, _obj));
+#else
     checkCudaCall(cuMemPrefetchAsync(devPtr, size, CU_DEVICE_CPU, _obj));
+#endif
   }
 
   void memPrefetchAsync(DeviceMemory &devPtr, size_t size, Device &dstDevice) {
+#if CUDA_VERSION >= 13000
+    CUmemLocation memLocation;
+    memLocation.type = CU_MEM_LOCATION_TYPE_DEVICE;
+    memLocation.id = 0;
+    checkCudaCall(cuMemPrefetchAsync(devPtr, size, memLocation, 0, _obj));
+#else
     checkCudaCall(cuMemPrefetchAsync(devPtr, size, dstDevice, _obj));
+#endif
   }
 
   void memsetAsync(DeviceMemory &devPtr, unsigned char value, size_t size) {

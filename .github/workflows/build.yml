@@ -5,60 +5,74 @@ on:
   workflow_dispatch:
 
 jobs:
-  linting:
-    name: run
-    runs-on: ubuntu-22.04
-    env:
-        cuda-version: "12.6.1"
-        hip-version: "6.1.3"
-        amdgpu-version: "6.1.60103-1_all"
+  build-cuda:
+    name: build (CUDA ${{ matrix.cuda-version }})
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        cuda-version: ["12.9.1", "13.0.2"]
     steps:
-
-      - name: Check out a copy of the repository
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
-      - name: Show some relevant env vars
+      - name: Show GitHub env vars
         run: |
           echo "GITHUB_BASE_REF = $GITHUB_BASE_REF"
           echo "GITHUB_HEAD_REF = $GITHUB_HEAD_REF"
           echo "GITHUB_REF_NAME = $GITHUB_REF_NAME"
 
-      - name: Install cuda
-        uses: Jimver/cuda-toolkit@v0.2.19
+      - name: Install CUDA ${{ matrix.cuda-version }}
+        uses: Jimver/cuda-toolkit@v0.2.29
         with:
-          cuda: ${{ env.cuda-version }}
+          cuda: ${{ matrix.cuda-version }}
           method: "network"
           sub-packages: '["runtime", "nvcc", "nvml-dev", "nvrtc-dev", "nvtx"]'
           non-cuda-sub-packages: '["libcufft-dev"]'
           linux-local-args: '["--toolkit"]'
 
+      - name: Show tool versions
+        run: |
+          g++ --version
+          cmake --version
+          nvcc --version
+
+      - name: Build in CUDA mode
+        shell: bash -el {0}
+        run: |
+          cmake -DCUDAWRAPPERS_BUILD_TESTING=True -S . -B build -DCMAKE_INSTALL_PREFIX=install
+          cmake --build build -j
+          cmake --install build
+
+  build-hip:
+    name: build (HIP)
+    runs-on: ubuntu-24.04
+    env:
+      hip-version: "6.4.4"
+      amdgpu-version: "6.4.60404-1_all"
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
       - name: Install ROCm and HIP
         shell: bash -el {0}
         run: |
-          wget https://repo.radeon.com/amdgpu-install/${{ env.hip-version }}/ubuntu/jammy/amdgpu-install_${{ env.amdgpu-version }}.deb
+          wget https://repo.radeon.com/amdgpu-install/${{ env.hip-version }}/ubuntu/noble/amdgpu-install_${{ env.amdgpu-version }}.deb
           sudo apt -y install ./amdgpu-install_${{ env.amdgpu-version }}.deb
           sudo apt update
           sudo apt -y install rocm-hip-runtime-dev hipfft-dev
 
       - name: Show tool versions
         run: |
-           echo "nvcc: $(nvcc --version)"
-           echo "hipcc: $(/opt/rocm/bin/hipcc --version)"
-           echo "g++: $(g++ --version)"
-           echo "cmake: $(cmake --version)"
+          g++ --version
+          cmake --version
+          /opt/rocm/bin/hipcc --version
 
-      - name: Build the code in CUDA mode
-        shell: bash -el {0}
-        run: |
-          cmake -DCUDAWRAPPERS_BUILD_TESTING=True -S . -B build -DCMAKE_INSTALL_PREFIX=install
-          make -C build -j
-          make -C build install
-
-      - name: Build the code in HIP mode
+      - name: Build in HIP mode
         shell: bash -el {0}
         run: |
           cmake -DCUDAWRAPPERS_BUILD_TESTING=True -DCUDAWRAPPERS_BACKEND=HIP -DAMDGPU_TARGETS=gfx1101 -S . -B build -DCMAKE_INSTALL_PREFIX=install
-          make -C build -j
-          make -C build install
+          cmake --build build -j
+          cmake --install build
