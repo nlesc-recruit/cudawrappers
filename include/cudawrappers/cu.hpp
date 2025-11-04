@@ -1037,7 +1037,7 @@ class Stream : public Wrapper<CUstream> {
 
   void memPrefetchAsync(DeviceMemory &devPtr, size_t size) {
 #if CUDA_VERSION >= 13000
-    CUmemLocation memLocation{0};
+    CUmemLocation memLocation;
     memLocation.type = CU_MEM_LOCATION_TYPE_HOST;
     memLocation.id = 0;
     checkCudaCall(cuMemPrefetchAsync(devPtr, size, memLocation, 0, _obj));
@@ -1048,7 +1048,7 @@ class Stream : public Wrapper<CUstream> {
 
   void memPrefetchAsync(DeviceMemory &devPtr, size_t size, Device &dstDevice) {
 #if CUDA_VERSION >= 13000
-    CUmemLocation memLocation{0};
+    CUmemLocation memLocation;
     memLocation.type = CU_MEM_LOCATION_TYPE_DEVICE;
     memLocation.id = 0;
 
