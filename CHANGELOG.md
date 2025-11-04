@@ -19,6 +19,7 @@ project adheres to [Semantic Versioning](http://semver.org/).
 - Changed `cu::Device` constructor to accept `unsigned int` instead of `int`
 - Use NVTX 3 for CUDA >= 12.8
 - Use CI build to Ubuntu 24.04, CUDA to 12.9 and 13.0, HIP to 6.4
+- Preload `libnvrtc-builtins.so` in `nvrtc::Program` constructor
 
 ## [0.9.0] - 2025-03-18
 
