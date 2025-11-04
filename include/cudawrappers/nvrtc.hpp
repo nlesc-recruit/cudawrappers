@@ -83,7 +83,9 @@ class Program {
           const std::vector<std::string> &headers = std::vector<std::string>(),
           const std::vector<std::string> &includeNames =
               std::vector<std::string>()) {
-    dlopen("libnvrtc-builtins.so", RTLD_LAZY);
+    if (!dlopen("libnvrtc-builtins.so", RTLD_LAZY)) {
+      throw std::runtime_error("Failed to load libnvrtc-builtins.so");
+    }
     std::vector<const char *> c_headers;
     std::transform(headers.begin(), headers.end(),
                    std::back_inserter(c_headers),
