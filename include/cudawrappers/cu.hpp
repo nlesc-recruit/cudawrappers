@@ -230,7 +230,7 @@ class Context : public Wrapper<CUcontext> {
   Context(int flags, Device &device) : _device(device) {
 #if !defined(__HIP__)
 #if CUDA_VERSION >= 13000
-    CUctxCreateParams ctxCreateParams{};
+    CUctxCreateParams ctxCreateParams{0};
     checkCudaCall(cuCtxCreate(&_obj, &ctxCreateParams, flags, device));
 #else
     checkCudaCall(cuCtxCreate(&_obj, flags, device));
@@ -1037,7 +1037,7 @@ class Stream : public Wrapper<CUstream> {
 
   void memPrefetchAsync(DeviceMemory &devPtr, size_t size) {
 #if CUDA_VERSION >= 13000
-    CUmemLocation memLocation;
+    CUmemLocation memLocation{0};
     memLocation.type = CU_MEM_LOCATION_TYPE_HOST;
     memLocation.id = 0;
     checkCudaCall(cuMemPrefetchAsync(devPtr, size, memLocation, 0, _obj));
@@ -1048,7 +1048,7 @@ class Stream : public Wrapper<CUstream> {
 
   void memPrefetchAsync(DeviceMemory &devPtr, size_t size, Device &dstDevice) {
 #if CUDA_VERSION >= 13000
-    CUmemLocation memLocation;
+    CUmemLocation memLocation{0};
     memLocation.type = CU_MEM_LOCATION_TYPE_DEVICE;
     memLocation.id = 0;
 
