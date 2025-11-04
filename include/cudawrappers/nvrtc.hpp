@@ -1,5 +1,6 @@
 #if !defined NVRTC_H
 #define NVRTC_H
+#include <dlfcn.h>
 #include <link.h>
 #include <sys/stat.h>
 
@@ -82,6 +83,7 @@ class Program {
           const std::vector<std::string> &headers = std::vector<std::string>(),
           const std::vector<std::string> &includeNames =
               std::vector<std::string>()) {
+    dlopen("libnvrtc-builtins.so", RTLD_LAZY);
     std::vector<const char *> c_headers;
     std::transform(headers.begin(), headers.end(),
                    std::back_inserter(c_headers),
