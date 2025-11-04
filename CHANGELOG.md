@@ -17,6 +17,7 @@ project adheres to [Semantic Versioning](http://semver.org/).
 - Reimplementation of `inline_local_includes` with one CMake file
 - Changed `cu::Device` constructor to accept `unsigned int` instead of `int`
 - Use NVTX 3 for CUDA >= 12.8
+- Preload `libnvrtc-builtins.so` in `nvrtc::Program` constructor
 
 ## [0.9.0] - 2025-03-18
 
