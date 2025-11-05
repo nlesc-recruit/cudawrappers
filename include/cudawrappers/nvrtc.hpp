@@ -83,7 +83,7 @@ class Program {
           const std::vector<std::string> &headers = std::vector<std::string>(),
           const std::vector<std::string> &includeNames =
               std::vector<std::string>()) {
-#if defined(__HIP__)
+#if !defined(__HIP__)
     if (!dlopen("libnvrtc-builtins.so", RTLD_LAZY)) {
       throw std::runtime_error("Failed to load libnvrtc-builtins.so");
     }
