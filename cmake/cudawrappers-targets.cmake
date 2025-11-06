@@ -32,7 +32,7 @@ else()
     set(LINK_nvml CUDA::cuda_driver CUDA::nvml)
   endif()
   if(CUDAWRAPPERS_BUILD_NVRTC)
-    set(LINK_nvrtc CUDA::cuda_driver CUDA::nvrtc)
+    set(LINK_nvrtc CUDA::cuda_driver CUDA::nvrtc ${CMAKE_DL_LIBS})
   endif()
   # NVTX 3 is header only, so don't link nvToolsExt
   if(CUDAWRAPPERS_BUILD_NVTX AND NOT CUDAWRAPPERS_USE_NVTX3)
