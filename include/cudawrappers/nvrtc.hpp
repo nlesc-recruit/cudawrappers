@@ -40,54 +40,6 @@ inline void checkNvrtcCall(nvrtcResult result) {
   if (result != NVRTC_SUCCESS) throw Error(result);
 }
 
-inline std::string findIncludePath() {
-  std::string path;
-
-  if (dl_iterate_phdr(
-          [](struct dl_phdr_info *info, size_t, void *arg) -> int {
-            std::string &path = *static_cast<std::string *>(arg);
-            path = info->dlpi_name;
-#if defined(__HIP__)
-            // HIPRTC symbols are also in libamdhip64.so, although they will be
-            // removed from there see
-            // https://rocm.docs.amd.com/projects/HIP/en/docs-6.1.0/how-to/hip_rtc.html#deprecation-notice
-            // check both libraries for now, as linking with hiprtc is not yet
-            // required
-            return (path.find("libhiprtc.so") != std::string::npos) |
-                   (path.find("libamdhip64.so") != std::string::npos);
-#else
-            return path.find("libnvrtc.so") != std::string::npos;
-#endif
-          },
-          &path))
-    for (size_t pos; (pos = path.find_last_of("/")) != std::string::npos;) {
-      path.erase(pos);  // remove last part of path
-
-      struct stat buffer;
-#if defined(__HIP__)
-      const std::string filename = path + "/include/hip/hip_runtime.h";
-#else
-      const std::string filename = path + "/include/cuda.h";
-#endif
-      if (stat(filename.c_str(), &buffer) == 0) {
-#if CUDA_VERSION >= 13000
-        // From CUDA version 13, some folders in the /include/cuda have been
-        // moved to /include/cuda/cccl To ensure that packages depending on
-        // nxrtc do not break, for instance by using <cuda/pipeline> the CCCL
-        // path will also be inserted.
-        const std::string cccl_path(path + "/include/cccl");
-
-        if (stat(cccl_path.c_str(), &buffer) == 0) {
-          return path + "/include -I" + cccl_path;
-        }
-#endif
-        return path + "/include";
-      }
-    }
-
-  throw std::runtime_error("Could not find NVRTC include path");
-}
-
 inline std::vector<std::string> findIncludePaths() {
   std::string path;
 
@@ -134,6 +86,22 @@ inline std::vector<std::string> findIncludePaths() {
     }
 
   throw std::runtime_error("Could not find NVRTC include paths");
+}
+
+inline std::string findIncludePath() {
+  std::vector<std::string> paths = findIncludePaths();
+
+  if (paths.empty()) {
+    throw std::runtime_error("Could not find NVRTC include path");
+  }
+
+  // Join paths for backward compatibility
+  std::string result = paths[0];
+  for (size_t i = 1; i < paths.size(); ++i) {
+    result += " -I" + paths[i];
+  }
+
+  return result;
 }
 
 class Program {
