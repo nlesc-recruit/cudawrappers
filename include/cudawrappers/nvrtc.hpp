@@ -40,7 +40,7 @@ inline void checkNvrtcCall(nvrtcResult result) {
   if (result != NVRTC_SUCCESS) throw Error(result);
 }
 
-inline std::string findIncludePath() {
+inline std::vector<std::string> findIncludePaths() {
   std::string path;
 
   if (dl_iterate_phdr(
@@ -70,11 +70,38 @@ inline std::string findIncludePath() {
       const std::string filename = path + "/include/cuda.h";
 #endif
       if (stat(filename.c_str(), &buffer) == 0) {
-        return path + "/include";
+        std::vector<std::string> paths;
+        paths.emplace_back(path + "/include");
+
+#if CUDA_VERSION >= 13000
+        const std::string cccl_path(path + "/include/cccl");
+
+        if (stat(cccl_path.c_str(), &buffer) == 0) {
+          paths.push_back(cccl_path);
+        }
+#endif
+
+        return paths;
       }
     }
 
-  throw std::runtime_error("Could not find NVRTC include path");
+  throw std::runtime_error("Could not find NVRTC include paths");
+}
+
+inline std::string findIncludePath() {
+  std::vector<std::string> paths = findIncludePaths();
+
+  if (paths.empty()) {
+    throw std::runtime_error("Could not find NVRTC include path");
+  }
+
+  // Join paths for backward compatibility
+  std::string result = paths[0];
+  for (size_t i = 1; i < paths.size(); ++i) {
+    result += " -I" + paths[i];
+  }
+
+  return result;
 }
 
 class Program {
