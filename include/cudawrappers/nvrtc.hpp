@@ -72,7 +72,7 @@ inline std::string findIncludePath() {
       if (stat(filename.c_str(), &buffer) == 0) {
 #if CUDA_VERSION >= 13000
         // From CUDA version 13, some folders in the /include/cuda have been
-        // moved to /include/cccl/cuda. To ensure that packages depending on
+        // moved to /include/cuda/cccl To ensure that packages depending on
         // nxrtc do not break, for instance by using <cuda/pipeline> the CCCL
         // path will also be inserted.
         const std::string cccl_path(path + "/include/cccl");
