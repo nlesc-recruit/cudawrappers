@@ -82,4 +82,17 @@ TEST_CASE("Test nvrtc::Program recursively inlined header", "[program]") {
 TEST_CASE("Test nvrtc::findIncludePath", "[helper]") {
   const std::string path = nvrtc::findIncludePath();
   CHECK(path.find("include") != std::string::npos);
+
+#if CUDA_VERSION >= 13000
+  CHECK(path.find("include/cccl") != std::string::npos);
+#endif
+}
+
+TEST_CASE("Test nvrtc::findIncludePaths", "[helper]") {
+  const std::vector<std::string> paths = nvrtc::findIncludePaths();
+  CHECK(paths.size() > 0);
+
+  for (const std::string& path : paths) {
+    CHECK(path.find("include") != std::string::npos);
+  }
 }

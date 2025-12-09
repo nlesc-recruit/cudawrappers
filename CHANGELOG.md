@@ -12,6 +12,7 @@ project adheres to [Semantic Versioning](http://semver.org/).
 - Added `CUDAWRAPPERS_COMPONENTS` CMake option
 - Added `cu::Stream::launchHostFunc`
 - Added support for CUDA 13
+- Added `nvrtc::findIncludePaths`
 
 ### Changed
 
@@ -20,6 +21,8 @@ project adheres to [Semantic Versioning](http://semver.org/).
 - Use NVTX 3 for CUDA >= 12.8
 - Use CI build to Ubuntu 24.04, CUDA to 12.9 and 13.0, HIP to 6.4
 - Preload `libnvrtc-builtins.so` in `nvrtc::Program` constructor
+- `nvrtc::findIncludePath` now appends `/include/cccl` to the returned path when
+  CUDA ≥ 13.0
 
 ## [0.9.0] - 2025-03-18
 
