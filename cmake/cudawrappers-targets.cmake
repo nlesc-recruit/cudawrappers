@@ -61,10 +61,6 @@ foreach(component ${CUDAWRAPPERS_COMPONENTS})
   endif()
 endforeach()
 
-if(CUDAWRAPPERS_BUILD_NVTX AND CUDAWRAPPERS_USE_NVTX3)
-  target_compile_definitions(nvtx INTERFACE USE_NVTX3)
-endif()
-
 # Install the header files and export the configuration
 install(
   TARGETS ${CUDAWRAPPERS_COMPONENTS}

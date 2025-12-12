@@ -51,6 +51,7 @@ lib/*
 bin/*
 test/test_runner
 *.user*
+include/cudawrappers/config.h
 
 # Visual Studio work directory
 .vs/

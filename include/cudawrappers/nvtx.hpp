@@ -1,8 +1,10 @@
 #if !defined NVTX_H
 #define NVTX_H
 
+#include <cudawrappers/config.h>
+
 #if !defined(__HIP__)
-#if defined(USE_NVTX3)
+#if defined(CUDAWRAPPERS_USE_NVTX3)
 #include <nvtx3/nvToolsExt.h>
 #else
 #include <nvToolsExt.h>
