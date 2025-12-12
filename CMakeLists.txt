@@ -123,10 +123,10 @@ include(cmake/cudawrappers-dependencies.cmake)
 if(CUDAToolkit_VERSION VERSION_GREATER_EQUAL "12.8" AND CUDAWRAPPERS_BUILD_NVTX)
   set(CUDAWRAPPERS_USE_NVTX3 True)
 endif()
-set(CUDAWRAPPERS_CONFIG_FILE "${CMAKE_CURRENT_SOURCE_DIR}/include/cudawrappers/config.h")
-configure_file(
-  cmake/cudawrappers-config.h.in
-  ${CUDAWRAPPERS_CONFIG_FILE})
+set(CUDAWRAPPERS_CONFIG_FILE
+    "${CMAKE_CURRENT_SOURCE_DIR}/include/cudawrappers/config.h"
+)
+configure_file(cmake/cudawrappers-config.h.in ${CUDAWRAPPERS_CONFIG_FILE})
 install(FILES ${CUDAWRAPPERS_CONFIG_FILE} DESTINATION include/cudawrappers)
 
 # Update the final list of components in the cache
