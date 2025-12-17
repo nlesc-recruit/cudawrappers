@@ -457,7 +457,7 @@ class Module : public Wrapper<CUmodule> {
     std::vector<CUjit_option> keys;
     std::vector<void *> values;
 
-    for (const std::pair<CUjit_option, void *> &i : options) {
+    for (const auto &i : options) {
       keys.push_back(i.first);
       values.push_back(i.second);
     }
