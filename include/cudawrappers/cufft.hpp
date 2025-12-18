@@ -13,68 +13,15 @@
 
 #include <array>
 #include <exception>
+#include <magic_enum/magic_enum.hpp>
 
 #include "cudawrappers/cu.hpp"
 
 /*
- * Error handling helper function, copied from cuda-samples Common/helper_cuda.h
+ * Error handling helper function
  */
-static const char *_cudaGetErrorEnum(cufftResult error) {
-  switch (error) {
-    case CUFFT_SUCCESS:
-      return "CUFFT_SUCCESS";
-
-    case CUFFT_INVALID_PLAN:
-      return "CUFFT_INVALID_PLAN";
-
-    case CUFFT_ALLOC_FAILED:
-      return "CUFFT_ALLOC_FAILED";
-
-    case CUFFT_INVALID_TYPE:
-      return "CUFFT_INVALID_TYPE";
-
-    case CUFFT_INVALID_VALUE:
-      return "CUFFT_INVALID_VALUE";
-
-    case CUFFT_INTERNAL_ERROR:
-      return "CUFFT_INTERNAL_ERROR";
-
-    case CUFFT_EXEC_FAILED:
-      return "CUFFT_EXEC_FAILED";
-
-    case CUFFT_SETUP_FAILED:
-      return "CUFFT_SETUP_FAILED";
-
-    case CUFFT_INVALID_SIZE:
-      return "CUFFT_INVALID_SIZE";
-
-    case CUFFT_UNALIGNED_DATA:
-      return "CUFFT_UNALIGNED_DATA";
-
-#if CUDA_VERSION < 13000
-    case CUFFT_INCOMPLETE_PARAMETER_LIST:
-      return "CUFFT_INCOMPLETE_PARAMETER_LIST";
-#endif
-
-    case CUFFT_INVALID_DEVICE:
-      return "CUFFT_INVALID_DEVICE";
-
-#if CUDA_VERSION < 13000
-    case CUFFT_PARSE_ERROR:
-      return "CUFFT_PARSE_ERROR";
-#endif
-
-    case CUFFT_NO_WORKSPACE:
-      return "CUFFT_NO_WORKSPACE";
-
-    case CUFFT_NOT_IMPLEMENTED:
-      return "CUFFT_NOT_IMPLEMENTED";
-
-    case CUFFT_NOT_SUPPORTED:
-      return "CUFFT_NOT_SUPPORTED";
-  }
-
-  return "<unknown>";
+static std::string _cudaGetErrorEnum(cufftResult_t error) {
+  return std::string(magic_enum::enum_name(error));
 }
 
 namespace cufft {
@@ -87,13 +34,15 @@ class Error : public std::exception {
   explicit Error(cufftResult result) : result_(result) {}
 
   const char *what() const noexcept override {
-    return _cudaGetErrorEnum(result_);
+    message_ = _cudaGetErrorEnum(result_);
+    return message_.c_str();
   }
 
   operator cufftResult() const { return result_; }
 
  private:
   cufftResult result_;
+  mutable std::string message_ = "";
 };
 
 /*
