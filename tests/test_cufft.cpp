@@ -75,7 +75,7 @@ TEST_CASE("Test 1D FFT", "[FFT1D]") {
     generateSignal(static_cast<cufftComplex *>(h_in), size, patchSize, {1, 1});
     stream.memcpyHtoDAsync(d_in, h_in, arraySize);
 
-    cufft::FFT1D<CUDA_C_32F> fft{size};
+    cufft::FFT1D<CUDA_C_32F> fft(size);
     fft.setStream(stream);
 
     fft.execute(d_in, d_out, CUFFT_FORWARD);
@@ -101,7 +101,7 @@ TEST_CASE("Test 1D FFT", "[FFT1D]") {
     generateSignal(static_cast<half2 *>(h_in), size, patchSize, {0.1, 0.1});
     stream.memcpyHtoDAsync(d_in, h_in, arraySize);
 
-    cufft::FFT1D<CUDA_C_16F> fft{size};
+    cufft::FFT1D<CUDA_C_16F> fft(size);
     fft.setStream(stream);
 
     fft.execute(d_in, d_out, CUFFT_FORWARD);
@@ -167,7 +167,7 @@ TEST_CASE("Test 2D FFT", "[FFT2D]") {
                    {1, 1});
     stream.memcpyHtoDAsync(d_in, h_in, arraySize);
 
-    cufft::FFT2D<CUDA_C_32F> fft{height, width};
+    cufft::FFT2D<CUDA_C_32F> fft(height, width);
     fft.setStream(stream);
 
     fft.execute(d_in, d_out, CUFFT_FORWARD);
@@ -200,7 +200,7 @@ TEST_CASE("Test 2D FFT", "[FFT2D]") {
                    patchSize, {2, 2});
     stream.memcpyHtoDAsync(d_in, h_in, arraySize);
 
-    cufft::FFT2D<CUDA_C_32F> fft{height, width, stride, dist, batch};
+    cufft::FFT2D<CUDA_C_32F> fft(height, width, stride, dist, batch);
     fft.setStream(stream);
 
     fft.execute(d_in, d_out, CUFFT_FORWARD);
@@ -227,7 +227,7 @@ TEST_CASE("Test 2D FFT", "[FFT2D]") {
                    {0.1, 0.1});
     stream.memcpyHtoDAsync(d_in, h_in, arraySize);
 
-    cufft::FFT2D<CUDA_C_16F> fft{height, width};
+    cufft::FFT2D<CUDA_C_16F> fft(height, width);
     fft.setStream(stream);
 
     fft.execute(d_in, d_out, CUFFT_FORWARD);
@@ -240,4 +240,12 @@ TEST_CASE("Test 2D FFT", "[FFT2D]") {
     scaleSignal(out_ptr, out_ptr, height * width, float(height * width));
     compare(out_ptr, in_ptr, height * width);
   }
+}
+
+TEST_CASE("Test erorr messages", "[Error]") {
+  CHECK_THROWS_WITH(throw cufft::Error(CUFFT_SUCCESS), "CUFFT_SUCCESS");
+  CHECK_THROWS_WITH(throw cufft::Error(CUFFT_INVALID_PLAN),
+                    "CUFFT_INVALID_PLAN");
+  CHECK_THROWS_WITH(throw cufft::Error(CUFFT_ALLOC_FAILED),
+                    "CUFFT_ALLOC_FAILED");
 }
