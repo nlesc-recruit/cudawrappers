@@ -41,7 +41,7 @@ jobs:
       - name: Build in CUDA mode
         shell: bash -el {0}
         run: |
-          cmake -DCUDAWRAPPERS_BUILD_TESTING=True -S . -B build -DCMAKE_INSTALL_PREFIX=install
+          cmake -DCUDAWRAPPERS_BUILD_TESTING=True -DCUDAWRAPPERS_COMPONENTS='cu;cufft;nvml;nvrtc' -S . -B build -DCMAKE_INSTALL_PREFIX=install
           cmake --build build -j
           cmake --install build
 
@@ -73,6 +73,6 @@ jobs:
       - name: Build in HIP mode
         shell: bash -el {0}
         run: |
-          cmake -DCUDAWRAPPERS_BUILD_TESTING=True -DCUDAWRAPPERS_BACKEND=HIP -DAMDGPU_TARGETS=gfx1101 -S . -B build -DCMAKE_INSTALL_PREFIX=install
+          cmake -DCUDAWRAPPERS_BUILD_TESTING=True -DCUDAWRAPPERS_COMPONENTS='cu;cufft;nvrtc' -DCUDAWRAPPERS_BACKEND=HIP -DAMDGPU_TARGETS=gfx1101 -S . -B build -DCMAKE_INSTALL_PREFIX=install
           cmake --build build -j
           cmake --install build
