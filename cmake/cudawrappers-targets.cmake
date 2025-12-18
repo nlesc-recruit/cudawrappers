@@ -61,6 +61,18 @@ foreach(component ${CUDAWRAPPERS_COMPONENTS})
   endif()
 endforeach()
 
+if(CUDAWRAPPERS_BUILD_CUFFT)
+  set(MAGIC_ENUM_OPT_INSTALL TRUE)
+  FetchContent_Declare(
+    magic_enum
+    GIT_REPOSITORY https://github.com/Neargye/magic_enum.git
+    GIT_TAG v0.9.7
+  )
+
+  FetchContent_MakeAvailable(magic_enum)
+  target_link_libraries(cufft INTERFACE magic_enum)
+endif()
+
 # Install the header files and export the configuration
 install(
   TARGETS ${CUDAWRAPPERS_COMPONENTS}
