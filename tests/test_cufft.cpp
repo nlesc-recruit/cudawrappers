@@ -241,3 +241,11 @@ TEST_CASE("Test 2D FFT", "[FFT2D]") {
     compare(out_ptr, in_ptr, height * width);
   }
 }
+
+TEST_CASE("Test erorr messages", "[Error]") {
+  CHECK_THROWS_WITH(throw cufft::Error(CUFFT_SUCCESS), "CUFFT_SUCCESS");
+  CHECK_THROWS_WITH(throw cufft::Error(CUFFT_INVALID_PLAN),
+                    "CUFFT_INVALID_PLAN");
+  CHECK_THROWS_WITH(throw cufft::Error(CUFFT_ALLOC_FAILED),
+                    "CUFFT_ALLOC_FAILED");
+}
