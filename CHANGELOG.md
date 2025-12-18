@@ -23,6 +23,7 @@ project adheres to [Semantic Versioning](http://semver.org/).
 - Preload `libnvrtc-builtins.so` in `nvrtc::Program` constructor
 - `nvrtc::findIncludePath` now appends `/include/cccl` to the returned path when
   CUDA ≥ 13.0
+- Use `magic_enum` to handle `cufftResult_t` to string translation
 
 ## [0.9.0] - 2025-03-18
 
