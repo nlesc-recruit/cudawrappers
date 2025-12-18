@@ -59,7 +59,11 @@ inline void checkNvrtcCall(nvrtcResult result) {
 }
 
 inline std::vector<std::string> findIncludePaths() {
+#if defined(__HIP__)
+  std::string path = HIP_INCLUDE_DIRS;
+#else
   std::string path = CUDA_INCLUDE_DIRS;
+#endif
 
   std::vector<std::string> paths = tokenize(path, ";");
 
