@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <cstddef>
 #include <exception>
+#include <filesystem>
 #include <fstream>
 #include <iterator>
 #include <stdexcept>
@@ -22,6 +23,23 @@
 
 #include <cudawrappers/macros.hpp>
 #endif
+#include <cudawrappers/config.h>
+namespace {
+std::vector<std::string> tokenize(const std::string &input,
+                                  const std::string &delimiter) {
+  std::string s = input;
+  size_t pos = 0;
+  std::string token;
+  std::vector<std::string> tokens;
+  while ((pos = s.find(delimiter)) != std::string::npos) {
+    token = s.substr(0, pos);
+    tokens.push_back(token);
+    s.erase(0, pos + delimiter.length());
+  }
+  tokens.push_back(s);
+  return tokens;
+}
+}  // namespace
 
 namespace nvrtc {
 class Error : public std::exception {
@@ -41,51 +59,40 @@ inline void checkNvrtcCall(nvrtcResult result) {
 }
 
 inline std::vector<std::string> findIncludePaths() {
-  std::string path;
-
-  if (dl_iterate_phdr(
-          [](struct dl_phdr_info *info, size_t, void *arg) -> int {
-            std::string &path = *static_cast<std::string *>(arg);
-            path = info->dlpi_name;
 #if defined(__HIP__)
-            // HIPRTC symbols are also in libamdhip64.so, although they will be
-            // removed from there see
-            // https://rocm.docs.amd.com/projects/HIP/en/docs-6.1.0/how-to/hip_rtc.html#deprecation-notice
-            // check both libraries for now, as linking with hiprtc is not yet
-            // required
-            return (path.find("libhiprtc.so") != std::string::npos) |
-                   (path.find("libamdhip64.so") != std::string::npos);
+  std::string path = HIP_INCLUDE_DIRS;
 #else
-            return path.find("libnvrtc.so") != std::string::npos;
+  std::string path = CUDA_INCLUDE_DIRS;
 #endif
-          },
-          &path))
-    for (size_t pos; (pos = path.find_last_of("/")) != std::string::npos;) {
-      path.erase(pos);  // remove last part of path
 
-      struct stat buffer;
-#if defined(__HIP__)
-      const std::string filename = path + "/include/hip/hip_runtime.h";
-#else
-      const std::string filename = path + "/include/cuda.h";
-#endif
-      if (stat(filename.c_str(), &buffer) == 0) {
-        std::vector<std::string> paths;
-        paths.emplace_back(path + "/include");
+  std::vector<std::string> paths = tokenize(path, ";");
 
 #if CUDA_VERSION >= 13000
-        const std::string cccl_path(path + "/include/cccl");
+  const std::string cccl_suffix = "cccl";
 
-        if (stat(cccl_path.c_str(), &buffer) == 0) {
-          paths.push_back(cccl_path);
-        }
+  // Check whether any of the paths contain /cccl
+  for (const std::string &path : paths) {
+    size_t pos = path.rfind("/" + cccl_suffix);
+    if (pos != std::string::npos &&
+        pos == path.size() - (cccl_suffix.size() + 1)) {
+      return paths;
+    }
+  }
+
+  // Try to find the path that contains /cccl
+  for (const auto &path : paths) {
+    std::filesystem::path cccl_path = std::filesystem::path(path) / cccl_suffix;
+
+    // Add the path if it exists
+    if (std::filesystem::exists(cccl_path) &&
+        std::filesystem::is_directory(cccl_path)) {
+      paths.emplace_back(path + "/" + cccl_suffix);
+      break;
+    }
+  }
 #endif
 
-        return paths;
-      }
-    }
-
-  throw std::runtime_error("Could not find NVRTC include paths");
+  return paths;
 }
 
 inline std::string findIncludePath() {
