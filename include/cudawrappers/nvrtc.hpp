@@ -73,7 +73,8 @@ inline std::vector<std::string> findIncludePaths() {
   // Check whether any of the paths contain /cccl
   for (const std::string &path : paths) {
     size_t pos = path.rfind("/" + cccl_suffix);
-    if (pos != std::string::npos && pos == path.size() - 5) {
+    if (pos != std::string::npos &&
+        pos == path.size() - (cccl_suffix.size() + 1)) {
       return paths;
     }
   }
