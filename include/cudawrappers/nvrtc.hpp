@@ -39,6 +39,12 @@ std::vector<std::string> tokenize(const std::string &input,
   tokens.push_back(s);
   return tokens;
 }
+
+void loadNvrtcBuiltins() {
+  if (!dlopen("libnvrtc-builtins.so", RTLD_LAZY)) {
+    throw std::runtime_error("Failed to load libnvrtc-builtins.so");
+  }
+}
 }  // namespace
 
 namespace nvrtc {
@@ -118,9 +124,7 @@ class Program {
           const std::vector<std::string> &includeNames =
               std::vector<std::string>()) {
 #if !defined(__HIP__)
-    if (!dlopen("libnvrtc-builtins.so", RTLD_LAZY)) {
-      throw std::runtime_error("Failed to load libnvrtc-builtins.so");
-    }
+    loadNvrtcBuiltins();
 #endif
     std::vector<const char *> c_headers;
     std::transform(headers.begin(), headers.end(),
@@ -139,6 +143,9 @@ class Program {
   }
 
   explicit Program(const std::string &filename) {
+#if !defined(__HIP__)
+    loadNvrtcBuiltins();
+#endif
     std::ifstream ifs(filename);
     if (!ifs.is_open()) {
       throw std::runtime_error("Error opening file '" + filename +
