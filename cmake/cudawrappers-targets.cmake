@@ -45,20 +45,17 @@ foreach(component ${CUDAWRAPPERS_COMPONENTS})
   # cudawrappers exposes targets like, cudawrappers::cu, so an alias is created
   add_library(${PROJECT_NAME}::${component} ALIAS ${component})
   target_link_libraries(${component} INTERFACE ${LINK_${component}})
-  if(${CUDAWRAPPERS_INSTALLED})
-    target_include_directories(
-      ${component} INTERFACE $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
-    )
-    set_target_properties(
-      ${component}
-      PROPERTIES PUBLIC_HEADER
-                 ${CUDAWRAPPERS_INCLUDE_DIR}/cudawrappers/${component}.hpp
-    )
-  else()
-    target_include_directories(
-      ${component} INTERFACE ${CUDAWRAPPERS_INCLUDE_DIR}
-    )
-  endif()
+
+  target_include_directories(
+    ${component} INTERFACE $<BUILD_INTERFACE:${CUDAWRAPPERS_INCLUDE_DIR}>
+                           $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+  )
+
+  set_target_properties(
+    ${component}
+    PROPERTIES PUBLIC_HEADER
+               ${CUDAWRAPPERS_INCLUDE_DIR}/cudawrappers/${component}.hpp
+  )
 endforeach()
 
 if(CUDAWRAPPERS_BUILD_CUFFT)
