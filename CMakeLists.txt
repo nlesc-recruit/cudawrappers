@@ -111,9 +111,6 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS True)
 # Include CMake helper functions
 include(cmake/cudawrappers-helper.cmake)
 
-# You can use cudawrappers by installing it, or by including it in your project
-set(CUDAWRAPPERS_INSTALLED ${CMAKE_PROJECT_NAME} STREQUAL cudawrappers)
-
 # Check if the dependencies are satisfied This may update the
 # CUDAWRAPPERS_COMPONENTS variable if some components are not available (e.g.
 # hipfft).
