@@ -39,14 +39,40 @@ function(target_embed_source target_name input_file)
     COMMENT "Inlining all includes of ${input_file}"
   )
 
-  add_custom_command(
-    OUTPUT "${output_object_file}"
-    COMMAND ${CMAKE_LINKER} -r -b binary -A ${CMAKE_SYSTEM_PROCESSOR} -o
-            "${output_object_file}" "${output_source_file}"
-    DEPENDS "${output_source_file}"
-    COMMENT "Creating object file for ${input_file}"
-    VERBATIM
+  if(CMAKE_C_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL
+                                             "Clang"
   )
+    find_program(LLVM_OBJCOPY NAMES llvm-objcopy objcopy REQUIRED)
+
+    # Map processor to output format
+    if(CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|amd64|AMD64")
+      set(objcopy_format "elf64-x86-64")
+    elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64|arm64")
+      set(objcopy_format "elf64-littleaarch64")
+    else()
+      message(FATAL_ERROR "Unsupported processor: ${CMAKE_SYSTEM_PROCESSOR}")
+    endif()
+
+    add_custom_command(
+      OUTPUT "${output_object_file}"
+      COMMAND
+        ${LLVM_OBJCOPY} -I binary -O ${objcopy_format} --rename-section
+        .data=.rodata,alloc,load,readonly,data,contents "${output_source_file}"
+        "${output_object_file}"
+      DEPENDS "${output_source_file}"
+      COMMENT "Creating object file for ${input_file}"
+      VERBATIM
+    )
+  else()
+    add_custom_command(
+      OUTPUT "${output_object_file}"
+      COMMAND ${CMAKE_LINKER} -r -b binary -A ${CMAKE_SYSTEM_PROCESSOR} -o
+              "${output_object_file}" "${output_source_file}"
+      DEPENDS "${output_source_file}"
+      COMMENT "Creating object file for ${input_file}"
+      VERBATIM
+    )
+  endif()
 
   string(REPLACE "." "_" symbol_base "${output_source_file}")
   string(REPLACE "/" "_" symbol_base "${symbol_base}")
