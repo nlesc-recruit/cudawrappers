@@ -24,7 +24,7 @@ jobs:
           echo "GITHUB_REF_NAME = $GITHUB_REF_NAME"
 
       - name: Install CUDA ${{ matrix.cuda-version }}
-        uses: Jimver/cuda-toolkit@v0.2.29
+        uses: Jimver/cuda-toolkit@v0.2.30
         with:
           cuda: ${{ matrix.cuda-version }}
           method: "network"
