@@ -45,6 +45,52 @@ jobs:
           cmake --build build -j
           cmake --install build
 
+  build-cuda-clang:
+    name: build (CUDA ${{ matrix.cuda-version }})
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        cuda-version: ["13.1.0"]
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Show GitHub env vars
+        run: |
+          echo "GITHUB_BASE_REF = $GITHUB_BASE_REF"
+          echo "GITHUB_HEAD_REF = $GITHUB_HEAD_REF"
+          echo "GITHUB_REF_NAME = $GITHUB_REF_NAME"
+
+      - name: Install CUDA ${{ matrix.cuda-version }}
+        uses: Jimver/cuda-toolkit@v0.2.30
+        with:
+          cuda: ${{ matrix.cuda-version }}
+          method: "network"
+          sub-packages: '["runtime", "nvcc", "nvml-dev", "nvrtc-dev", "nvtx"]'
+          non-cuda-sub-packages: '["libcufft-dev"]'
+          linux-local-args: '["--toolkit"]'
+
+      - name: Install ROCm and HIP
+        shell: bash -el {0}
+        run: |
+          sudo apt update
+          sudo apt -y install clang
+
+      - name: Show tool versions
+        run: |
+          clang --version
+          cmake --version
+          nvcc --version
+
+      - name: Build in CUDA mode
+        shell: bash -el {0}
+        run: |
+          CXX=clang++ cmake -DCUDAWRAPPERS_BUILD_TESTING=True -DCUDAWRAPPERS_COMPONENTS='cu;cufft;nvml;nvrtc' -S . -B build -DCMAKE_INSTALL_PREFIX=install
+          cmake --build build -j
+          cmake --install build
+
   build-hip:
     name: build (HIP)
     runs-on: ubuntu-24.04
