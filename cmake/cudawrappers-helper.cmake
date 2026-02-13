@@ -58,6 +58,8 @@ function(target_embed_source target_name input_file)
       "#ifndef ${include_guard}
 #define ${include_guard}
 
+#include <string>
+
 extern const unsigned char _binary_${symbol_base}_start[];
 extern const unsigned char _binary_${symbol_base}_end[];
 extern const unsigned int  _binary_${symbol_base}_size;
