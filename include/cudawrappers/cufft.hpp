@@ -105,16 +105,16 @@ class FFT1D : public FFT {
 };
 
 template <>
-FFT1D<CUDA_C_32F>::FFT1D(const int nx, const int batch) {
+inline FFT1D<CUDA_C_32F>::FFT1D(const int nx, const int batch) {
   checkCuFFTCall(cufftCreate(plan()));
   checkCuFFTCall(cufftPlan1d(plan(), nx, CUFFT_C2C, batch));
 }
 
 template <>
-FFT1D<CUDA_C_32F>::FFT1D(const int nx) : FFT1D(nx, 1) {}
+inline FFT1D<CUDA_C_32F>::FFT1D(const int nx) : FFT1D(nx, 1) {}
 
 template <>
-FFT1D<CUDA_C_16F>::FFT1D(const int nx, const int batch) {
+inline FFT1D<CUDA_C_16F>::FFT1D(const int nx, const int batch) {
   checkCuFFTCall(cufftCreate(plan()));
   const int rank = 1;
   size_t ws = 0;
@@ -129,7 +129,7 @@ FFT1D<CUDA_C_16F>::FFT1D(const int nx, const int batch) {
 }
 
 template <>
-FFT1D<CUDA_C_16F>::FFT1D(const int nx) : FFT1D(nx, 1) {}
+inline FFT1D<CUDA_C_16F>::FFT1D(const int nx) : FFT1D(nx, 1) {}
 
 /*
  * FFT2D
@@ -149,14 +149,14 @@ class FFT2D : public FFT {
 };
 
 template <>
-FFT2D<CUDA_C_32F>::FFT2D(const int nx, const int ny) {
+inline FFT2D<CUDA_C_32F>::FFT2D(const int nx, const int ny) {
   checkCuFFTCall(cufftCreate(plan()));
   checkCuFFTCall(cufftPlan2d(plan(), nx, ny, CUFFT_C2C));
 }
 
 template <>
-FFT2D<CUDA_C_32F>::FFT2D(const int nx, const int ny, const int stride,
-                         const int dist, const int batch) {
+inline FFT2D<CUDA_C_32F>::FFT2D(const int nx, const int ny, const int stride,
+                                const int dist, const int batch) {
   checkCuFFTCall(cufftCreate(plan()));
   std::array<int, 2> n{nx, ny};
   checkCuFFTCall(cufftPlanMany(plan(), 2, n.data(), n.data(), stride, dist,
@@ -164,8 +164,8 @@ FFT2D<CUDA_C_32F>::FFT2D(const int nx, const int ny, const int stride,
 }
 
 template <>
-FFT2D<CUDA_C_16F>::FFT2D(const int nx, const int ny, const int stride,
-                         const int dist, const int batch) {
+inline FFT2D<CUDA_C_16F>::FFT2D(const int nx, const int ny, const int stride,
+                                const int dist, const int batch) {
   checkCuFFTCall(cufftCreate(plan()));
   const int rank = 2;
   size_t ws = 0;
@@ -180,7 +180,7 @@ FFT2D<CUDA_C_16F>::FFT2D(const int nx, const int ny, const int stride,
 }
 
 template <>
-FFT2D<CUDA_C_16F>::FFT2D(const int nx, const int ny)
+inline FFT2D<CUDA_C_16F>::FFT2D(const int nx, const int ny)
     : FFT2D(nx, ny, 1, nx * ny, 1) {}
 
 /*
@@ -206,8 +206,8 @@ class FFT1DR2C : public FFT {
 };
 
 template <>
-FFT1DR2C<CUDA_R_32F>::FFT1DR2C(const int nx, const int batch, long long inembed,
-                               long long ouembed) {
+inline FFT1DR2C<CUDA_R_32F>::FFT1DR2C(const int nx, const int batch,
+                                      long long inembed, long long ouembed) {
   checkCuFFTCall(cufftCreate(plan()));
   const int rank = 1;
   size_t ws = 0;
@@ -244,8 +244,8 @@ class FFT1DC2R : public FFT {
 };
 
 template <>
-FFT1DC2R<CUDA_C_32F>::FFT1DC2R(const int nx, const int batch, long long inembed,
-                               long long ouembed) {
+inline FFT1DC2R<CUDA_C_32F>::FFT1DC2R(const int nx, const int batch,
+                                      long long inembed, long long ouembed) {
   checkCuFFTCall(cufftCreate(plan()));
   const int rank = 1;
   size_t ws = 0;
