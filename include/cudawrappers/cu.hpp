@@ -353,6 +353,8 @@ class Context : public Wrapper<CUcontext> {
 
 class HostMemory : public Wrapper<void *> {
  public:
+  struct Unmanaged {};
+
   explicit HostMemory(size_t size, unsigned int flags = 0) : _size(size) {
     checkCudaCall(cuMemHostAlloc(&_obj, size, flags));
     manager = std::shared_ptr<void *>(new (void *)(_obj), [](void **ptr) {
@@ -368,6 +370,11 @@ class HostMemory : public Wrapper<void *> {
     manager = std::shared_ptr<void *>(new (void *)(_obj), [](void **ptr) {
       checkCudaCall(cuMemHostUnregister(*ptr));
     });
+  }
+
+  explicit HostMemory(void *ptr, size_t size, Unmanaged)
+      : Wrapper(ptr), _size(size) {
+    checkCudaCall(cuMemHostRegister(_obj, size, 0));
   }
 
   template <typename T>
