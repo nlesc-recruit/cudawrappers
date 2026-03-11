@@ -121,8 +121,8 @@ TEST_CASE("Test copying cu::DeviceMemory and cu::HostMemory using cu::Stream",
     cu::Stream stream;
 
     {
-      cu::HostMemory src(src_data.data(), size, cu::HostMemory::Unmanaged{});
-      cu::HostMemory tgt(tgt_data.data(), size, cu::HostMemory::Unmanaged{});
+      cu::UnmanagedMemory src(src_data.data(), size);
+      cu::UnmanagedMemory tgt(tgt_data.data(), size);
 
       stream.memcpyHtoDAsync(mem, src, size);
       stream.memcpyDtoHAsync(tgt, mem, size);
