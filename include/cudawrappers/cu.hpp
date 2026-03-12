@@ -343,11 +343,11 @@ class Context : public Wrapper<CUcontext> {
 #endif
   }
 
- private:
   friend class Device;
   Context(CUcontext context, Device &device)
       : Wrapper<CUcontext>(context), _device(device) {}
 
+ private:
   cu::Device &_device;
 };
 
