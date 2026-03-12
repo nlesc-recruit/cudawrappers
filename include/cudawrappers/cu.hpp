@@ -364,10 +364,12 @@ class HostMemory : public Wrapper<void *> {
   explicit HostMemory(void *ptr, size_t size, unsigned int flags = 0)
       : _size(size) {
     _obj = ptr;
-    checkCudaCall(cuMemHostRegister(_obj, size, flags));
-    manager = std::shared_ptr<void *>(new (void *)(_obj), [](void **ptr) {
-      checkCudaCall(cuMemHostUnregister(*ptr));
-    });
+    if (size) {
+      checkCudaCall(cuMemHostRegister(_obj, size, flags));
+      manager = std::shared_ptr<void *>(new (void *)(_obj), [](void **ptr) {
+        checkCudaCall(cuMemHostUnregister(*ptr));
+      });
+    }
   }
 
   template <typename T>
@@ -377,8 +379,16 @@ class HostMemory : public Wrapper<void *> {
 
   size_t size() const { return _size; }
 
- private:
+ protected:
   size_t _size;
+};
+
+class UnmanagedMemory : public HostMemory {
+ public:
+  UnmanagedMemory(void *ptr, size_t size) : HostMemory(ptr, 0, 0) {
+    _obj = ptr;
+    _size = size;
+  }
 };
 
 class Array : public Wrapper<CUarray> {

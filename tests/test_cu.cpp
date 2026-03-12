@@ -110,6 +110,30 @@ TEST_CASE("Test copying cu::DeviceMemory and cu::HostMemory using cu::Stream",
     CHECK(!static_cast<bool>(memcmp(src, tgt, size)));
   }
 
+  SECTION("Test copying unmanaged HostMemory to the device and back") {
+    const size_t N = 3;
+    const size_t size = N * sizeof(int);
+
+    std::vector<int> src_data = {1, 2, 3};
+    std::vector<int> tgt_data(N, 0);
+
+    cu::DeviceMemory mem(size);
+    cu::Stream stream;
+
+    {
+      cu::UnmanagedMemory src(src_data.data(), size);
+      cu::UnmanagedMemory tgt(tgt_data.data(), size);
+
+      stream.memcpyHtoDAsync(mem, src, size);
+      stream.memcpyDtoHAsync(tgt, mem, size);
+      stream.synchronize();
+    }
+
+    // HostMemory objects are now destroyed; the underlying data must still be
+    // valid.
+    CHECK(src_data == tgt_data);
+  }
+
   SECTION("Test copying 2D HostMemory to the device and back") {
     const size_t width = 3 * sizeof(int);
     const size_t height = 3;

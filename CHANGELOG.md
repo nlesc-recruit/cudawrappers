@@ -13,6 +13,7 @@ project adheres to [Semantic Versioning](http://semver.org/).
 - Added `cu::Stream::launchHostFunc`
 - Added support for CUDA 13
 - Added `nvrtc::findIncludePaths`
+- Added `cu::UnmanagedMemory` class
 
 ### Changed
 
