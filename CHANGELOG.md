@@ -26,6 +26,7 @@ project adheres to [Semantic Versioning](http://semver.org/).
   CUDA ≥ 13.0
 - Use `magic_enum` to handle `cufftResult_t` to string translation
 - Upgrade C++ standard to C++17
+- Make `cu::Context(CUcontext, cu::Device)` constructor public
 
 ## [0.9.0] - 2025-03-18
 
