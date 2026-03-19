@@ -1,10 +1,12 @@
 {
-  "httpHeaders": [
+  "ignorePatterns": [
     {
-      "urls": ["https://*"],
-      "headers": {
-        "User-Agent": "Mozilla/5.0 ..."
-      }
+      "pattern": "^https://cppcheck\\.sourceforge\\.io",
+      "aliveStatusCodes": [200, 403]
+    },
+    {
+      "pattern": "^https://zenodo\\.org/records/",
+      "aliveStatusCodes": [200, 403]
     }
   ]
 }
