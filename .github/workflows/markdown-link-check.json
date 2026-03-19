@@ -1,0 +1,16 @@
+{
+  "ignorePatterns": [
+    {
+      "pattern": "^https://cppcheck\\.sourceforge\\.io",
+      "aliveStatusCodes": [200, 403]
+    },
+    {
+      "pattern": "^https://zenodo\\.org/",
+      "aliveStatusCodes": [200, 403]
+    },
+    {
+      "pattern": "^https://doxygen\\.nl/",
+      "aliveStatusCodes": [200, 403]
+    }
+  ]
+}
