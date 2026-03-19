@@ -1,0 +1,10 @@
+{
+  "httpHeaders": [
+    {
+      "urls": ["https://*"],
+      "headers": {
+        "User-Agent": "Mozilla/5.0 ..."
+      }
+    }
+  ]
+}
