@@ -183,7 +183,7 @@ These systems collectively process terabytes of radio-astronomical data daily, v
 ## Recent major features (v1.0.0, April 2026)
 
 - **CUDA 13 support**: Updated for latest NVIDIA CUDA releases and CUDA Core Compute Library (CCCL) compatibility.
-- **NVTX 3 integration**: Modern profiling framework (automatic for CUDA ≥ 12.8).
+- **NVTX 3 integration**: Modern profiling framework (automatic for CUDA >= 12.8).
 - **Runtime kernel compilation enhancements**: `nvrtc::addNameExpression`, `nvrtc::getLoweredName`, and improved `nvrtc::findIncludePaths`.
 - **Advanced memory operations**: `cu::Stream::launchHostFunc` for host-device synchronization; async memory allocation and 2D transfers.
 - **GPU task graphs**: `cu::Graph` for complex computation pipelines and kernel scheduling.
@@ -202,8 +202,8 @@ The library has evolved from 2022 to production-ready status:
 # Technical specifications
 
 - **Language**: Modern C++ (C++17 standard as of v1.0)
-- **Dependencies**: CUDA ≥ 10.0 (tested up to 13.0) or ROCM ≥ 6.1 (HIP)
-- **Build System**: CMake ≥ 3.17
+- **Dependencies**: CUDA >= 10.0 (tested up to 13.0) or ROCM >= 6.1 (HIP)
+- **Build System**: CMake >= 3.17
 - **Platforms**: Linux (x86_64), with HIP support for AMD ROCM
 - **Architecture**: Header-only library; no compiled artifacts
 - **Testing**: Comprehensive test suite (CTest integration) covering all wrapped libraries
