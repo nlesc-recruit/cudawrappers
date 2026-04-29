@@ -6,9 +6,9 @@ This project is primarily authored by:
 - Leon Oostrum (Netherlands eScience Center)
 - John W. Romein (ASTRON)
 
-Additional contributors are acknowledged for their work
-in setting up the GitHub repository and initial workflows:
+Additional contributors include:
 
-- Jurriaan H. Spaaks, Faruk Diblen, Abel Soares Siqueira (Netherlands eScience Center)
+- Wiebe van Breukelen and Mattia Mancini (ASTRON), for contributions to the development of the library
+- Jurriaan H. Spaaks, Faruk Diblen, and Abel Soares Siqueira (Netherlands eScience Center), for setting up the GitHub repository and initial workflows
 
 Other contributors are listed [here](https://github.com/nlesc-recruit/cudawrappers/graphs/contributors).
