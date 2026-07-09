@@ -37,7 +37,9 @@ TEST_CASE("Test cu::Device", "[device]") {
   }
 
   SECTION("Test Device.getComputeCapability", "[device]") {
-    const auto [major, minor] = device.getComputeCapability();
+    int major;
+    int minor;
+    device.getComputeCapability(major, minor);
     CHECK(major >= 0);
     CHECK(minor >= 0);
   }

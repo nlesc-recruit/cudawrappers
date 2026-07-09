@@ -223,13 +223,6 @@ class Device : public Wrapper<CUdevice> {
     minor = getAttribute<CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MINOR>();
   }
 
-  std::pair<int, int> getComputeCapability() const {
-    int major{};
-    int minor{};
-    getComputeCapability(major, minor);
-    return {major, minor};
-  }
-
   static Device getByPCIBusId(const std::string &pciBusId) {
     CUdevice device{};
     checkCudaCall(cuDeviceGetByPCIBusId(&device, pciBusId.c_str()));
