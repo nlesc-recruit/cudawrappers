@@ -25,29 +25,29 @@ Source header: `/var/scratch/veenboer/spack/opt/spack/linux-x86_64_v3/cuda-13.3.
 
 | CUDA Driver API | cudawrappers interface |
 |---|---|
-| `cuDeviceComputeCapability` | Missing |
+| `cuDeviceComputeCapability` | Device::getComputeCapability() |
 | `cuDeviceGet` | Device::Device(unsigned int) |
 | `cuDeviceGetAttribute` | Device::getAttribute() |
-| `cuDeviceGetByPCIBusId` | Missing |
+| `cuDeviceGetByPCIBusId` | Device::getByPCIBusId() |
 | `cuDeviceGetCount` | Device::getCount() |
-| `cuDeviceGetDefaultMemPool` | Missing |
-| `cuDeviceGetDevResource` | Missing |
-| `cuDeviceGetExecAffinitySupport` | Missing |
-| `cuDeviceGetGraphMemAttribute` | Missing |
-| `cuDeviceGetLuid` | Missing |
-| `cuDeviceGetMemPool` | Missing |
+| `cuDeviceGetDefaultMemPool` | Device::getDefaultMemPool() |
+| `cuDeviceGetDevResource` | Device::getDevResource() |
+| `cuDeviceGetExecAffinitySupport` | Device::getExecAffinitySupport() |
+| `cuDeviceGetGraphMemAttribute` | Device::getGraphMemAttribute() |
+| `cuDeviceGetLuid` | Device::getLuid() |
+| `cuDeviceGetMemPool` | Device::getMemPool() |
 | `cuDeviceGetName` | Device::getName() |
-| `cuDeviceGetNvSciSyncAttributes` | Missing |
-| `cuDeviceGetPCIBusId` | Missing |
-| `cuDeviceGetProperties` | Missing |
-| `cuDeviceGetTexture1DLinearMaxWidth` | Missing |
+| `cuDeviceGetNvSciSyncAttributes` | Device::getNvSciSyncAttributes() |
+| `cuDeviceGetPCIBusId` | Device::getPCIBusId() |
+| `cuDeviceGetProperties` | Device::getProperties() |
+| `cuDeviceGetTexture1DLinearMaxWidth` | Device::getTexture1DLinearMaxWidth() |
 | `cuDeviceGetUuid` | Device::getUuid() |
-| `cuDeviceGraphMemTrim` | Missing |
-| `cuDeviceRegisterAsyncNotification` | Missing |
-| `cuDeviceSetGraphMemAttribute` | Missing |
-| `cuDeviceSetMemPool` | Missing |
+| `cuDeviceGraphMemTrim` | Device::graphMemTrim() |
+| `cuDeviceRegisterAsyncNotification` | Device::registerAsyncNotification() |
+| `cuDeviceSetGraphMemAttribute` | Device::setGraphMemAttribute() |
+| `cuDeviceSetMemPool` | Device::setMemPool() |
 | `cuDeviceTotalMem` | Device::totalMem() |
-| `cuDeviceUnregisterAsyncNotification` | Missing |
+| `cuDeviceUnregisterAsyncNotification` | Device::unregisterAsyncNotification() |
 
 ## Primary Context Management
 
@@ -232,7 +232,7 @@ Source header: `/var/scratch/veenboer/spack/opt/spack/linux-x86_64_v3/cuda-13.3.
 
 | CUDA Driver API | cudawrappers interface |
 |---|---|
-| `cuDeviceGetHostAtomicCapabilities` | Missing |
+| `cuDeviceGetHostAtomicCapabilities` | Device::getHostAtomicCapabilities() |
 | `cuPointerGetAttribute` | Wrapper::checkPointerAccess() |
 | `cuPointerGetAttributes` | Wrapper::checkPointerAccess() |
 | `cuPointerSetAttribute` | Missing |
@@ -590,8 +590,8 @@ Source header: `/var/scratch/veenboer/spack/opt/spack/linux-x86_64_v3/cuda-13.3.
 | `cuCtxDisablePeerAccess` | Missing |
 | `cuCtxEnablePeerAccess` | Missing |
 | `cuDeviceCanAccessPeer` | Missing |
-| `cuDeviceGetP2PAtomicCapabilities` | Missing |
-| `cuDeviceGetP2PAttribute` | Missing |
+| `cuDeviceGetP2PAtomicCapabilities` | Device::getP2PAtomicCapabilities() |
+| `cuDeviceGetP2PAttribute` | Device::getP2PAttribute() |
 
 ## Graphics Interoperability
 
