@@ -1,6 +1,8 @@
----
+______________________________________________________________________
+
 title: 'The CUDA wrappers'
 tags:
+
 - C++
 - GPU computing
 - CUDA
@@ -9,7 +11,7 @@ tags:
 - runtime compilation
 - FFT
 - profiling
-authors:
+  authors:
 - name: Bram Veenboer
   orcid: 0000-0001-9607-1142
   affiliation: "1"
@@ -19,29 +21,30 @@ authors:
 - name: John W. Romein
   orcid: 0000-0002-1915-5067
   affiliation: "1"
-affiliations:
+  affiliations:
 - name: ASTRON (Netherlands Institute for Radio Astronomy)
   index: 1
 - name: Netherlands eScience Center
   index: 2
-date: April 2026
-bibliography: paper.bib
----
+  date: April 2026
+  bibliography: paper.bib
+
+______________________________________________________________________
 
 # Summary
 
-CUDA Wrappers is a header-only C++ library that simplifies GPU programming by wrapping NVIDIA's CUDA Driver API, NVRTC (runtime compilation), cuFFT, NVML (GPU monitoring), and NVTX (profiling) libraries. The library applies modern C++ principles [@myers2004], particularly RAII (Resource Acquisition Is Initialization) [@stroustrup2013] and exception-based error handling, to eliminate boilerplate code, automatically manage GPU resources, and provide transparent support for both NVIDIA GPUs (via CUDA) [@cuda] and AMD GPUs (via HIP) [@rocm_hip]. By reducing the verbosity typical of raw CUDA programming by 50-70%, CUDA Wrappers enables developers to focus on algorithm development rather than resource management and error handling. The library is header-only, making integration straightforward, and maintains a consistent, intuitive API across all wrapped functionality.
+CUDA Wrappers is a header-only C++ library that simplifies host-side GPU application programming by wrapping NVIDIA's CUDA Driver API, NVRTC (runtime compilation), cuFFT, NVML (GPU monitoring), and NVTX (profiling) libraries. The library applies modern C++ principles [@myers2004], particularly RAII (Resource Acquisition Is Initialization) [@stroustrup2013] and exception-based error handling, to eliminate boilerplate code, automatically manage GPU resources, and provide transparent support for both NVIDIA GPUs (via CUDA) [@cuda] and AMD GPUs (via HIP) [@rocm_hip]. By reducing the amount of code needed to access the CUDA libraries by 50-80%, CUDA Wrappers enables developers to focus on algorithm development rather than resource management and error handling. The library is header-only, making integration straightforward, and maintains a consistent, intuitive API across all wrapped functionality.
 
 # Statement of need
 
 GPU programming with raw CUDA APIs presents several well-known challenges:
 
 1. **Manual resource management**: Developers must explicitly manage device memory, streams, events, and contexts, with no automatic cleanup on errors or scope exit, leading to resource leaks.
-1. **Error handling overhead**: Every CUDA call returns a status code that must be checked individually, resulting in repetitive if-statements and increasing code complexity.
+1. **Error handling overhead**: Every CUDA call returns a status code that must be checked individually, resulting in repetitive if-statements and increasing code complexity. This intertwining of error handling and normal program flow reduces readability and makes code harder to maintain.
 1. **Boilerplate code**: Simple GPU operations require extensive scaffolding, obscuring the core algorithm logic.
 1. **Limited portability**: CUDA code is tightly coupled to NVIDIA hardware; supporting AMD GPUs requires parallel codebases or extensive conditional compilation.
 
-Existing solutions like CUDA-C++ Runtime API offer some convenience but still require explicit error checking and manual context management. Other C++ wrappers [@cuda_api_wrappers] provide partial coverage of the CUDA Driver API but lack support for runtime compilation (NVRTC), FFT, and GPU monitoring. High-level libraries like Thrust [@hoberock2011] abstract GPU programming but are less suitable for low-level resource control and custom kernels, while emerging standards like SYCL [@khronos_sycl] have a steeper learning curve and less mature ecosystem.
+Existing solutions like CUDA-C++ Runtime API offer some convenience but still require explicit error checking and manual context management. Other C++ wrappers [@cuda_api_wrappers] provide partial coverage of the CUDA Driver API but lack support for runtime compilation (NVRTC), FFT, and GPU monitoring. High-level libraries like Thrust [@hoberock2011] abstract GPU programming but are less suitable for low-level resource control and custom kernels, while emerging standards like SYCL [@khronos_sycl] have a steeper learning curve and target a different ecosystem.
 
 CUDA Wrappers addresses these gaps by:
 
@@ -50,7 +53,7 @@ CUDA Wrappers addresses these gaps by:
 - **Comprehensive library coverage**: Wrappers for Driver API, NVRTC, cuFFT, NVML, and NVTX enable complete GPU workflows within a single library.
 - **Transparent multi-vendor support**: A single codebase compiles for both NVIDIA (CUDA) and AMD (HIP) GPUs via compile-time backend selection.
 
-The library is used as a fundamental building block in multiple production systems developed by ASTRON (the Netherlands Institute for Radio Astronomy), including the Imaging Domain Grid (IDG), Tensor Core Correlator, GPU-Filter, and related signal-processing pipelines. This established track record in demanding, real-world applications (radio astronomical data processing) validates the design and reliability of the library.
+The library is used as a fundamental building block in multiple production systems developed by ASTRON (the Netherlands Institute for Radio Astronomy), including the Imaging Domain Grid (IDG), Tensor Core Correlator, GPU-Filter, and related signal-processing pipelines. This established track record in demanding, real-world applications (radio astronomical data processing) and about two decades of GPU application development validates the design and reliability of the library.
 
 # Software design
 
@@ -65,7 +68,7 @@ CUDA Wrappers is structured as a collection of modular, header-only wrappers org
 - **`nvtx.hpp`**: Performance profiling instrumentation.
 - **`macros.hpp`**: HIP backend translation layer for NVIDIA/AMD portability.
 
-Each wrapper follows the same design philosophy: acquire resources in constructors, release them in destructors, and throw exceptions on failure.
+Each wrapper follows the same design philosophy: acquire resources in constructors, release them in destructors, and throw exceptions on failure. The APIs of the CUDA Wrappers are intentionally similar to the original CUDA library APIs, so developers familiar with CUDA can adopt the wrappers quickly.
 
 ## Core design principles
 
@@ -75,8 +78,9 @@ All GPU resources (memory, streams, contexts, modules) are encapsulated in C++ o
 
 ```cpp
 cu::init();                                     // Initialize the environment
-cu::Device device(0);                           // Initialize device
+cu::Device device(0);                           // Initialize the first GPU
 cu::Context context(CU_CTX_SCHED_AUTO, device); // Initialize context
+context.setCurrent();                           // Make sure the context is current
 cu::Stream stream;                              // Initialize a stream
 cu::DeviceMemory mem(1024 * 1024);              // Allocate device memory
 ```
@@ -96,7 +100,7 @@ try {
 }
 ```
 
-This eliminates the tedious pattern of checking every CUDA call's return value, making code significantly more readable and less prone to missed error cases.
+This eliminates the tedious pattern of checking every CUDA call's return value, making code significantly more readable and less prone to missed error cases. In environments that support C++23, exception diagnostics can be further enhanced with `std::basic_stacktrace` to help locate the origin of a thrown exception.
 
 ### Runtime compilation for flexibility
 
@@ -111,23 +115,24 @@ const char* kernel_source = R"(
 )";
 
 nvrtc::Program program(kernel_source, "kernel.cu");
-program.compile({"-use_fast_math", "-O3"});
+program.compile({"--use_fast_math", "-O3", "--gpu-architecture=compute_86"});
 cu::Module module(program.getPTX());
 cu::Function add_kernel(module, "add");
 ```
 
-This capability is especially useful when parameters are not known when the host code is compiled, but are known just before launching a kernel. In that case, the host can pass these values as compile definitions to NVRTC (for example via `-DNR_STATIONS=...`), so the generated device code sees constants instead of runtime variables. This often enables stronger compiler optimizations such as constant folding, unrolling, and simplified address arithmetic.
+This capability is especially useful when parameters are not known when the host code is compiled, but are known just before launching a kernel. In that case, the host can pass these values as compile definitions to NVRTC (for example via `-DNR_STATIONS=...`), so the generated device code sees constants instead of runtime variables. It also allows runtime-detected GPU architecture and generation options to be passed to the compiler, for example `--gpu-architecture=compute_86`, so the kernel is optimized for the actual target device. This often enables stronger compiler optimizations such as constant folding, unrolling, and simplified address arithmetic.
 
 It also allows clean expression of multidimensional data layouts using compile-time dimensions in the kernel source, for example:
 
 ```cpp
-typedef float2 (*InputType)[NR_STATIONS][NR_CHANNELS][NR_INTEGRATIONS]
+typedef cuda::std::complex<float> Complex;
+typedef Complex (*InputType)[NR_STATIONS][NR_CHANNELS][NR_INTEGRATIONS]
                            [NR_SAMPLES_PER_INTEGRATION];
-typedef float2 (*OutputType)[NR_INTEGRATIONS][NR_BASELINES][NR_CHANNELS]
+typedef Complex (*OutputType)[NR_INTEGRATIONS][NR_BASELINES][NR_CHANNELS]
                             [NR_POLARIZATIONS][NR_POLARIZATIONS];
 ```
 
-This approach keeps kernels readable while still generating specialized code for each problem configuration.
+This approach keeps kernels readable while still generating specialized code for each problem configuration. Using explicit array types also enables clear indexing such as `output[integration][baseline][channel][x_pol][y_pol]`, instead of hard-to-read flattened expressions like `output[(((integration * nr_baselines + baseline) * nr_channels + channel) * nr_polarizations + x_pol) * nr_polarizations + y_pol]`.
 
 ### Transparent multi-GPU support (CUDA/HIP)
 
@@ -176,7 +181,7 @@ CUDA Wrappers serves as a foundational building block for several production GPU
 - **Cobalt**: Real-time GPU-accelerated correlator and beamformer application [https://git.astron.nl/cobalt/cobalt](https://git.astron.nl/cobalt/cobalt)
 - **CCGlib**: General-purpose library for tensor-core accelerated complex GEMM. [https://github.com/nlesc-recruit/ccglib](https://github.com/nlesc-recruit/ccglib)
 
-These systems collectively process terabytes of radio-astronomical data daily, validating CUDA Wrappers' reliability, performance, and design in demanding, production environments. The library has also been adopted in graduate-level GPU programming courses, demonstrating pedagogical value for teaching GPU computing concepts.
+These systems collectively process terabytes of radio-astronomical data daily, validating CUDA Wrappers' reliability, performance, and design in demanding, production environments. The library has also been adopted in graduate-level GPU programming courses and other GPU applications developed at NLeSC, demonstrating pedagogical value and practical impact.
 
 # Software features and development
 
@@ -192,7 +197,7 @@ These systems collectively process terabytes of radio-astronomical data daily, v
 
 ## Development timeline
 
-The library has evolved from 2022 to production-ready status:
+The library has evolved from early prototypes before 2022 to production-ready status:
 
 - **v0.1.0 (2022)**: Initial release with basic CUDA Driver API wrapper.
 - **v0.5.0 (2023)**: Added cuFFT, host memory support, and async operations.
@@ -216,7 +221,7 @@ CUDA Wrappers is open-source and available on GitHub [@recruit_github] at [https
 # Acknowledgements
 
 CUDA Wrappers was developed by the Netherlands eScience Center and ASTRON (the Netherlands Institute for Radio Astronomy)
-under grant number ETEC.2020.025 (RECRUIT). The library benefits from contributions and feedback from the ASTRON scientific and engineering teams and the broader GPU computing community. We thank all contributors and users who have provided bug reports, feature requests, and improvements.
+under grant number ETEC.2020.025 (RECRUIT) and supported by the RADIOBLOCKS grant from the European Commission (HORIZON-INFRA-2022-TECH-01, Grant Agreement nr. 101093934). The library benefits from contributions and feedback from the ASTRON scientific and engineering teams and the broader GPU computing community. We thank all contributors and users who have provided bug reports, feature requests, and improvements.
 
 # AI usage disclosure
 
