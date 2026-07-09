@@ -647,9 +647,9 @@ Reference: https://docs.nvidia.com/cuda/cuda-driver-api/index.html
 
 | CUDA Driver API | cudawrappers interface |
 |---|---|
-| `cuCtxDisablePeerAccess` | Missing |
-| `cuCtxEnablePeerAccess` | Missing |
-| `cuDeviceCanAccessPeer` | Missing |
+| `cuCtxDisablePeerAccess` | Context::disablePeerAccess(Context &) |
+| `cuCtxEnablePeerAccess` | Context::enablePeerAccess(Context &, unsigned int) |
+| `cuDeviceCanAccessPeer` | Device::canAccessPeer(const Device &, const Device &) |
 | `cuDeviceGetP2PAtomicCapabilities` | Device::getP2PAtomicCapabilities() |
 | `cuDeviceGetP2PAttribute` | Device::getP2PAttribute() |
 

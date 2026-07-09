@@ -337,6 +337,12 @@ class Device : public Wrapper<CUdevice> {
         capabilities, operations, count, srcDevice, dstDevice));
   }
 
+  static bool canAccessPeer(const Device &device, const Device &peerDevice) {
+    int canAccess{};
+    checkCudaCall(cuDeviceCanAccessPeer(&canAccess, device, peerDevice));
+    return static_cast<bool>(canAccess);
+  }
+
   void registerAsyncNotification(CUasyncCallback callbackFunc, void *userData,
                                  CUasyncCallbackHandle *callback) const {
     checkCudaCall(cuDeviceRegisterAsyncNotification(_obj, callbackFunc,
@@ -426,6 +432,18 @@ class Context : public Wrapper<CUcontext> {
   void pushCurrent() {
 #if !defined(__HIP__)
     checkCudaCall(cuCtxPushCurrent(_obj));
+#endif
+  }
+
+  void enablePeerAccess(Context &peerContext, unsigned int flags = 0) {
+#if !defined(__HIP__)
+    checkCudaCall(cuCtxEnablePeerAccess(peerContext, flags));
+#endif
+  }
+
+  void disablePeerAccess(Context &peerContext) {
+#if !defined(__HIP__)
+    checkCudaCall(cuCtxDisablePeerAccess(peerContext));
 #endif
   }
 
