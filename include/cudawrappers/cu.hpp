@@ -278,7 +278,24 @@ class Device : public Wrapper<CUdevice> {
   }
 
   void getProperties(CUdevprop &prop) const {
-    checkCudaCall(cuDeviceGetProperties(&prop, _obj));
+    prop.maxThreadsPerBlock =
+        getAttribute<CU_DEVICE_ATTRIBUTE_MAX_THREADS_PER_BLOCK>();
+    prop.maxThreadsDim[0] = getAttribute<CU_DEVICE_ATTRIBUTE_MAX_BLOCK_DIM_X>();
+    prop.maxThreadsDim[1] = getAttribute<CU_DEVICE_ATTRIBUTE_MAX_BLOCK_DIM_Y>();
+    prop.maxThreadsDim[2] = getAttribute<CU_DEVICE_ATTRIBUTE_MAX_BLOCK_DIM_Z>();
+    prop.maxGridSize[0] = getAttribute<CU_DEVICE_ATTRIBUTE_MAX_GRID_DIM_X>();
+    prop.maxGridSize[1] = getAttribute<CU_DEVICE_ATTRIBUTE_MAX_GRID_DIM_Y>();
+    prop.maxGridSize[2] = getAttribute<CU_DEVICE_ATTRIBUTE_MAX_GRID_DIM_Z>();
+    prop.sharedMemPerBlock =
+        getAttribute<CU_DEVICE_ATTRIBUTE_MAX_SHARED_MEMORY_PER_BLOCK>();
+    prop.totalConstantMemory =
+        getAttribute<CU_DEVICE_ATTRIBUTE_TOTAL_CONSTANT_MEMORY>();
+    prop.SIMDWidth = getAttribute<CU_DEVICE_ATTRIBUTE_WARP_SIZE>();
+    prop.memPitch = getAttribute<CU_DEVICE_ATTRIBUTE_MAX_PITCH>();
+    prop.regsPerBlock =
+        getAttribute<CU_DEVICE_ATTRIBUTE_MAX_REGISTERS_PER_BLOCK>();
+    prop.clockRate = getAttribute<CU_DEVICE_ATTRIBUTE_CLOCK_RATE>();
+    prop.textureAlign = getAttribute<CU_DEVICE_ATTRIBUTE_TEXTURE_ALIGNMENT>();
   }
 
   void getDevResource(CUdevResource &resource, CUdevResourceType type) const {
