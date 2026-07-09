@@ -1,6 +1,51 @@
 # CUDA Driver API Coverage for cudawrappers
 
-Source header: `/var/scratch/veenboer/spack/opt/spack/linux-x86_64_v3/cuda-13.3.0-rlj4hareovbtodpgvtizh2lkfw6zrefr/targets/x86_64-linux/include/cuda.h`
+This document summarizes CUDA Driver API coverage for `cudawrappers` against CUDA 13.3.0. It maps user-facing APIs to wrapper support and highlights internal-only variants that are excluded from coverage percentages.
+
+Reference: https://docs.nvidia.com/cuda/cuda-driver-api/index.html
+
+| Section | Coverage |
+|---|---|
+| Error Handling | ✅ |
+| Initialization | ✅ |
+| Version Management | ✅ |
+| Device Management | ✅ |
+| Unified Addressing | ✅ |
+| Event Management | ✅ |
+| Context Management | ⌛ 48% |
+| Stream Memory Operations | ⌛ 43% |
+| Module Management | ⌛ 42% |
+| Peer Context Memory Access | ⌛ 40% |
+| Memory Management | ⌛ 32% |
+| Stream Management | ⌛ 28% |
+| Execution Control | ⌛ 22% |
+| Occupancy | ⌛ 14% |
+| Graph Management | ⌛ 10% |
+| Other | ⌛ 6% |
+
+> Internal-only variants such as `_v2`, `_v3`, and `_ptsz` are listed in each section and excluded from the coverage percentage calculations.
+
+### Not Implemented Sections
+- Primary Context Management
+- Library Management
+- Virtual Memory Management
+- Stream Ordered Memory Allocator
+- Multicast Object Management
+- Logical Endpoint
+- External Resource Interoperability
+- Texture Object Management
+- Surface Object Management
+- Tensor Map Object Management
+- Graphics Interoperability
+- Driver Entry Point Access
+- Coredump Attributes Control API
+- Green Contexts
+- Error Log Management Functions
+- CUDA Checkpointing
+- Profiler Control
+
+### Deprecated APIs
+- Texture Reference Management [DEPRECATED] — not implemented
 
 ## Error Handling
 
@@ -50,7 +95,6 @@ Source header: `/var/scratch/veenboer/spack/opt/spack/linux-x86_64_v3/cuda-13.3.
 | `cuDeviceUnregisterAsyncNotification` | Device::unregisterAsyncNotification() |
 
 ## Primary Context Management
-
 | CUDA Driver API | cudawrappers interface |
 |---|---|
 | `cuDevicePrimaryCtxGetState` | Missing |
@@ -60,6 +104,8 @@ Source header: `/var/scratch/veenboer/spack/opt/spack/linux-x86_64_v3/cuda-13.3.
 | `cuDevicePrimaryCtxSetFlags` | Missing |
 
 ## Context Management
+
+> Internal APIs not counted in coverage: `cuCtxCreate_v2`, `cuCtxCreate_v3`, `cuCtxGetDevice_v2`, `cuCtxSynchronize_v2`
 
 | CUDA Driver API | cudawrappers interface |
 |---|---|
@@ -131,6 +177,8 @@ Source header: `/var/scratch/veenboer/spack/opt/spack/linux-x86_64_v3/cuda-13.3.
 
 ## Memory Management
 
+> Internal APIs not counted in coverage: `cuMemPrefetchAsync_ptsz`, `cuMemPrefetchAsync_v2`
+
 | CUDA Driver API | cudawrappers interface |
 |---|---|
 | `cuMemAlloc` | DeviceMemory::DeviceMemory(size_t, CUmemorytype, unsigned int) |
@@ -200,6 +248,8 @@ Source header: `/var/scratch/veenboer/spack/opt/spack/linux-x86_64_v3/cuda-13.3.
 
 ## Multicast Object Management
 
+> Internal APIs not counted in coverage: `cuMulticastBindAddr_v2`, `cuMulticastBindMem_v2`
+
 | CUDA Driver API | cudawrappers interface |
 |---|---|
 | `cuMulticastAddDevice` | Missing |
@@ -238,6 +288,8 @@ Source header: `/var/scratch/veenboer/spack/opt/spack/linux-x86_64_v3/cuda-13.3.
 | `cuPointerSetAttribute` | pointerSetAttribute() |
 
 ## Stream Management
+
+> Internal APIs not counted in coverage: `cuStreamBatchMemOp_ptsz`, `cuStreamBatchMemOp_v2`, `cuStreamBeginCapture_ptsz`, `cuStreamBeginCapture_v2`, `cuStreamGetCaptureInfo_ptsz`, `cuStreamGetCaptureInfo_v2`, `cuStreamGetCaptureInfo_v2_ptsz`, `cuStreamGetCaptureInfo_v3`, `cuStreamGetCtx_v2`, `cuStreamUpdateCaptureDependencies_ptsz`, `cuStreamUpdateCaptureDependencies_v2`, `cuStreamWaitValue32_ptsz`, `cuStreamWaitValue32_v2`, `cuStreamWaitValue64_ptsz`, `cuStreamWaitValue64_v2`, `cuStreamWriteValue32_ptsz`, `cuStreamWriteValue32_v2`, `cuStreamWriteValue64_ptsz`, `cuStreamWriteValue64_v2`
 
 | CUDA Driver API | cudawrappers interface |
 |---|---|
@@ -318,6 +370,8 @@ Source header: `/var/scratch/veenboer/spack/opt/spack/linux-x86_64_v3/cuda-13.3.
 
 ## Stream Memory Operations
 
+> Internal APIs not counted in coverage: `cuMemcpy2DAsync_v2`, `cuMemcpy2DUnaligned_v2`, `cuMemcpy2D_v2`, `cuMemcpy3DAsync_v2`, `cuMemcpy3DBatchAsync_ptsz`, `cuMemcpy3DBatchAsync_v2`, `cuMemcpy3D_v2`, `cuMemcpyAtoA_v2`, `cuMemcpyAtoD_v2`, `cuMemcpyAtoHAsync_v2`, `cuMemcpyAtoH_v2`, `cuMemcpyBatchAsync_ptsz`, `cuMemcpyBatchAsync_v2`, `cuMemcpyDtoA_v2`, `cuMemcpyDtoDAsync_v2`, `cuMemcpyDtoD_v2`, `cuMemcpyDtoHAsync_v2`, `cuMemcpyDtoH_v2`, `cuMemcpyHtoAAsync_v2`, `cuMemcpyHtoA_v2`, `cuMemcpyHtoDAsync_v2`, `cuMemcpyHtoD_v2`, `cuMemsetD16_v2`, `cuMemsetD2D16_v2`, `cuMemsetD2D32_v2`, `cuMemsetD2D8_v2`, `cuMemsetD32_v2`, `cuMemsetD8_v2`
+
 | CUDA Driver API | cudawrappers interface |
 |---|---|
 | `cuMemAdvise` | Missing |
@@ -392,6 +446,8 @@ Source header: `/var/scratch/veenboer/spack/opt/spack/linux-x86_64_v3/cuda-13.3.
 
 ## Execution Control
 
+> Internal APIs not counted in coverage: `cuLaunchHostFunc_v2`
+
 | CUDA Driver API | cudawrappers interface |
 |---|---|
 | `cuFuncGetAttribute` | Function::getAttribute() |
@@ -424,6 +480,8 @@ Source header: `/var/scratch/veenboer/spack/opt/spack/linux-x86_64_v3/cuda-13.3.
 | `cuLinkCreate` | Missing |
 
 ## Graph Management
+
+> Internal APIs not counted in coverage: `cuGraphInstantiate_v2`
 
 | CUDA Driver API | cudawrappers interface |
 |---|---|
@@ -525,6 +583,8 @@ Source header: `/var/scratch/veenboer/spack/opt/spack/linux-x86_64_v3/cuda-13.3.
 
 ## Texture Reference Management [DEPRECATED]
 
+> Internal APIs not counted in coverage: `cuTexRefSetAddress2D_v2`
+
 | CUDA Driver API | cudawrappers interface |
 |---|---|
 | `cuTexRefCreate` | Missing |
@@ -606,6 +666,8 @@ Source header: `/var/scratch/veenboer/spack/opt/spack/linux-x86_64_v3/cuda-13.3.
 | `cuGraphicsUnregisterResource` | Missing |
 
 ## Driver Entry Point Access
+
+> Internal APIs not counted in coverage: `cuGetProcAddress_v2`, `cuGetProcAddress_v2_ptsz`
 
 | CUDA Driver API | cudawrappers interface |
 |---|---|
