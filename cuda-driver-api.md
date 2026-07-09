@@ -465,6 +465,7 @@ Reference: https://docs.nvidia.com/cuda/cuda-driver-api/index.html
 | `cuKernelGetAttribute` | Missing |
 | `cuKernelGetFunction` | Missing |
 | `cuKernelGetLibrary` | Missing |
+| `cudaGraphKernelNodeSetParam` | Missing |
 | `cuKernelGetName` | Missing |
 | `cuKernelGetParamCount` | Missing |
 | `cuKernelGetParamInfo` | Missing |
@@ -506,8 +507,10 @@ Reference: https://docs.nvidia.com/cuda/cuda-driver-api/index.html
 | `cuGraphClone` | Missing |
 | `cuGraphConditionalHandleCreate` | Missing |
 | `cuGraphCreate` | Graph::Graph(Context &, unsigned int) |
+| `cudaGraphKernelNodeUpdatesApply` | Missing |
 | `cuGraphDebugDotPrint` | Graph::debugDotPrint() |
 | `cuGraphDestroy` | Graph destructor |
+| `cudaGraphLaunch` | Missing |
 | `cuGraphDestroyNode` | Missing |
 | `cuGraphEventRecordNodeGetEvent` | Missing |
 | `cuGraphEventRecordNodeSetEvent` | Missing |
@@ -775,9 +778,6 @@ Reference: https://docs.nvidia.com/cuda/cuda-driver-api/index.html
 | `cudaDeviceGetTexture1DLinearMaxWidth` | Missing |
 | `cudaDeviceSynchronize` | Missing |
 | `cudaGetLastError` | Missing |
-| `cudaGraphKernelNodeSetParam` | Missing |
-| `cudaGraphKernelNodeUpdatesApply` | Missing |
-| `cudaGraphLaunch` | Missing |
 | `cudaGridDependencySynchronize` | Missing |
 | `cudaTriggerProgrammaticLaunchCompletion` | Missing |
 
