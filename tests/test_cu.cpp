@@ -469,6 +469,7 @@ TEST_CASE("Test cu::Event", "[event]") {
   cu::Event end;
 
   SECTION("Test Event::record(Stream&, unsigned int)") {
+    context.setCurrent();
     start.record(stream, CU_EVENT_RECORD_DEFAULT);
     end.record(stream, CU_EVENT_RECORD_DEFAULT);
     stream.synchronize();
@@ -476,6 +477,7 @@ TEST_CASE("Test cu::Event", "[event]") {
   }
 
   SECTION("Test Stream::record(Event&, unsigned int)") {
+    context.setCurrent();
     stream.record(start, CU_EVENT_RECORD_DEFAULT);
     stream.record(end, CU_EVENT_RECORD_DEFAULT);
     stream.synchronize();
@@ -486,10 +488,11 @@ TEST_CASE("Test cu::Event", "[event]") {
 TEST_CASE("Test cu::Stream", "[stream]") {
   cu::init();
   cu::Device device(0);
-  cu::Context(CU_CTX_SCHED_BLOCKING_SYNC, device);
+  cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, device);
   cu::Stream stream;
 
   SECTION("Test memAllocAsync") {
+    context.setCurrent();
     const size_t size = 1024;
     cu::DeviceMemory mem = stream.memAllocAsync(size);
     CHECK(mem.size() == size);
