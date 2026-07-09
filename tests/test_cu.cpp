@@ -460,10 +460,33 @@ TEMPLATE_LIST_TEST_CASE("Test memset 2D", "[memset]", TestTypes) {
   }
 }
 
-TEST_CASE("Test cu::Stream", "[stream]") {
+TEST_CASE("Test cu::Event", "[event]") {
   cu::init();
   cu::Device device(0);
   cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, device);
+  cu::Stream stream;
+  cu::Event start;
+  cu::Event end;
+
+  SECTION("Test Event::record(Stream&, unsigned int)") {
+    start.record(stream, CU_EVENT_RECORD_DEFAULT);
+    end.record(stream, CU_EVENT_RECORD_DEFAULT);
+    stream.synchronize();
+    CHECK(end.elapsedTime(start) >= 0.0f);
+  }
+
+  SECTION("Test Stream::record(Event&, unsigned int)") {
+    stream.record(start, CU_EVENT_RECORD_DEFAULT);
+    stream.record(end, CU_EVENT_RECORD_DEFAULT);
+    stream.synchronize();
+    CHECK(end.elapsedTime(start) >= 0.0f);
+  }
+}
+
+TEST_CASE("Test cu::Stream", "[stream]") {
+  cu::init();
+  cu::Device device(0);
+  cu::Context(CU_CTX_SCHED_BLOCKING_SYNC, device);
   cu::Stream stream;
 
   SECTION("Test memAllocAsync") {

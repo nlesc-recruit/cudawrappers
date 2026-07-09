@@ -688,6 +688,7 @@ class Event : public Wrapper<CUevent> {
   void record() { checkCudaCall(cuEventRecord(_obj, 0)); }
 
   void record(Stream &);
+  void record(Stream &stream, unsigned int flags);
 
   void synchronize() { checkCudaCall(cuEventSynchronize(_obj)); }
 };
@@ -1290,6 +1291,10 @@ class Stream : public Wrapper<CUstream> {
 
   void record(Event &event) { checkCudaCall(cuEventRecord(event, _obj)); }
 
+  void record(Event &event, unsigned int flags) {
+    checkCudaCall(cuEventRecordWithFlags(event, _obj, flags));
+  }
+
 #if !defined(__HIP__)
   void batchMemOp(unsigned count, CUstreamBatchMemOpParams *paramArray,
                   unsigned flags) {
@@ -1308,6 +1313,10 @@ class Stream : public Wrapper<CUstream> {
 
 inline void Event::record(Stream &stream) {
   checkCudaCall(cuEventRecord(_obj, stream._obj));
+}
+
+inline void Event::record(Stream &stream, unsigned int flags) {
+  checkCudaCall(cuEventRecordWithFlags(_obj, stream._obj, flags));
 }
 }  // namespace cu
 

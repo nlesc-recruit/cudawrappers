@@ -302,7 +302,7 @@ Source header: `/var/scratch/veenboer/spack/opt/spack/linux-x86_64_v3/cuda-13.3.
 | `cuEventElapsedTime` | Event::elapsedTime() |
 | `cuEventQuery` | Event::query() |
 | `cuEventRecord` | Event::record() / Stream::record(Event &) |
-| `cuEventRecordWithFlags` | Missing |
+| `cuEventRecordWithFlags` | Event::record(Stream &, unsigned int) / Stream::record(Event &, unsigned int) |
 | `cuEventSynchronize` | Event::synchronize() |
 
 ## External Resource Interoperability
