@@ -52,7 +52,7 @@ Reference: https://docs.nvidia.com/cuda/cuda-driver-api/index.html
 | CUDA Driver API | cudawrappers interface |
 |---|---|
 | `cuGetErrorName` | `cu::getErrorName()` |
-| `cuGetErrorString` | Implemented in cudawrappers |
+| `cuGetErrorString` | Error::what() (internal cu::Error wrapper) |
 
 ## Initialization
 
@@ -194,7 +194,7 @@ Reference: https://docs.nvidia.com/cuda/cuda-driver-api/index.html
 | `cuMemExportToShareableHandle` | Missing |
 | `cuMemFree` | DeviceMemory destructor |
 | `cuMemFreeAsync` | Stream::memFreeAsync() |
-| `cuMemFreeHost` | Implemented in cudawrappers |
+| `cuMemFreeHost` | HostMemory destructor |
 | `cuMemGetAccess` | Missing |
 | `cuMemGetAddressRange` | Missing |
 | `cuMemGetAllocationGranularity` | Missing |
@@ -207,10 +207,10 @@ Reference: https://docs.nvidia.com/cuda/cuda-driver-api/index.html
 | `cuMemHostGetDevicePointer` | DeviceMemory::DeviceMemory(const HostMemory &) |
 | `cuMemHostGetFlags` | Missing |
 | `cuMemHostRegister` | HostMemory::HostMemory(void *, size_t, unsigned int) |
-| `cuMemHostUnregister` | HostMemory cleanup |
+| `cuMemHostUnregister` | HostMemory destructor |
 | `cuMemImportFromShareableHandle` | Missing |
 | `cuMemMapArrayAsync` | Missing |
-| `cuMemPrefetchAsync` | Implemented in cudawrappers |
+| `cuMemPrefetchAsync` | Stream::memPrefetchAsync(DeviceMemory &, size_t) / Stream::memPrefetchAsync(DeviceMemory &, size_t, Device &) |
 | `cuMemPrefetchAsync_ptsz` | Missing |
 | `cuMemPrefetchAsync_v2` | Missing |
 | `cuMemPrefetchBatchAsync` | Missing |
@@ -470,10 +470,10 @@ Reference: https://docs.nvidia.com/cuda/cuda-driver-api/index.html
 | `cuKernelGetParamInfo` | Missing |
 | `cuKernelSetAttribute` | Missing |
 | `cuKernelSetCacheConfig` | Missing |
-| `cuLaunchCooperativeKernel` | Implemented in cudawrappers |
+| `cuLaunchCooperativeKernel` | Stream::launchCooperativeKernel(Function &, unsigned, unsigned, unsigned, unsigned, unsigned, unsigned, unsigned, const std::vector<const void *> &) |
 | `cuLaunchHostFunc` | Stream::launchHostFunc() |
 | `cuLaunchHostFunc_v2` | Missing |
-| `cuLaunchKernel` | Implemented in cudawrappers |
+| `cuLaunchKernel` | Stream::launchKernel(Function &, unsigned, unsigned, unsigned, unsigned, unsigned, unsigned, unsigned, const std::vector<const void *> &) |
 | `cuLaunchKernelEx` | Missing |
 | `cuLinkAddData` | Missing |
 | `cuLinkAddFile` | Missing |
@@ -733,10 +733,10 @@ Reference: https://docs.nvidia.com/cuda/cuda-driver-api/index.html
 
 | CUDA Driver API | cudawrappers interface |
 |---|---|
-| `cuArray3DCreate` | Implemented in cudawrappers |
+| `cuArray3DCreate` | Array::Array(unsigned width, unsigned height, unsigned depth, CUarray_format format, unsigned numChannels) |
 | `cuArray3DGetDescriptor` | Missing |
-| `cuArrayCreate` | Implemented in cudawrappers |
-| `cuArrayDestroy` | Implemented in cudawrappers |
+| `cuArrayCreate` | Array::Array(unsigned width, unsigned height, CUarray_format format, unsigned numChannels) |
+| `cuArrayDestroy` | Array destructor |
 | `cuArrayGetDescriptor` | Missing |
 | `cuArrayGetMemoryRequirements` | Missing |
 | `cuArrayGetPlane` | Missing |
