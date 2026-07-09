@@ -72,6 +72,11 @@ inline void memcpyDtoH(void *dst, CUdeviceptr src, size_t size) {
   checkCudaCall(cuMemcpyDtoH(dst, src, size));
 }
 
+inline void pointerSetAttribute(const void *value, CUpointer_attribute attribute,
+                                CUdeviceptr ptr) {
+  checkCudaCall(cuPointerSetAttribute(value, attribute, ptr));
+}
+
 class Context;
 class Stream;
 

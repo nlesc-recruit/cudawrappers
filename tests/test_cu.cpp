@@ -267,6 +267,15 @@ TEST_CASE("Test cu::DeviceMemory", "[devicememory]") {
     CHECK(static_cast<bool>(memcmp(src, tgt, size)));
   }
 
+  SECTION("Test cuPointerSetAttribute") {
+    const size_t size = 256;
+    cu::DeviceMemory mem(size);
+    unsigned int syncMemOps = 1;
+
+    CHECK_NOTHROW(cu::pointerSetAttribute(
+        &syncMemOps, CU_POINTER_ATTRIBUTE_SYNC_MEMOPS, mem));
+  }
+
   SECTION("Test cu::DeviceMemory memcpy asynchronously") {
     const size_t N = 3;
     const size_t size = N * sizeof(int);

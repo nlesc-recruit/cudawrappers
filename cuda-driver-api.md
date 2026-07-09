@@ -235,7 +235,7 @@ Source header: `/var/scratch/veenboer/spack/opt/spack/linux-x86_64_v3/cuda-13.3.
 | `cuDeviceGetHostAtomicCapabilities` | Device::getHostAtomicCapabilities() |
 | `cuPointerGetAttribute` | Wrapper::checkPointerAccess() |
 | `cuPointerGetAttributes` | Wrapper::checkPointerAccess() |
-| `cuPointerSetAttribute` | Missing |
+| `cuPointerSetAttribute` | pointerSetAttribute() |
 
 ## Stream Management
 
