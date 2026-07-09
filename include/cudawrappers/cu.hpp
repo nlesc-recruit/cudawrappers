@@ -219,7 +219,8 @@ class Device : public Wrapper<CUdevice> {
   }
 
   void getComputeCapability(int &major, int &minor) const {
-    checkCudaCall(cuDeviceComputeCapability(&major, &minor, _obj));
+    major = getAttribute<CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MAJOR>();
+    minor = getAttribute<CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MINOR>();
   }
 
   std::pair<int, int> getComputeCapability() const {
