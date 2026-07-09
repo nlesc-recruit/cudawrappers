@@ -6,7 +6,7 @@ Source header: `/var/scratch/veenboer/spack/opt/spack/linux-x86_64_v3/cuda-13.3.
 
 | CUDA Driver API | cudawrappers interface |
 |---|---|
-| `cuGetErrorName` | Missing |
+| `cuGetErrorName` | `cu::getErrorName()` |
 | `cuGetErrorString` | Implemented in cudawrappers |
 
 ## Initialization
