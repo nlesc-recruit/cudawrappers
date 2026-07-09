@@ -53,6 +53,12 @@ inline int driverGetVersion() {
   return version;
 }
 
+inline const char *getErrorName(CUresult result) {
+  const char *str;
+  checkCudaCall(cuGetErrorName(result, &str));
+  return str;
+}
+
 inline void memcpyHtoD(CUdeviceptr dst, const void *src, size_t size) {
 #if defined(__HIP__) && HIP_VERSION_MAJOR < 7
   // const_cast is a temp fix for https://github.com/ROCm/ROCm/issues/2977
