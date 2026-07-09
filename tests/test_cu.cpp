@@ -35,6 +35,54 @@ TEST_CASE("Test cu::Device", "[device]") {
     const int dev_ordinal = device.getOrdinal();
     CHECK(dev_ordinal >= 0);
   }
+
+  SECTION("Test Device.getComputeCapability", "[device]") {
+    const auto [major, minor] = device.getComputeCapability();
+    CHECK(major >= 0);
+    CHECK(minor >= 0);
+  }
+
+  SECTION("Test Device.getPCIBusId and Device.getByPCIBusId", "[device]") {
+    const std::string pciBusId = device.getPCIBusId();
+    CHECK(pciBusId.size() > 0);
+
+    const cu::Device deviceByPci = cu::Device::getByPCIBusId(pciBusId);
+    CHECK(deviceByPci.getOrdinal() == device.getOrdinal());
+    CHECK(deviceByPci.getName() == device.getName());
+  }
+
+  SECTION("Test Device.getTexture1DLinearMaxWidth", "[device]") {
+    const size_t maxWidth =
+        device.getTexture1DLinearMaxWidth(CU_AD_FORMAT_UNSIGNED_INT8, 1);
+    CHECK(maxWidth > 0);
+  }
+
+  SECTION("Test Device memory pool APIs", "[device]") {
+    if (!device.getAttribute(CU_DEVICE_ATTRIBUTE_MEMORY_POOLS_SUPPORTED)) {
+      WARN("Device does not support memory pools");
+      return;
+    }
+
+    CUmemoryPool pool{};
+    device.getDefaultMemPool(pool);
+    CHECK(pool != 0);
+
+    device.getMemPool(pool);
+    device.setMemPool(pool);
+  }
+
+  SECTION("Test Device.getExecAffinitySupport", "[device]") {
+    int pi = 0;
+    device.getExecAffinitySupport(pi, CU_EXEC_AFFINITY_TYPE_SM_COUNT);
+    CHECK(pi >= 0);
+  }
+
+  SECTION("Test Device.getProperties", "[device]") {
+    CUdevprop properties;
+    device.getProperties(properties);
+    CHECK(properties.maxThreadsPerBlock > 0);
+    CHECK(properties.clockRate > 0);
+  }
 }
 
 TEST_CASE("Test context::getDevice", "[device]") {

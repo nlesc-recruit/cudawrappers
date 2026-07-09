@@ -143,7 +143,7 @@ class Device : public Wrapper<CUdevice> {
 #endif
   }
 
-  explicit Device(CUdevice device) : Wrapper<CUdevice>(device) {
+  explicit Device(CUdevice device) : Wrapper<CUdevice>(device), _ordinal(-1) {
     int count = 0;
     checkCudaCall(cuDeviceGetCount(&count));
 
@@ -152,6 +152,7 @@ class Device : public Wrapper<CUdevice> {
       checkCudaCall(cuDeviceGet(&current_device, ordinal));
       if (current_device == device) {
         _ordinal = ordinal;
+        break;
       }
     }
   }
@@ -215,6 +216,118 @@ class Device : public Wrapper<CUdevice> {
         getAttribute<CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MINOR>();
     return "sm_" + std::to_string(10 * major + minor);
 #endif
+  }
+
+  void getComputeCapability(int &major, int &minor) const {
+    checkCudaCall(cuDeviceComputeCapability(&major, &minor, _obj));
+  }
+
+  std::pair<int, int> getComputeCapability() const {
+    int major{};
+    int minor{};
+    getComputeCapability(major, minor);
+    return {major, minor};
+  }
+
+  static Device getByPCIBusId(const std::string &pciBusId) {
+    CUdevice device{};
+    checkCudaCall(cuDeviceGetByPCIBusId(&device, pciBusId.c_str()));
+    return Device(device);
+  }
+
+  std::string getPCIBusId() const {
+    const size_t pciBusIdLength{64};
+    std::array<char, pciBusIdLength> pciBusId{};
+    checkCudaCall(cuDeviceGetPCIBusId(pciBusId.data(), pciBusId.size(), _obj));
+    return std::string(pciBusId.data());
+  }
+
+  size_t getTexture1DLinearMaxWidth(CUarray_format format,
+                                    unsigned numChannels) const {
+    size_t maxWidth{};
+    checkCudaCall(cuDeviceGetTexture1DLinearMaxWidth(&maxWidth, format,
+                                                     numChannels, _obj));
+    return maxWidth;
+  }
+
+  void getDefaultMemPool(CUmemoryPool &pool) const {
+    checkCudaCall(cuDeviceGetDefaultMemPool(&pool, _obj));
+  }
+
+  void getMemPool(CUmemoryPool &pool) const {
+    checkCudaCall(cuDeviceGetMemPool(&pool, _obj));
+  }
+
+  void setMemPool(CUmemoryPool pool) const {
+    checkCudaCall(cuDeviceSetMemPool(_obj, pool));
+  }
+
+  void graphMemTrim() const { checkCudaCall(cuDeviceGraphMemTrim(_obj)); }
+
+  void getGraphMemAttribute(CUgraphMem_attribute attr, void *value) const {
+    checkCudaCall(cuDeviceGetGraphMemAttribute(_obj, attr, value));
+  }
+
+  void setGraphMemAttribute(CUgraphMem_attribute attr, void *value) const {
+    checkCudaCall(cuDeviceSetGraphMemAttribute(_obj, attr, value));
+  }
+
+  std::array<unsigned char, 8> getLuid(unsigned int &deviceNodeMask) const {
+    std::array<unsigned char, 8> luid{};
+    checkCudaCall(cuDeviceGetLuid(reinterpret_cast<char *>(luid.data()),
+                                  &deviceNodeMask, _obj));
+    return luid;
+  }
+
+  void getExecAffinitySupport(int &pi, CUexecAffinityType type) const {
+    checkCudaCall(cuDeviceGetExecAffinitySupport(&pi, type, _obj));
+  }
+
+  void getProperties(CUdevprop &prop) const {
+    checkCudaCall(cuDeviceGetProperties(&prop, _obj));
+  }
+
+  void getDevResource(CUdevResource &resource, CUdevResourceType type) const {
+    checkCudaCall(cuDeviceGetDevResource(_obj, &resource, type));
+  }
+
+  void getNvSciSyncAttributes(void *nvSciSyncAttrList, int flags) const {
+    checkCudaCall(
+        cuDeviceGetNvSciSyncAttributes(nvSciSyncAttrList, _obj, flags));
+  }
+
+  void getHostAtomicCapabilities(unsigned int *capabilities,
+                                 const CUatomicOperation *operations,
+                                 unsigned int count) const {
+    checkCudaCall(cuDeviceGetHostAtomicCapabilities(capabilities, operations,
+                                                    count, _obj));
+  }
+
+  static int getP2PAttribute(CUdevice_P2PAttribute attrib,
+                             const Device &srcDevice, const Device &dstDevice) {
+    int value{};
+    checkCudaCall(
+        cuDeviceGetP2PAttribute(&value, attrib, srcDevice, dstDevice));
+    return value;
+  }
+
+  static void getP2PAtomicCapabilities(unsigned int *capabilities,
+                                       const CUatomicOperation *operations,
+                                       unsigned int count,
+                                       const Device &srcDevice,
+                                       const Device &dstDevice) {
+    checkCudaCall(cuDeviceGetP2PAtomicCapabilities(
+        capabilities, operations, count, srcDevice, dstDevice));
+  }
+
+  void registerAsyncNotification(CUasyncCallback callbackFunc, void *userData,
+                                 CUasyncCallbackHandle *callback) const {
+    checkCudaCall(cuDeviceRegisterAsyncNotification(_obj, callbackFunc,
+                                                    userData, callback));
+  }
+
+  void unregisterAsyncNotification(CUasyncCallbackHandle callback) const {
+    checkCudaCall(cuDeviceUnregisterAsyncNotification(_obj, callback));
   }
 
   size_t totalMem() const {
