@@ -115,7 +115,7 @@ Reference: https://docs.nvidia.com/cuda/cuda-driver-api/index.html
 | `cuCtxCreate_v3` | Missing |
 | `cuCtxDestroy` | Context destructor |
 | `cuCtxDetach` | Missing |
-| `cuCtxFromGreenCtx` | Missing |
+| `cuCtxFromGreenCtx` | Context::fromGreenCtx(GreenContext &) |
 | `cuCtxGetApiVersion` | Context::getApiVersion() |
 | `cuCtxGetCacheConfig` | Context::getCacheConfig() |
 | `cuCtxGetCurrent` | Context::getCurrent() |
@@ -321,7 +321,7 @@ Reference: https://docs.nvidia.com/cuda/cuda-driver-api/index.html
 | `cuStreamGetDevResource` | Missing |
 | `cuStreamGetDevice` | Missing |
 | `cuStreamGetFlags` | Missing |
-| `cuStreamGetGreenCtx` | Missing |
+| `cuStreamGetGreenCtx` | Stream::getGreenCtx() |
 | `cuStreamGetId` | Missing |
 | `cuStreamGetPriority` | Missing |
 | `cuStreamIsCapturing` | Missing |
@@ -696,13 +696,13 @@ Reference: https://docs.nvidia.com/cuda/cuda-driver-api/index.html
 
 | CUDA Driver API | cudawrappers interface |
 |---|---|
-| `cuGreenCtxCreate` | Missing |
-| `cuGreenCtxDestroy` | Missing |
-| `cuGreenCtxGetDevResource` | Missing |
-| `cuGreenCtxGetId` | Missing |
-| `cuGreenCtxRecordEvent` | Missing |
-| `cuGreenCtxStreamCreate` | Missing |
-| `cuGreenCtxWaitEvent` | Missing |
+| `cuGreenCtxCreate` | GreenContext::GreenContext(CUdevResourceDesc, Device &, unsigned int) |
+| `cuGreenCtxDestroy` | GreenContext destructor |
+| `cuGreenCtxGetDevResource` | GreenContext::getDevResource(CUdevResource &, CUdevResourceType) |
+| `cuGreenCtxGetId` | GreenContext::getId() |
+| `cuGreenCtxRecordEvent` | GreenContext::recordEvent(Event &) |
+| `cuGreenCtxStreamCreate` | GreenContext::createStream(unsigned int, int) |
+| `cuGreenCtxWaitEvent` | GreenContext::waitEvent(Event &) |
 
 ## Error Log Management Functions
 
@@ -744,7 +744,7 @@ Reference: https://docs.nvidia.com/cuda/cuda-driver-api/index.html
 | `cuArrayGetMemoryRequirements` | Missing |
 | `cuArrayGetPlane` | Missing |
 | `cuArrayGetSparseProperties` | Missing |
-| `cuDevResourceGenerateDesc` | Missing |
+| `cuDevResourceGenerateDesc` | devResourceGenerateDesc(CUdevResourceDesc *, CUdevResource *, unsigned int) |
 | `cuDevSmResourceSplit` | Missing |
 | `cuDevSmResourceSplitByCount` | Missing |
 | `cuFlushGPUDirectRDMAWrites` | Missing |

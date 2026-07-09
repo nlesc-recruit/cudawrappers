@@ -494,6 +494,62 @@ TEST_CASE("Test cu::Event", "[event]") {
   }
 }
 
+#if !defined(__HIP__)
+TEST_CASE("Test cu::GreenContext", "[greencontext]") {
+  cu::init();
+
+  CUdevice device;
+  CHECK(CUDA_SUCCESS == cuDeviceGet(&device, 0));
+  CHECK(CUDA_SUCCESS ==
+        cuDevicePrimaryCtxSetFlags(device, CU_CTX_SCHED_BLOCKING_SYNC));
+
+  CUcontext context;
+  CHECK(CUDA_SUCCESS == cuDevicePrimaryCtxRetain(&context, device));
+  CHECK(CUDA_SUCCESS == cuCtxSetCurrent(context));
+
+  CUdevResource input{};
+  CHECK(CUDA_SUCCESS ==
+        cuDeviceGetDevResource(device, &input, CU_DEV_RESOURCE_TYPE_SM));
+
+  unsigned int nbGroups = 1;
+  unsigned int minCount = (unsigned int)((float)input.sm.smCount * 0.4f);
+  CUdevResource resources[2]{};
+  CHECK(CUDA_SUCCESS == cuDevSmResourceSplitByCount(&resources[0], &nbGroups,
+                                                    &input, &resources[1], 0,
+                                                    minCount));
+
+  CUdevResourceDesc desc{};
+  CHECK(CUDA_SUCCESS == cuDevResourceGenerateDesc(&desc, &resources[0], 1));
+
+  CUgreenCtx gctx;
+  CHECK(CUDA_SUCCESS ==
+        cuGreenCtxCreate(&gctx, desc, device, CU_GREEN_CTX_DEFAULT_STREAM));
+
+  CUstream streamA;
+  CHECK(CUDA_SUCCESS ==
+        cuGreenCtxStreamCreate(&streamA, gctx, CU_STREAM_NON_BLOCKING, 0));
+
+  const size_t count = 1000 * 512;
+  CUdeviceptr tensor_device{};
+  void* tensor_host = nullptr;
+
+  CHECK(CUDA_SUCCESS == cuMemAlloc(&tensor_device, count * sizeof(float)));
+  CHECK(CUDA_SUCCESS == cuMemHostAlloc(&tensor_host, count * sizeof(float), 0));
+  CHECK(CUDA_SUCCESS ==
+        cuMemcpyHtoD(tensor_device, tensor_host, count * sizeof(float)));
+  CHECK(CUDA_SUCCESS == cuMemcpyHtoDAsync(tensor_device, tensor_host,
+                                          count * sizeof(float), streamA));
+  CHECK(CUDA_SUCCESS == cuStreamSynchronize(streamA));
+
+  CHECK(CUDA_SUCCESS == cuMemFreeHost(tensor_host));
+  CHECK(CUDA_SUCCESS == cuMemFree(tensor_device));
+  CHECK(CUDA_SUCCESS == cuStreamDestroy(streamA));
+  CHECK(CUDA_SUCCESS == cuGreenCtxDestroy(gctx));
+  CHECK(CUDA_SUCCESS == cuCtxSetCurrent(nullptr));
+  CHECK(CUDA_SUCCESS == cuDevicePrimaryCtxRelease(device));
+}
+#endif
+
 TEST_CASE("Test cu::Stream", "[stream]") {
   cu::init();
   cu::Device device(0);

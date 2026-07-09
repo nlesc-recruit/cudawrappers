@@ -78,8 +78,18 @@ inline void pointerSetAttribute(const void *value,
   checkCudaCall(cuPointerSetAttribute(value, attribute, ptr));
 }
 
+#if !defined(__HIP__)
+inline void devResourceGenerateDesc(CUdevResourceDesc *phDesc,
+                                    CUdevResource *resources,
+                                    unsigned int nbResources) {
+  checkCudaCall(cuDevResourceGenerateDesc(phDesc, resources, nbResources));
+}
+#endif
+
 class Context;
 class Stream;
+class Event;
+class GreenContext;
 
 template <typename T>
 class Wrapper {
@@ -477,6 +487,10 @@ class Context : public Wrapper<CUcontext> {
     setLimit(limit, value);
   }
 
+#if !defined(__HIP__)
+  static Context fromGreenCtx(GreenContext &greenContext);
+#endif
+
   size_t getFreeMemory() const {
     size_t free;
     size_t total;
@@ -504,6 +518,10 @@ class Context : public Wrapper<CUcontext> {
  private:
   cu::Device &_device;
 };
+
+#if !defined(__HIP__)
+class GreenContext;
+#endif
 
 class HostMemory : public Wrapper<void *> {
  public:
@@ -1077,6 +1095,16 @@ class Stream : public Wrapper<CUstream> {
 
   explicit Stream(CUstream stream) : Wrapper<CUstream>(stream) {}
 
+  Stream(CUstream stream, bool takeOwnership) : Wrapper<CUstream>(stream) {
+    if (takeOwnership) {
+      manager =
+          std::shared_ptr<CUstream>(new CUstream(stream), [](CUstream *ptr) {
+            checkCudaCall(cuStreamDestroy(*ptr));
+            delete ptr;
+          });
+    }
+  }
+
   DeviceMemory memAllocAsync(size_t size) {
     CUdeviceptr ptr;
     checkCudaCall(cuMemAllocAsync(&ptr, size, _obj));
@@ -1304,6 +1332,14 @@ class Stream : public Wrapper<CUstream> {
 
   void wait(Event &event) { checkCudaCall(cuStreamWaitEvent(_obj, event, 0)); }
 
+#if !defined(__HIP__)
+  CUgreenCtx getGreenCtx() const {
+    CUgreenCtx greenCtx;
+    checkCudaCall(cuStreamGetGreenCtx(_obj, &greenCtx));
+    return greenCtx;
+  }
+#endif
+
   void addCallback(CUstreamCallback callback, void *userData,
                    unsigned int flags = 0) {
     checkCudaCall(cuStreamAddCallback(_obj, callback, userData, flags));
@@ -1334,6 +1370,57 @@ class Stream : public Wrapper<CUstream> {
     checkCudaCall(cuStreamWriteValue32(_obj, addr, value, flags));
   }
 };
+
+#if !defined(__HIP__)
+class GreenContext : public Wrapper<CUgreenCtx> {
+ public:
+  GreenContext(CUdevResourceDesc desc, Device &device,
+               unsigned int flags = CU_GREEN_CTX_DEFAULT_STREAM)
+      : _device(device) {
+    checkCudaCall(cuGreenCtxCreate(&_obj, desc, device, flags));
+    manager =
+        std::shared_ptr<CUgreenCtx>(new CUgreenCtx(_obj), [](CUgreenCtx *ptr) {
+          if (*ptr) cuGreenCtxDestroy(*ptr);
+          delete ptr;
+        });
+  }
+
+  void getDevResource(CUdevResource &resource, CUdevResourceType type) const {
+    checkCudaCall(cuGreenCtxGetDevResource(_obj, &resource, type));
+  }
+
+  unsigned long long getId() const {
+    unsigned long long id{};
+    checkCudaCall(cuGreenCtxGetId(_obj, &id));
+    return id;
+  }
+
+  Stream createStream(unsigned int flags = 0, int priority = 0) const {
+    CUstream stream;
+    checkCudaCall(cuGreenCtxStreamCreate(&stream, _obj, flags, priority));
+    return Stream(stream, true);
+  }
+
+  void recordEvent(Event &event) const {
+    checkCudaCall(cuGreenCtxRecordEvent(_obj, static_cast<CUevent>(event)));
+  }
+
+  void waitEvent(Event &event) const {
+    checkCudaCall(cuGreenCtxWaitEvent(_obj, static_cast<CUevent>(event)));
+  }
+
+  const Device &getDevice() const { return _device; }
+
+ private:
+  Device _device;
+};
+
+inline Context Context::fromGreenCtx(GreenContext &greenContext) {
+  CUcontext context{};
+  checkCudaCall(cuCtxFromGreenCtx(&context, greenContext));
+  return Context(context, const_cast<Device &>(greenContext.getDevice()));
+}
+#endif
 
 inline void Event::record(Stream &stream) {
   checkCudaCall(cuEventRecord(_obj, stream._obj));
