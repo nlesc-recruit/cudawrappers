@@ -503,55 +503,35 @@ TEST_CASE("Test cu::Event", "[event]") {
 TEST_CASE("Test cu::GreenContext", "[greencontext]") {
   cu::init();
 
-  CUdevice device;
-  CHECK(CUDA_SUCCESS == cuDeviceGet(&device, 0));
-  CHECK(CUDA_SUCCESS ==
-        cuDevicePrimaryCtxSetFlags(device, CU_CTX_SCHED_BLOCKING_SYNC));
-
-  CUcontext context;
-  CHECK(CUDA_SUCCESS == cuDevicePrimaryCtxRetain(&context, device));
-  CHECK(CUDA_SUCCESS == cuCtxSetCurrent(context));
+  cu::Device device(0);
+  cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, device);
+  context.setCurrent();
 
   CUdevResource input{};
-  CHECK(CUDA_SUCCESS ==
-        cuDeviceGetDevResource(device, &input, CU_DEV_RESOURCE_TYPE_SM));
+  device.getDevResource(input, CU_DEV_RESOURCE_TYPE_SM);
 
   unsigned int nbGroups = 1;
-  unsigned int minCount = (unsigned int)((float)input.sm.smCount * 0.4f);
+  unsigned int minCount = static_cast<unsigned int>(input.sm.smCount * 0.4f);
   CUdevResource resources[2]{};
-  CHECK(CUDA_SUCCESS == cuDevSmResourceSplitByCount(&resources[0], &nbGroups,
-                                                    &input, &resources[1], 0,
-                                                    minCount));
+  CHECK_NOTHROW(cu::devSmResourceSplitByCount(&resources[0], &nbGroups, &input,
+                                              &resources[1], 0, minCount));
 
   CUdevResourceDesc desc{};
-  CHECK(CUDA_SUCCESS == cuDevResourceGenerateDesc(&desc, &resources[0], 1));
+  CHECK_NOTHROW(cu::devResourceGenerateDesc(&desc, &resources[0], 1));
 
-  CUgreenCtx gctx;
-  CHECK(CUDA_SUCCESS ==
-        cuGreenCtxCreate(&gctx, desc, device, CU_GREEN_CTX_DEFAULT_STREAM));
+  cu::GreenContext greenContext(desc, device, CU_GREEN_CTX_DEFAULT_STREAM);
+  cu::Context greenContextBase = cu::Context::fromGreenCtx(greenContext);
+  greenContextBase.setCurrent();
 
-  CUstream streamA;
-  CHECK(CUDA_SUCCESS ==
-        cuGreenCtxStreamCreate(&streamA, gctx, CU_STREAM_NON_BLOCKING, 0));
+  cu::Stream stream = greenContext.createStream(CU_STREAM_NON_BLOCKING, 0);
 
-  const size_t count = 1000 * 512;
-  CUdeviceptr tensor_device{};
-  void* tensor_host = nullptr;
+  const size_t size = 1024;
+  cu::DeviceMemory a(size);
+  cu::HostMemory b(size);
 
-  CHECK(CUDA_SUCCESS == cuMemAlloc(&tensor_device, count * sizeof(float)));
-  CHECK(CUDA_SUCCESS == cuMemHostAlloc(&tensor_host, count * sizeof(float), 0));
-  CHECK(CUDA_SUCCESS ==
-        cuMemcpyHtoD(tensor_device, tensor_host, count * sizeof(float)));
-  CHECK(CUDA_SUCCESS == cuMemcpyHtoDAsync(tensor_device, tensor_host,
-                                          count * sizeof(float), streamA));
-  CHECK(CUDA_SUCCESS == cuStreamSynchronize(streamA));
-
-  CHECK(CUDA_SUCCESS == cuMemFreeHost(tensor_host));
-  CHECK(CUDA_SUCCESS == cuMemFree(tensor_device));
-  CHECK(CUDA_SUCCESS == cuStreamDestroy(streamA));
-  CHECK(CUDA_SUCCESS == cuGreenCtxDestroy(gctx));
-  CHECK(CUDA_SUCCESS == cuCtxSetCurrent(nullptr));
-  CHECK(CUDA_SUCCESS == cuDevicePrimaryCtxRelease(device));
+  CHECK_NOTHROW(cu::memcpyHtoD(a, b, size));
+  CHECK_NOTHROW(stream.memcpyHtoDAsync(a, b, size));
+  CHECK_NOTHROW(stream.synchronize());
 }
 #endif
 

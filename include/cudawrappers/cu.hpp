@@ -84,6 +84,13 @@ inline void devResourceGenerateDesc(CUdevResourceDesc *phDesc,
                                     unsigned int nbResources) {
   checkCudaCall(cuDevResourceGenerateDesc(phDesc, resources, nbResources));
 }
+
+inline void devSmResourceSplitByCount(
+    CUdevResource *result, unsigned int *nbGroups, CUdevResource *input,
+    CUdevResource *remaining, unsigned int useFlags, unsigned int minCount) {
+  checkCudaCall(cuDevSmResourceSplitByCount(result, nbGroups, input, remaining,
+                                            useFlags, minCount));
+}
 #endif
 
 class Context;
