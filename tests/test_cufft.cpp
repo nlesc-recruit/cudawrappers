@@ -243,9 +243,17 @@ TEST_CASE("Test 2D FFT", "[FFT2D]") {
 }
 
 TEST_CASE("Test erorr messages", "[Error]") {
+#if defined(__HIP__)
+  CHECK_THROWS_WITH(throw cufft::Error(HIPFFT_SUCCESS), "HIPFFT_SUCCESS");
+  CHECK_THROWS_WITH(throw cufft::Error(HIPFFT_INVALID_PLAN),
+                    "HIPFFT_INVALID_PLAN");
+  CHECK_THROWS_WITH(throw cufft::Error(HIPFFT_ALLOC_FAILED),
+                    "HIPFFT_ALLOC_FAILED");
+#else
   CHECK_THROWS_WITH(throw cufft::Error(CUFFT_SUCCESS), "CUFFT_SUCCESS");
   CHECK_THROWS_WITH(throw cufft::Error(CUFFT_INVALID_PLAN),
                     "CUFFT_INVALID_PLAN");
   CHECK_THROWS_WITH(throw cufft::Error(CUFFT_ALLOC_FAILED),
                     "CUFFT_ALLOC_FAILED");
+#endif
 }
