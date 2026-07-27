@@ -53,11 +53,13 @@ TEST_CASE("Test cu::Device", "[device]") {
     CHECK(deviceByPci.getName() == device.getName());
   }
 
+#if !defined(__HIP__)
   SECTION("Test Device.getTexture1DLinearMaxWidth", "[device]") {
     const size_t maxWidth =
         device.getTexture1DLinearMaxWidth(CU_AD_FORMAT_UNSIGNED_INT8, 1);
     CHECK(maxWidth > 0);
   }
+#endif
 
   SECTION("Test Device memory pool APIs", "[device]") {
     if (!device.getAttribute(CU_DEVICE_ATTRIBUTE_MEMORY_POOLS_SUPPORTED)) {
@@ -73,6 +75,7 @@ TEST_CASE("Test cu::Device", "[device]") {
     device.setMemPool(pool);
   }
 
+#if !defined(__HIP__)
   SECTION("Test Device.getExecAffinitySupport", "[device]") {
     int pi = 0;
     device.getExecAffinitySupport(pi, CU_EXEC_AFFINITY_TYPE_SM_COUNT);
@@ -85,6 +88,7 @@ TEST_CASE("Test cu::Device", "[device]") {
     CHECK(properties.maxThreadsPerBlock > 0);
     CHECK(properties.clockRate > 0);
   }
+#endif
 }
 
 TEST_CASE("Test context::getDevice", "[device]") {
@@ -476,19 +480,20 @@ TEST_CASE("Test cu::Event", "[event]") {
   cu::Stream stream;
   cu::Event start;
   cu::Event end;
+  constexpr unsigned int record_flags = 0;
 
   SECTION("Test Event::record(Stream&, unsigned int)") {
     context.setCurrent();
-    start.record(stream, CU_EVENT_RECORD_DEFAULT);
-    end.record(stream, CU_EVENT_RECORD_DEFAULT);
+    start.record(stream, record_flags);
+    end.record(stream, record_flags);
     stream.synchronize();
     CHECK(end.elapsedTime(start) >= 0.0f);
   }
 
   SECTION("Test Stream::record(Event&, unsigned int)") {
     context.setCurrent();
-    stream.record(start, CU_EVENT_RECORD_DEFAULT);
-    stream.record(end, CU_EVENT_RECORD_DEFAULT);
+    stream.record(start, record_flags);
+    stream.record(end, record_flags);
     stream.synchronize();
     CHECK(end.elapsedTime(start) >= 0.0f);
   }

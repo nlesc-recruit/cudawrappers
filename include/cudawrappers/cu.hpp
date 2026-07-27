@@ -252,6 +252,7 @@ class Device : public Wrapper<CUdevice> {
     return std::string(pciBusId.data());
   }
 
+#if !defined(__HIP__)
   size_t getTexture1DLinearMaxWidth(CUarray_format format,
                                     unsigned numChannels) const {
     size_t maxWidth{};
@@ -259,6 +260,7 @@ class Device : public Wrapper<CUdevice> {
                                                      numChannels, _obj));
     return maxWidth;
   }
+#endif
 
   void getDefaultMemPool(CUmemoryPool &pool) const {
     checkCudaCall(cuDeviceGetDefaultMemPool(&pool, _obj));
@@ -272,6 +274,7 @@ class Device : public Wrapper<CUdevice> {
     checkCudaCall(cuDeviceSetMemPool(_obj, pool));
   }
 
+#if !defined(__HIP__)
   void graphMemTrim() const { checkCudaCall(cuDeviceGraphMemTrim(_obj)); }
 
   void getGraphMemAttribute(CUgraphMem_attribute attr, void *value) const {
@@ -366,6 +369,7 @@ class Device : public Wrapper<CUdevice> {
   void unregisterAsyncNotification(CUasyncCallbackHandle callback) const {
     checkCudaCall(cuDeviceUnregisterAsyncNotification(_obj, callback));
   }
+#endif
 
   size_t totalMem() const {
     size_t size{};
