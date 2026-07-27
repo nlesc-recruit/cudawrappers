@@ -534,10 +534,6 @@ class Context : public Wrapper<CUcontext> {
   cu::Device &_device;
 };
 
-#if !defined(__HIP__)
-class GreenContext;
-#endif
-
 class HostMemory : public Wrapper<void *> {
  public:
   explicit HostMemory(size_t size, unsigned int flags = 0) : _size(size) {
