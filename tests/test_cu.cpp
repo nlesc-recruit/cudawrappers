@@ -512,7 +512,7 @@ TEST_CASE("Test cu::GreenContext", "[greencontext]") {
 
   unsigned int nbGroups = 1;
   unsigned int minCount = static_cast<unsigned int>(input.sm.smCount * 0.4f);
-  CUdevResource resources[2]{};
+  std::array<CUdevResource, 2> resources{};
   CHECK_NOTHROW(cu::devSmResourceSplitByCount(&resources[0], &nbGroups, &input,
                                               &resources[1], 0, minCount));
 
