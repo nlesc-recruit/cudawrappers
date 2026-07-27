@@ -748,7 +748,7 @@ Reference: https://docs.nvidia.com/cuda/cuda-driver-api/index.html
 | `cuArrayGetSparseProperties` | Missing |
 | `cuDevResourceGenerateDesc` | devResourceGenerateDesc(CUdevResourceDesc *, CUdevResource *, unsigned int) |
 | `cuDevSmResourceSplit` | Missing |
-| `cuDevSmResourceSplitByCount` | Missing |
+| `cuDevSmResourceSplitByCount` | devSmResourceSplitByCount(CUdevResource *, unsigned int *, CUdevResource *, CUdevResource *, unsigned int, unsigned int) |
 | `cuFlushGPUDirectRDMAWrites` | Missing |
 | `cuIpcCloseMemHandle` | Missing |
 | `cuIpcGetEventHandle` | Missing |
