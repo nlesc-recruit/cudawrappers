@@ -77,7 +77,7 @@ inline std::vector<std::string> findIncludePaths() {
   const std::string cccl_suffix = "cccl";
 
   // Check whether any of the paths contain /cccl
-  for (const std::string &path : paths) {
+  for (const std::filesystem::path &path : paths) {
     size_t pos = path.rfind("/" + cccl_suffix);
     if (pos != std::string::npos &&
         pos == path.size() - (cccl_suffix.size() + 1)) {
