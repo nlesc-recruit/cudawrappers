@@ -323,12 +323,14 @@ class Device : public Wrapper<CUdevice> {
         cuDeviceGetNvSciSyncAttributes(nvSciSyncAttrList, _obj, flags));
   }
 
+#if !defined(__HIP__) && CUDA_VERSION >= 13000
   void getHostAtomicCapabilities(unsigned int *capabilities,
                                  const CUatomicOperation *operations,
                                  unsigned int count) const {
     checkCudaCall(cuDeviceGetHostAtomicCapabilities(capabilities, operations,
                                                     count, _obj));
   }
+#endif
 
   static int getP2PAttribute(CUdevice_P2PAttribute attrib,
                              const Device &srcDevice, const Device &dstDevice) {
@@ -338,6 +340,7 @@ class Device : public Wrapper<CUdevice> {
     return value;
   }
 
+#if !defined(__HIP__) && CUDA_VERSION >= 13000
   static void getP2PAtomicCapabilities(unsigned int *capabilities,
                                        const CUatomicOperation *operations,
                                        unsigned int count,
@@ -346,6 +349,7 @@ class Device : public Wrapper<CUdevice> {
     checkCudaCall(cuDeviceGetP2PAtomicCapabilities(
         capabilities, operations, count, srcDevice, dstDevice));
   }
+#endif
 
   static bool canAccessPeer(const Device &device, const Device &peerDevice) {
     int canAccess{};
@@ -1389,11 +1393,13 @@ class GreenContext : public Wrapper<CUgreenCtx> {
     checkCudaCall(cuGreenCtxGetDevResource(_obj, &resource, type));
   }
 
+#if CUDA_VERSION >= 13000
   unsigned long long getId() const {
     unsigned long long id{};
     checkCudaCall(cuGreenCtxGetId(_obj, &id));
     return id;
   }
+#endif
 
   Stream createStream(unsigned int flags = 0, int priority = 0) const {
     CUstream stream;
