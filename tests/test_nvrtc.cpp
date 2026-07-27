@@ -99,7 +99,7 @@ TEST_CASE("Test nvrtc::findIncludePaths", "[helper]") {
 
   size_t non_empty_paths = 0;
 
-  for (const std::string &path : paths) {
+  for (const std::filesystem::path &path : paths) {
     if (path.empty()) {
       continue;
     }
