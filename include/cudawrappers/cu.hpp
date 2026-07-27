@@ -1422,10 +1422,11 @@ class GreenContext : public Wrapper<CUgreenCtx> {
     checkCudaCall(cuGreenCtxWaitEvent(_obj, static_cast<CUevent>(event)));
   }
 
+  Device &getDevice() { return _device; }
   const Device &getDevice() const { return _device; }
 
  private:
-  Device _device;
+  Device &_device;
 };
 
 inline Context Context::fromGreenCtx(GreenContext &greenContext) {
