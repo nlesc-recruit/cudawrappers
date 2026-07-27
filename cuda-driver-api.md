@@ -21,6 +21,7 @@ Reference: https://docs.nvidia.com/cuda/cuda-driver-api/index.html
 | Execution Control | ⌛ 22% |
 | Occupancy | ⌛ 14% |
 | Graph Management | ⌛ 10% |
+| Green Contexts | ✅ |
 | Other | ⌛ 6% |
 
 > Internal-only variants such as `_v2`, `_v3`, and `_ptsz` are listed in each section and excluded from the coverage percentage calculations.
@@ -39,7 +40,6 @@ Reference: https://docs.nvidia.com/cuda/cuda-driver-api/index.html
 - Graphics Interoperability
 - Driver Entry Point Access
 - Coredump Attributes Control API
-- Green Contexts
 - Error Log Management Functions
 - CUDA Checkpointing
 - Profiler Control
@@ -696,6 +696,7 @@ Reference: https://docs.nvidia.com/cuda/cuda-driver-api/index.html
 
 | CUDA Driver API | cudawrappers interface |
 |---|---|
+| `cuCtxFromGreenCtx` | Context::fromGreenCtx(GreenContext &) |
 | `cuGreenCtxCreate` | GreenContext::GreenContext(CUdevResourceDesc, Device &, unsigned int) |
 | `cuGreenCtxDestroy` | GreenContext destructor |
 | `cuGreenCtxGetDevResource` | GreenContext::getDevResource(CUdevResource &, CUdevResourceType) |
@@ -703,6 +704,7 @@ Reference: https://docs.nvidia.com/cuda/cuda-driver-api/index.html
 | `cuGreenCtxRecordEvent` | GreenContext::recordEvent(Event &) |
 | `cuGreenCtxStreamCreate` | GreenContext::createStream(unsigned int, int) |
 | `cuGreenCtxWaitEvent` | GreenContext::waitEvent(Event &) |
+| `cuStreamGetGreenCtx` | Stream::getGreenCtx() |
 
 ## Error Log Management Functions
 
