@@ -460,13 +460,13 @@ class Context : public Wrapper<CUcontext> {
 #endif
   }
 
-  void enablePeerAccess(Context &peerContext, unsigned int flags = 0) {
+  const void enablePeerAccess(Context &peerContext, unsigned int flags = 0) {
 #if !defined(__HIP__)
     checkCudaCall(cuCtxEnablePeerAccess(peerContext, flags));
 #endif
   }
 
-  void disablePeerAccess(Context &peerContext) {
+  const void disablePeerAccess(Context &peerContext) {
 #if !defined(__HIP__)
     checkCudaCall(cuCtxDisablePeerAccess(peerContext));
 #endif
