@@ -109,7 +109,7 @@ TEST_CASE("Test nvrtc::findIncludePaths", "[helper]") {
     CHECK(std::filesystem::is_directory(path));
 
 #if !defined(__HIP__)
-    CHECK(path.find("include") != std::string::npos);
+    CHECK(path.string().find("include") != std::string::npos);
 #endif
   }
 
