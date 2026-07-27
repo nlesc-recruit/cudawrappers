@@ -1432,7 +1432,7 @@ class GreenContext : public Wrapper<CUgreenCtx> {
 inline Context Context::fromGreenCtx(GreenContext &greenContext) {
   CUcontext context{};
   checkCudaCall(cuCtxFromGreenCtx(&context, greenContext));
-  return Context(context, const_cast<Device &>(greenContext.getDevice()));
+  return Context(context, greenContext.getDevice());
 }
 #endif
 
