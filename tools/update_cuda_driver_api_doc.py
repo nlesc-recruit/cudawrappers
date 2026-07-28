@@ -19,6 +19,10 @@ from collections import OrderedDict
 from pathlib import Path
 from typing import Dict, List, Tuple
 
+HTML_TAG_RE = re.compile(r"<[^>]+>")
+SECTION_STATUS_RE = re.compile(r"\s+[✅🟡❌](?:\s*\([^)]*\))?$")
+API_NAME_RE = re.compile(r"(cu[A-Z][A-Za-z0-9_]+)")
+
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_DOC = ROOT / "cuda-driver-api.md"
 DEFAULT_MAP = ROOT / "tools" / "cuda_driver_api_map.json"
@@ -73,16 +77,23 @@ def fetch_url(url: str) -> str:
 
 def parse_upstream_functions(group_page: str) -> List[str]:
     html = fetch_url(group_page)
-    names = []
+    names: List[str] = []
     seen = set()
-    for match in re.finditer(
-        r'<span class="member_name"><a[^>]*>(cu[A-Z][A-Za-z0-9_]+)</a>', html
-    ):
+
+    for line in html.splitlines():
+        if "member_name" not in line:
+            continue
+        stripped = HTML_TAG_RE.sub("", line)
+        match = API_NAME_RE.search(stripped)
+        if not match:
+            continue
         name = match.group(1)
-        if not any(token in name for token in ("_v2", "_v3")):
-            if name not in seen:
-                seen.add(name)
-                names.append(name)
+        if any(token in name for token in ("_v2", "_v3")):
+            continue
+        if name not in seen:
+            seen.add(name)
+            names.append(name)
+
     return names
 
 
@@ -96,8 +107,7 @@ def read_existing_doc(path: Path) -> Tuple[Dict[str, Dict[str, str]], List[str]]
         line = raw_line.rstrip()
         if line.startswith("## "):
             heading = line[3:].strip()
-            heading = re.sub(r"\s+[✅🟡❌]\s*\([^)]*\)$", "", heading)
-            heading = re.sub(r"\s+[✅🟡❌]$", "", heading)
+            heading = SECTION_STATUS_RE.sub("", heading)
             if heading in {"Coverage summary", "Summary"}:
                 current = None
                 continue

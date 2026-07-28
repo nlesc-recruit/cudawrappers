@@ -1,6 +1,6 @@
 # CUDA Driver API Coverage for cudawrappers
 
-This document summarizes CUDA Driver API coverage for `cudawrappers` against the NVIDIA Driver API reference. It lists the APIs in the upstream sectioning and records whether a wrapper is represented in the project.
+This document summarizes CUDA Driver API coverage for `cudawrappers` against CUDA 13.1. It lists the APIs in the upstream Driver API sectioning and records whether a wrapper is represented in the project.
 
 Reference: https://docs.nvidia.com/cuda/cuda-driver-api/index.html
 
