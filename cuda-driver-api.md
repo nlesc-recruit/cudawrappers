@@ -1,6 +1,6 @@
 # CUDA Driver API Coverage for cudawrappers
 
-This document summarizes CUDA Driver API coverage for `cudawrappers` against CUDA 13.3.0. It maps user-facing APIs to wrapper support and highlights internal-only variants that are excluded from coverage percentages.
+This document summarizes CUDA Driver API coverage for `cudawrappers` against CUDA 13.3.0. It maps user-facing APIs to wrapper support and highlights internal-only variants that are excluded from coverage counts.
 
 Reference: https://docs.nvidia.com/cuda/cuda-driver-api/index.html
 
@@ -12,19 +12,19 @@ Reference: https://docs.nvidia.com/cuda/cuda-driver-api/index.html
 | Device Management | ✅ |
 | Unified Addressing | ✅ |
 | Event Management | ✅ |
-| Context Management | ⌛ 48% |
-| Stream Memory Operations | ⌛ 43% |
-| Module Management | ⌛ 42% |
-| Peer Context Memory Access | ⌛ 40% |
-| Memory Management | ⌛ 32% |
-| Stream Management | ⌛ 28% |
-| Execution Control | ⌛ 22% |
-| Occupancy | ⌛ 14% |
-| Graph Management | ⌛ 10% |
+| Peer Context Memory Access | ✅ |
 | Green Contexts | ✅ |
-| Other | ⌛ 6% |
+| Context Management | ⌛ (14/27) |
+| Stream Memory Operations | ⌛ (18/41) |
+| Module Management | ⌛ (6/14) |
+| Memory Management | ⌛ (12/37) |
+| Stream Management | ⌛ (10/32) |
+| Execution Control | ⌛ (6/28) |
+| Occupancy | ⌛ (1/7) |
+| Graph Management | ⌛ (9/84) |
+| Other | ⌛ (5/44) |
 
-> Internal-only variants such as `_v2`, `_v3`, and `_ptsz` are listed in each section and excluded from the coverage percentage calculations.
+> Internal-only variants such as `_v2`, `_v3`, and `_ptsz` are listed in each section and excluded from the coverage count calculations.
 
 ### Not Implemented Sections
 - Primary Context Management
