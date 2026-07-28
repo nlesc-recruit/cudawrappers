@@ -85,6 +85,14 @@ inline void devResourceGenerateDesc(CUdevResourceDesc *phDesc,
   checkCudaCall(cuDevResourceGenerateDesc(phDesc, resources, nbResources));
 }
 
+inline void devSmResourceSplit(
+    CUdevResource *result, unsigned int nbGroups, const CUdevResource *input,
+    CUdevResource *remainder, unsigned int flags,
+    CU_DEV_SM_RESOURCE_GROUP_PARAMS *groupParams = nullptr) {
+  checkCudaCall(cuDevSmResourceSplit(result, nbGroups, input, remainder, flags,
+                                     groupParams));
+}
+
 inline void devSmResourceSplitByCount(
     CUdevResource *result, unsigned int *nbGroups, const CUdevResource *input,
     CUdevResource *remaining, unsigned int useFlags, unsigned int minCount) {
@@ -471,6 +479,12 @@ class Context : public Wrapper<CUcontext> {
     checkCudaCall(cuCtxDisablePeerAccess(peerContext));
 #endif
   }
+
+#if !defined(__HIP__)
+  void getDevResource(CUdevResource &resource, CUdevResourceType type) const {
+    checkCudaCall(cuCtxGetDevResource(_obj, &resource, type));
+  }
+#endif
 
   Device getDevice() {
     CUdevice device;
@@ -1344,6 +1358,10 @@ class Stream : public Wrapper<CUstream> {
   void wait(Event &event) { checkCudaCall(cuStreamWaitEvent(_obj, event, 0)); }
 
 #if !defined(__HIP__)
+  void getDevResource(CUdevResource &resource, CUdevResourceType type) const {
+    checkCudaCall(cuStreamGetDevResource(_obj, &resource, type));
+  }
+
   CUgreenCtx getGreenCtx() const {
     CUgreenCtx greenCtx;
     checkCudaCall(cuStreamGetGreenCtx(_obj, &greenCtx));

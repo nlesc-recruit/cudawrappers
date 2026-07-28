@@ -1,6 +1,6 @@
 # CUDA Driver API Coverage for cudawrappers
 
-This document summarizes CUDA Driver API coverage for `cudawrappers` against CUDA 13.1. It lists the APIs in the upstream Driver API sectioning and records whether a wrapper is represented in the project.
+This document summarizes CUDA Driver API coverage for `cudawrappers` against the NVIDIA Driver API reference. It lists the APIs in the upstream sectioning and records whether a wrapper is represented in the project.
 
 Reference: https://docs.nvidia.com/cuda/cuda-driver-api/index.html
 
@@ -546,14 +546,14 @@ Reference: https://docs.nvidia.com/cuda/cuda-driver-api/index.html
 | `cuCoredumpSetAttribute` | Missing |
 | `cuCoredumpSetAttributeGlobal` | Missing |
 
-## Green Contexts 🟡 (12/15)
+## Green Contexts ✅ (15/15)
 
 | CUDA Driver API | cudawrappers interface |
 |---|---|
 | `cuCtxFromGreenCtx` | `Context::fromGreenCtx(GreenContext &)` |
-| `cuCtxGetDevResource` | Missing |
+| `cuCtxGetDevResource` | `Context::getDevResource(CUdevResource &, CUdevResourceType)` |
 | `cuDevResourceGenerateDesc` | `cu::devResourceGenerateDesc(CUdevResourceDesc *, CUdevResource *, unsigned int)` |
-| `cuDevSmResourceSplit` | Missing |
+| `cuDevSmResourceSplit` | `cu::devSmResourceSplit(CUdevResource *, unsigned int, const CUdevResource *, CUdevResource *, unsigned int, CU_DEV_SM_RESOURCE_GROUP_PARAMS *)` |
 | `cuDevSmResourceSplitByCount` | `cu::devSmResourceSplitByCount(CUdevResource *, unsigned int *, const CUdevResource *, CUdevResource *, unsigned int, unsigned int)` |
 | `cuDeviceGetDevResource` | `Device::getDevResource()` |
 | `cuGreenCtxCreate` | `GreenContext::GreenContext(CUdevResourceDesc, Device &, unsigned int)` |
@@ -563,7 +563,7 @@ Reference: https://docs.nvidia.com/cuda/cuda-driver-api/index.html
 | `cuGreenCtxRecordEvent` | `GreenContext::recordEvent(Event &)` |
 | `cuGreenCtxStreamCreate` | `GreenContext::createStream(unsigned int, int)` |
 | `cuGreenCtxWaitEvent` | `GreenContext::waitEvent(Event &)` |
-| `cuStreamGetDevResource` | Missing |
+| `cuStreamGetDevResource` | `Stream::getDevResource(CUdevResource &, CUdevResourceType)` |
 | `cuStreamGetGreenCtx` | `Stream::getGreenCtx()` |
 
 ## Error Log Management Functions ❌ (0/5)
