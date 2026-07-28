@@ -3,7 +3,6 @@
 
 This script does the following:
 - it scrapes the NVIDIA Driver API group pages for a target CUDA version,
-- preserves any existing wrapper mappings already present in cuda-driver-api.md,
 - uses a small JSON overrides file when available,
 - and rewrites the markdown document in a format similar to the current one.
 """
@@ -21,7 +20,7 @@ from typing import Dict, List, Tuple
 
 HTML_TAG_RE = re.compile(r"<[^>]+>")
 SECTION_STATUS_RE = re.compile(r"\s+[✅🟡❌](?:\s*\([^)]*\))?$")
-API_NAME_RE = re.compile(r"(cu[A-Z][A-Za-z0-9_]+)")
+API_NAME_RE = re.compile(r"(cu[A-Z][\w]+)")
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_DOC = ROOT / "cuda-driver-api.md"
@@ -180,6 +179,39 @@ def describe_section_heading(section_name: str, rows: List[Tuple[str, str]]) -> 
     return f"## {section_name} {status} ({implemented}/{total})"
 
 
+def build_initial_sections(
+    existing_sections: Dict[str, Dict[str, str]],
+) -> OrderedDict[str, List[Tuple[str, str]]]:
+    ordered_sections = OrderedDict()
+    for section_name in existing_sections.keys():
+        ordered_sections[section_name] = []
+
+    for section_name, _group_slug in SECTION_GROUPS:
+        if section_name not in ordered_sections:
+            ordered_sections[section_name] = []
+
+    return ordered_sections
+
+
+def populate_section_rows(
+    ordered_sections: OrderedDict[str, List[Tuple[str, str]]],
+    existing_sections: Dict[str, Dict[str, str]],
+    overrides: Dict[str, str],
+) -> None:
+    for section_name, group_slug in SECTION_GROUPS:
+        section_url = f"https://docs.nvidia.com/cuda/cuda-driver-api/{group_slug}.html"
+        api_names = parse_upstream_functions(section_url)
+        rows: List[Tuple[str, str]] = []
+        for api_name in api_names:
+            wrapper = overrides.get(api_name)
+            if wrapper is None:
+                wrapper = existing_sections.get(section_name, {}).get(
+                    api_name, "Missing"
+                )
+            rows.append((api_name, wrapper))
+        ordered_sections[section_name] = rows
+
+
 def build_markdown(
     sections: Dict[str, List[Tuple[str, str]]], cuda_version: str | None = None
 ) -> str:
@@ -232,7 +264,17 @@ def build_markdown(
     return "\n".join(out_lines).rstrip() + "\n"
 
 
-def main() -> int:
+def render_document(
+    output_path: Path,
+    ordered_sections: OrderedDict[str, List[Tuple[str, str]]],
+    cuda_version: str | None,
+) -> str:
+    rendered = build_markdown(ordered_sections, cuda_version)
+    output_path.write_text(rendered, encoding="utf-8")
+    return rendered
+
+
+def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Refresh cuda-driver-api.md from NVIDIA docs"
     )
@@ -248,7 +290,11 @@ def main() -> int:
     parser.add_argument(
         "--check", action="store_true", help="Exit non-zero if the output would change"
     )
-    args = parser.parse_args()
+    return parser.parse_args()
+
+
+def main() -> int:
+    args = parse_args()
 
     output_path = Path(args.output).resolve()
     mapping_path = Path(args.mapping).resolve()
@@ -256,43 +302,14 @@ def main() -> int:
     existing_sections, _ = read_existing_doc(DEFAULT_DOC)
     overrides = load_overrides(mapping_path)
 
-    # Preserve all sections already present in the markdown, then add the upstream-driven sections.
-    ordered_sections = OrderedDict()
-    for section_name in existing_sections.keys():
-        ordered_sections[section_name] = []
+    ordered_sections = build_initial_sections(existing_sections)
+    populate_section_rows(ordered_sections, existing_sections, overrides)
 
-    for section_name, group_slug in SECTION_GROUPS:
-        if section_name not in ordered_sections:
-            ordered_sections[section_name] = []
-
-    # Populate rows from upstream docs.
-    for section_name, group_slug in SECTION_GROUPS:
-        section_url = f"https://docs.nvidia.com/cuda/cuda-driver-api/{group_slug}.html"
-        api_names = parse_upstream_functions(section_url)
-        rows: List[Tuple[str, str]] = []
-        for api_name in api_names:
-            if api_name in overrides:
-                wrapper = overrides[api_name]
-            else:
-                wrapper = existing_sections.get(section_name, {}).get(
-                    api_name, "Missing"
-                )
-            rows.append((api_name, wrapper))
-        ordered_sections[section_name] = rows
-
-    # Preserve any manual sections from the current document that are not in the upstream mapping.
-    upstream_section_names = {name for name, _ in SECTION_GROUPS}
-    for section_name, rows_map in existing_sections.items():
-        if section_name in ordered_sections and section_name in upstream_section_names:
-            continue
-        if section_name not in ordered_sections:
-            ordered_sections[section_name] = [
-                (api, wrapper) for api, wrapper in rows_map.items()
-            ]
-
-    # Ensure the intro list doesn't include a duplicate or empty placeholder for the first section.
-    rendered = build_markdown(ordered_sections, args.cuda_version or None)
-    output_path.write_text(rendered, encoding="utf-8")
+    rendered = render_document(
+        output_path,
+        ordered_sections,
+        args.cuda_version or None,
+    )
 
     if args.check:
         existing = (
