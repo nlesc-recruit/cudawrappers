@@ -86,7 +86,7 @@ inline void devResourceGenerateDesc(CUdevResourceDesc *phDesc,
 }
 
 inline void devSmResourceSplitByCount(
-    CUdevResource *result, unsigned int *nbGroups, CUdevResource *input,
+    CUdevResource *result, unsigned int *nbGroups, const CUdevResource *input,
     CUdevResource *remaining, unsigned int useFlags, unsigned int minCount) {
   checkCudaCall(cuDevSmResourceSplitByCount(result, nbGroups, input, remaining,
                                             useFlags, minCount));
