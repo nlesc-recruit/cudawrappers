@@ -1,46 +1,9 @@
 # CUDA Driver API Coverage for cudawrappers
 
-This document summarizes CUDA Driver API coverage for `cudawrappers` against CUDA 13.3.0. It maps user-facing APIs to wrapper support and highlights internal-only variants that are excluded from coverage counts.
+This document summarizes CUDA Driver API coverage for `cudawrappers` against CUDA 13.1. It lists the APIs in the upstream Driver API sectioning and records whether a wrapper is represented in the project.
 
 Reference: https://docs.nvidia.com/cuda/cuda-driver-api/index.html
 
-Sections marked with ✅ are fully covered in the document, sections marked with ⌛ are partially covered, and sections marked with ❌ are not implemented. The detailed tables below provide the specific API-by-API coverage for each section.
-
-- Error Handling — ✅
-- Initialization — ✅
-- Version Management — ✅
-- Device Management — ✅
-- Primary Context Management — ❌
-- Context Management — ⌛
-- Module Management — ⌛
-- Library Management — ❌
-- Memory Management — ⌛
-- Virtual Memory Management — ❌
-- Stream Ordered Memory Allocator — ❌
-- Multicast Object Management — ❌
-- Logical Endpoint — ❌
-- Unified Addressing — ✅
-- Stream Management — ⌛
-- Event Management — ✅
-- External Resource Interoperability — ⌛
-- Stream Memory Operations — ⌛
-- Execution Control — ⌛
-- Graph Management — ⌛
-- Occupancy — ⌛
-- Texture Object Management — ❌
-- Surface Object Management — ❌
-- Tensor Map Object Management — ❌
-- Peer Context Memory Access — ✅
-- Graphics Interoperability — ❌
-- Driver Entry Point Access — ❌
-- Coredump Attributes Control API — ❌
-- Green Contexts — ✅
-- Error Log Management Functions — ❌
-- CUDA Checkpointing — ❌
-- Profiler Control — ❌
-- Array Object Management — ⌛
-- Mipmapped Array Object Management — ❌
-- Interprocess Communication — ❌
 
 ## Error Handling
 
@@ -65,29 +28,21 @@ Sections marked with ✅ are fully covered in the document, sections marked with
 
 | CUDA Driver API | cudawrappers interface |
 |---|---|
-| `cuDeviceComputeCapability` | Device::getComputeCapability() |
 | `cuDeviceGet` | Device::Device(unsigned int) |
 | `cuDeviceGetAttribute` | Device::getAttribute() |
-| `cuDeviceGetByPCIBusId` | Device::getByPCIBusId() |
 | `cuDeviceGetCount` | Device::getCount() |
 | `cuDeviceGetDefaultMemPool` | Device::getDefaultMemPool() |
-| `cuDeviceGetDevResource` | Device::getDevResource() |
 | `cuDeviceGetExecAffinitySupport` | Device::getExecAffinitySupport() |
-| `cuDeviceGetGraphMemAttribute` | Device::getGraphMemAttribute() |
+| `cuDeviceGetHostAtomicCapabilities` | Missing |
 | `cuDeviceGetLuid` | Device::getLuid() |
 | `cuDeviceGetMemPool` | Device::getMemPool() |
 | `cuDeviceGetName` | Device::getName() |
 | `cuDeviceGetNvSciSyncAttributes` | Device::getNvSciSyncAttributes() |
-| `cuDeviceGetPCIBusId` | Device::getPCIBusId() |
-| `cuDeviceGetProperties` | Device::getProperties() |
 | `cuDeviceGetTexture1DLinearMaxWidth` | Device::getTexture1DLinearMaxWidth() |
 | `cuDeviceGetUuid` | Device::getUuid() |
-| `cuDeviceGraphMemTrim` | Device::graphMemTrim() |
-| `cuDeviceRegisterAsyncNotification` | Device::registerAsyncNotification() |
-| `cuDeviceSetGraphMemAttribute` | Device::setGraphMemAttribute() |
 | `cuDeviceSetMemPool` | Device::setMemPool() |
 | `cuDeviceTotalMem` | Device::totalMem() |
-| `cuDeviceUnregisterAsyncNotification` | Device::unregisterAsyncNotification() |
+| `cuFlushGPUDirectRDMAWrites` | Missing |
 
 ## Primary Context Management
 
@@ -103,21 +58,16 @@ Sections marked with ✅ are fully covered in the document, sections marked with
 
 | CUDA Driver API | cudawrappers interface |
 |---|---|
-| `cuCtxAttach` | Missing |
 | `cuCtxCreate` | Context::Context(int flags, Device &device) |
 | `cuCtxDestroy` | Context destructor |
-| `cuCtxDetach` | Missing |
-| `cuCtxFromGreenCtx` | Context::fromGreenCtx(GreenContext &) |
 | `cuCtxGetApiVersion` | Context::getApiVersion() |
 | `cuCtxGetCacheConfig` | Context::getCacheConfig() |
 | `cuCtxGetCurrent` | Context::getCurrent() |
-| `cuCtxGetDevResource` | Missing |
 | `cuCtxGetDevice` | Context::getDevice() |
 | `cuCtxGetExecAffinity` | Missing |
 | `cuCtxGetFlags` | Missing |
 | `cuCtxGetId` | Missing |
 | `cuCtxGetLimit` | Context::getLimit() |
-| `cuCtxGetSharedMemConfig` | Missing |
 | `cuCtxGetStreamPriorityRange` | Missing |
 | `cuCtxPopCurrent` | Context::popCurrent() |
 | `cuCtxPushCurrent` | Context::pushCurrent() |
@@ -127,7 +77,6 @@ Sections marked with ✅ are fully covered in the document, sections marked with
 | `cuCtxSetCurrent` | Context::setCurrent() |
 | `cuCtxSetFlags` | Missing |
 | `cuCtxSetLimit` | Context::setLimit() |
-| `cuCtxSetSharedMemConfig` | Missing |
 | `cuCtxSynchronize` | Context::synchronize() |
 | `cuCtxWaitEvent` | Missing |
 
@@ -135,15 +84,16 @@ Sections marked with ✅ are fully covered in the document, sections marked with
 
 | CUDA Driver API | cudawrappers interface |
 |---|---|
+| `cuLinkAddData` | Missing |
+| `cuLinkAddFile` | Missing |
 | `cuLinkComplete` | Missing |
+| `cuLinkCreate` | Missing |
 | `cuLinkDestroy` | Missing |
 | `cuModuleEnumerateFunctions` | Missing |
 | `cuModuleGetFunction` | Function::Function(const Module &, const char *) |
 | `cuModuleGetFunctionCount` | Missing |
 | `cuModuleGetGlobal` | Module::getGlobal() |
 | `cuModuleGetLoadingMode` | Missing |
-| `cuModuleGetSurfRef` | Missing |
-| `cuModuleGetTexRef` | Missing |
 | `cuModuleLoad` | Module::Module(const char *) |
 | `cuModuleLoadData` | Module::Module(const void *) |
 | `cuModuleLoadDataEx` | Module::Module(const void *, Module::optionmap_t &) |
@@ -154,6 +104,14 @@ Sections marked with ✅ are fully covered in the document, sections marked with
 
 | CUDA Driver API | cudawrappers interface |
 |---|---|
+| `cuKernelGetAttribute` | Missing |
+| `cuKernelGetFunction` | Missing |
+| `cuKernelGetLibrary` | Missing |
+| `cuKernelGetName` | Missing |
+| `cuKernelGetParamCount` | Missing |
+| `cuKernelGetParamInfo` | Missing |
+| `cuKernelSetAttribute` | Missing |
+| `cuKernelSetCacheConfig` | Function::setCacheConfig() |
 | `cuLibraryEnumerateKernels` | Missing |
 | `cuLibraryGetGlobal` | Missing |
 | `cuLibraryGetKernel` | Missing |
@@ -169,173 +127,38 @@ Sections marked with ✅ are fully covered in the document, sections marked with
 
 | CUDA Driver API | cudawrappers interface |
 |---|---|
+| `cuArray3DCreate` | Array::Array(unsigned width, unsigned height, unsigned depth, CUarray_format format, unsigned numChannels) |
+| `cuArray3DGetDescriptor` | Missing |
+| `cuArrayCreate` | Array::Array(unsigned width, unsigned height, CUarray_format format, unsigned numChannels) |
+| `cuArrayDestroy` | Array destructor |
+| `cuArrayGetDescriptor` | Missing |
+| `cuArrayGetMemoryRequirements` | Missing |
+| `cuArrayGetPlane` | Missing |
+| `cuArrayGetSparseProperties` | Missing |
+| `cuDeviceGetByPCIBusId` | Device::getByPCIBusId() |
+| `cuDeviceGetPCIBusId` | Device::getPCIBusId() |
+| `cuDeviceRegisterAsyncNotification` | Device::registerAsyncNotification() |
+| `cuDeviceUnregisterAsyncNotification` | Device::unregisterAsyncNotification() |
+| `cuIpcCloseMemHandle` | Missing |
+| `cuIpcGetEventHandle` | Missing |
+| `cuIpcGetMemHandle` | Missing |
+| `cuIpcOpenEventHandle` | Missing |
+| `cuIpcOpenMemHandle` | Missing |
 | `cuMemAlloc` | DeviceMemory::DeviceMemory(size_t, CUmemorytype, unsigned int) |
-| `cuMemAllocAsync` | Stream::memAllocAsync() |
-| `cuMemAllocFromPoolAsync` | Missing |
 | `cuMemAllocHost` | Missing |
 | `cuMemAllocManaged` | DeviceMemory::DeviceMemory(size_t, CUmemorytype, unsigned int) |
 | `cuMemAllocPitch` | Missing |
 | `cuMemBatchDecompressAsync` | Missing |
-| `cuMemCreate` | Missing |
-| `cuMemDiscardAndPrefetchBatchAsync` | Missing |
-| `cuMemDiscardBatchAsync` | Missing |
-| `cuMemExportToShareableHandle` | Missing |
 | `cuMemFree` | DeviceMemory destructor |
-| `cuMemFreeAsync` | Stream::memFreeAsync() |
 | `cuMemFreeHost` | HostMemory destructor |
-| `cuMemGetAccess` | Missing |
 | `cuMemGetAddressRange` | Missing |
-| `cuMemGetAllocationGranularity` | Missing |
-| `cuMemGetAllocationPropertiesFromHandle` | Missing |
-| `cuMemGetDefaultMemPool` | Missing |
 | `cuMemGetHandleForAddressRange` | Missing |
 | `cuMemGetInfo` | Context::getFreeMemory()/Context::getTotalMemory() |
-| `cuMemGetMemPool` | Missing |
 | `cuMemHostAlloc` | HostMemory::HostMemory(size_t, unsigned int) |
 | `cuMemHostGetDevicePointer` | DeviceMemory::DeviceMemory(const HostMemory &) |
 | `cuMemHostGetFlags` | Missing |
 | `cuMemHostRegister` | HostMemory::HostMemory(void *, size_t, unsigned int) |
 | `cuMemHostUnregister` | HostMemory destructor |
-| `cuMemImportFromShareableHandle` | Missing |
-| `cuMemMapArrayAsync` | Missing |
-| `cuMemPrefetchAsync` | Stream::memPrefetchAsync(DeviceMemory &, size_t) / Stream::memPrefetchAsync(DeviceMemory &, size_t, Device &) |
-| `cuMemPrefetchBatchAsync` | Missing |
-| `cuMemRangeGetAttribute` | Missing |
-| `cuMemRangeGetAttributes` | Missing |
-| `cuMemRelease` | Missing |
-| `cuMemRetainAllocationHandle` | Missing |
-| `cuMemSetAccess` | Missing |
-| `cuMemSetMemPool` | Missing |
-
-## Virtual Memory Management
-
-| CUDA Driver API | cudawrappers interface |
-|---|---|
-| `cuMemAddressFree` | Missing |
-| `cuMemAddressReserve` | Missing |
-| `cuMemMap` | Missing |
-| `cuMemUnmap` | Missing |
-
-## Stream Ordered Memory Allocator
-
-| CUDA Driver API | cudawrappers interface |
-|---|---|
-| `cuMemPoolCreate` | Missing |
-| `cuMemPoolDestroy` | Missing |
-| `cuMemPoolExportPointer` | Missing |
-| `cuMemPoolExportToShareableHandle` | Missing |
-| `cuMemPoolGetAccess` | Missing |
-| `cuMemPoolGetAttribute` | Missing |
-| `cuMemPoolImportFromShareableHandle` | Missing |
-| `cuMemPoolImportPointer` | Missing |
-| `cuMemPoolSetAccess` | Missing |
-| `cuMemPoolSetAttribute` | Missing |
-| `cuMemPoolTrimTo` | Missing |
-
-## Multicast Object Management
-
-| CUDA Driver API | cudawrappers interface |
-|---|---|
-| `cuMulticastAddDevice` | Missing |
-| `cuMulticastBindAddr` | Missing |
-| `cuMulticastBindMem` | Missing |
-| `cuMulticastCreate` | Missing |
-| `cuMulticastGetGranularity` | Missing |
-| `cuMulticastUnbind` | Missing |
-
-## Logical Endpoint
-
-| CUDA Driver API | cudawrappers interface |
-|---|---|
-| `cuLogicalEndpointAddDevice` | Missing |
-| `cuLogicalEndpointBindAddr` | Missing |
-| `cuLogicalEndpointBindMem` | Missing |
-| `cuLogicalEndpointCreate` | Missing |
-| `cuLogicalEndpointDestroy` | Missing |
-| `cuLogicalEndpointExport` | Missing |
-| `cuLogicalEndpointGetLimits` | Missing |
-| `cuLogicalEndpointIdRelease` | Missing |
-| `cuLogicalEndpointIdReserve` | Missing |
-| `cuLogicalEndpointImport` | Missing |
-| `cuLogicalEndpointQuery` | Missing |
-| `cuLogicalEndpointUnbind` | Missing |
-
-## Unified Addressing
-
-| CUDA Driver API | cudawrappers interface |
-|---|---|
-| `cuDeviceGetHostAtomicCapabilities` | Device::getHostAtomicCapabilities() |
-| `cuPointerGetAttribute` | Wrapper::checkPointerAccess() |
-| `cuPointerGetAttributes` | Wrapper::checkPointerAccess() |
-| `cuPointerSetAttribute` | pointerSetAttribute() |
-
-## Stream Management
-
-| CUDA Driver API | cudawrappers interface |
-|---|---|
-| `cuStreamAddCallback` | Stream::addCallback() |
-| `cuStreamAttachMemAsync` | Missing |
-| `cuStreamBatchMemOp` | Stream::batchMemOp() |
-| `cuStreamBeginCapture` | Missing |
-| `cuStreamBeginCaptureToCig` | Missing |
-| `cuStreamBeginCaptureToGraph` | Missing |
-| `cuStreamBeginRecaptureToGraph` | Missing |
-| `cuStreamCopyAttributes` | Missing |
-| `cuStreamCreate` | Stream::Stream(unsigned int) |
-| `cuStreamCreateWithPriority` | Missing |
-| `cuStreamDestroy` | Stream destructor |
-| `cuStreamEndCapture` | Missing |
-| `cuStreamEndCaptureToCig` | Missing |
-| `cuStreamGetAttribute` | Missing |
-| `cuStreamGetCaptureInfo` | Missing |
-| `cuStreamGetCtx` | Missing |
-| `cuStreamGetDevResource` | Missing |
-| `cuStreamGetDevice` | Missing |
-| `cuStreamGetFlags` | Missing |
-| `cuStreamGetGreenCtx` | Stream::getGreenCtx() |
-| `cuStreamGetId` | Missing |
-| `cuStreamGetPriority` | Missing |
-| `cuStreamIsCapturing` | Missing |
-| `cuStreamQuery` | Stream::query() |
-| `cuStreamSetAttribute` | Missing |
-| `cuStreamSynchronize` | Stream::synchronize() |
-| `cuStreamUpdateCaptureDependencies` | Missing |
-| `cuStreamWaitEvent` | Stream::wait(Event &) |
-| `cuStreamWaitValue32` | Stream::waitValue32() |
-| `cuStreamWaitValue64` | Missing |
-| `cuStreamWriteValue32` | Stream::writeValue32() |
-| `cuStreamWriteValue64` | Missing |
-
-## Event Management
-
-| CUDA Driver API | cudawrappers interface |
-|---|---|
-| `cuEventCreate` | Event::Event(unsigned int) |
-| `cuEventDestroy` | Event destructor |
-| `cuEventElapsedTime` | Event::elapsedTime() |
-| `cuEventQuery` | Event::query() |
-| `cuEventRecord` | Event::record() / Stream::record(Event &) |
-| `cuEventRecordWithFlags` | Event::record(Stream &, unsigned int) / Stream::record(Event &, unsigned int) |
-| `cuEventSynchronize` | Event::synchronize() |
-
-## External Resource Interoperability
-
-| CUDA Driver API | cudawrappers interface |
-|---|---|
-| `cuDestroyExternalMemory` | Missing |
-| `cuDestroyExternalSemaphore` | Missing |
-| `cuExternalMemoryGetMappedBuffer` | Missing |
-| `cuExternalMemoryGetMappedMipmappedArray` | Missing |
-| `cuImportExternalMemory` | Missing |
-| `cuImportExternalSemaphore` | Missing |
-| `cuSignalExternalSemaphoresAsync` | Missing |
-| `cuWaitExternalSemaphoresAsync` | Missing |
-
-## Stream Memory Operations
-
-| CUDA Driver API | cudawrappers interface |
-|---|---|
-| `cuMemAdvise` | Missing |
 | `cuMemcpy` | Missing |
 | `cuMemcpy2D` | Missing |
 | `cuMemcpy2DAsync` | Stream::memcpyHtoD2DAsync / Stream::memcpyDtoH2DAsync |
@@ -376,6 +199,161 @@ Sections marked with ✅ are fully covered in the document, sections marked with
 | `cuMemsetD32Async` | Stream::memsetAsync(DeviceMemory &, unsigned int, size_t) |
 | `cuMemsetD8` | DeviceMemory::memset(unsigned char, size_t) |
 | `cuMemsetD8Async` | Stream::memsetAsync(DeviceMemory &, unsigned char, size_t) |
+| `cuMipmappedArrayCreate` | Missing |
+| `cuMipmappedArrayDestroy` | Missing |
+| `cuMipmappedArrayGetLevel` | Missing |
+| `cuMipmappedArrayGetMemoryRequirements` | Missing |
+| `cuMipmappedArrayGetSparseProperties` | Missing |
+
+## Virtual Memory Management
+
+| CUDA Driver API | cudawrappers interface |
+|---|---|
+| `cuMemAddressFree` | Missing |
+| `cuMemAddressReserve` | Missing |
+| `cuMemCreate` | Missing |
+| `cuMemExportToShareableHandle` | Missing |
+| `cuMemGetAccess` | Missing |
+| `cuMemGetAllocationGranularity` | Missing |
+| `cuMemGetAllocationPropertiesFromHandle` | Missing |
+| `cuMemImportFromShareableHandle` | Missing |
+| `cuMemMap` | Missing |
+| `cuMemMapArrayAsync` | Missing |
+| `cuMemRelease` | Missing |
+| `cuMemRetainAllocationHandle` | Missing |
+| `cuMemSetAccess` | Missing |
+| `cuMemUnmap` | Missing |
+
+## Stream Ordered Memory Allocator
+
+| CUDA Driver API | cudawrappers interface |
+|---|---|
+| `cuMemAllocAsync` | Stream::memAllocAsync() |
+| `cuMemAllocFromPoolAsync` | Missing |
+| `cuMemFreeAsync` | Stream::memFreeAsync() |
+| `cuMemGetDefaultMemPool` | Missing |
+| `cuMemGetMemPool` | Missing |
+| `cuMemPoolCreate` | Missing |
+| `cuMemPoolDestroy` | Missing |
+| `cuMemPoolExportPointer` | Missing |
+| `cuMemPoolExportToShareableHandle` | Missing |
+| `cuMemPoolGetAccess` | Missing |
+| `cuMemPoolGetAttribute` | Missing |
+| `cuMemPoolImportFromShareableHandle` | Missing |
+| `cuMemPoolImportPointer` | Missing |
+| `cuMemPoolSetAccess` | Missing |
+| `cuMemPoolSetAttribute` | Missing |
+| `cuMemPoolTrimTo` | Missing |
+| `cuMemSetMemPool` | Missing |
+
+## Multicast Object Management
+
+| CUDA Driver API | cudawrappers interface |
+|---|---|
+| `cuMulticastAddDevice` | Missing |
+| `cuMulticastBindAddr` | Missing |
+| `cuMulticastBindMem` | Missing |
+| `cuMulticastCreate` | Missing |
+| `cuMulticastGetGranularity` | Missing |
+| `cuMulticastUnbind` | Missing |
+
+## Logical Endpoint
+
+| CUDA Driver API | cudawrappers interface |
+|---|---|
+| `cuLogicalEndpointAddDevice` | Missing |
+| `cuLogicalEndpointBindAddr` | Missing |
+| `cuLogicalEndpointBindMem` | Missing |
+| `cuLogicalEndpointCreate` | Missing |
+| `cuLogicalEndpointDestroy` | Missing |
+| `cuLogicalEndpointExport` | Missing |
+| `cuLogicalEndpointGetLimits` | Missing |
+| `cuLogicalEndpointIdRelease` | Missing |
+| `cuLogicalEndpointIdReserve` | Missing |
+| `cuLogicalEndpointImport` | Missing |
+| `cuLogicalEndpointQuery` | Missing |
+| `cuLogicalEndpointUnbind` | Missing |
+
+## Unified Addressing
+
+| CUDA Driver API | cudawrappers interface |
+|---|---|
+| `cuMemAdvise` | Missing |
+| `cuMemDiscardAndPrefetchBatchAsync` | Missing |
+| `cuMemDiscardBatchAsync` | Missing |
+| `cuMemPrefetchAsync` | Stream::memPrefetchAsync(DeviceMemory &, size_t) / Stream::memPrefetchAsync(DeviceMemory &, size_t, Device &) |
+| `cuMemPrefetchBatchAsync` | Missing |
+| `cuMemRangeGetAttribute` | Missing |
+| `cuMemRangeGetAttributes` | Missing |
+| `cuPointerGetAttribute` | Implemented |
+| `cuPointerGetAttributes` | Implemented |
+| `cuPointerSetAttribute` | pointerSetAttribute() |
+
+## Stream Management
+
+| CUDA Driver API | cudawrappers interface |
+|---|---|
+| `cuStreamAddCallback` | Stream::addCallback() |
+| `cuStreamAttachMemAsync` | Missing |
+| `cuStreamBeginCapture` | Missing |
+| `cuStreamBeginCaptureToCig` | Missing |
+| `cuStreamBeginCaptureToGraph` | Missing |
+| `cuStreamBeginRecaptureToGraph` | Missing |
+| `cuStreamCopyAttributes` | Missing |
+| `cuStreamCreate` | Stream::Stream(unsigned int) |
+| `cuStreamCreateWithPriority` | Missing |
+| `cuStreamDestroy` | Stream destructor |
+| `cuStreamEndCapture` | Missing |
+| `cuStreamEndCaptureToCig` | Missing |
+| `cuStreamGetAttribute` | Missing |
+| `cuStreamGetCaptureInfo` | Missing |
+| `cuStreamGetCtx` | Missing |
+| `cuStreamGetDevice` | Missing |
+| `cuStreamGetFlags` | Missing |
+| `cuStreamGetId` | Missing |
+| `cuStreamGetPriority` | Missing |
+| `cuStreamIsCapturing` | Missing |
+| `cuStreamQuery` | Stream::query() |
+| `cuStreamSetAttribute` | Missing |
+| `cuStreamSynchronize` | Stream::synchronize() |
+| `cuStreamUpdateCaptureDependencies` | Missing |
+| `cuStreamWaitEvent` | Stream::wait(Event &) |
+| `cuThreadExchangeStreamCaptureMode` | Missing |
+
+## Event Management
+
+| CUDA Driver API | cudawrappers interface |
+|---|---|
+| `cuEventCreate` | Event::Event(unsigned int) |
+| `cuEventDestroy` | Event destructor |
+| `cuEventElapsedTime` | Event::elapsedTime() |
+| `cuEventQuery` | Event::query() |
+| `cuEventRecord` | Event::record() / Stream::record(Event &) |
+| `cuEventRecordWithFlags` | Event::record(Stream &, unsigned int) / Stream::record(Event &, unsigned int) |
+| `cuEventSynchronize` | Event::synchronize() |
+
+## External Resource Interoperability
+
+| CUDA Driver API | cudawrappers interface |
+|---|---|
+| `cuDestroyExternalMemory` | Missing |
+| `cuDestroyExternalSemaphore` | Missing |
+| `cuExternalMemoryGetMappedBuffer` | Missing |
+| `cuExternalMemoryGetMappedMipmappedArray` | Missing |
+| `cuImportExternalMemory` | Missing |
+| `cuImportExternalSemaphore` | Missing |
+| `cuSignalExternalSemaphoresAsync` | Missing |
+| `cuWaitExternalSemaphoresAsync` | Missing |
+
+## Stream Memory Operations
+
+| CUDA Driver API | cudawrappers interface |
+|---|---|
+| `cuStreamBatchMemOp` | Stream::batchMemOp() |
+| `cuStreamWaitValue32` | Stream::waitValue32() |
+| `cuStreamWaitValue64` | Missing |
+| `cuStreamWriteValue32` | Stream::writeValue32() |
+| `cuStreamWriteValue64` | Missing |
 
 ## Execution Control
 
@@ -389,39 +367,19 @@ Sections marked with ✅ are fully covered in the document, sections marked with
 | `cuFuncIsLoaded` | Missing |
 | `cuFuncLoad` | Missing |
 | `cuFuncSetAttribute` | Function::setAttribute() |
-| `cuFuncSetBlockShape` | Missing |
 | `cuFuncSetCacheConfig` | Function::setCacheConfig() |
-| `cuFuncSetSharedMemConfig` | Missing |
-| `cuFuncSetSharedSize` | Missing |
-| `cuKernelGetAttribute` | Missing |
-| `cuKernelGetFunction` | Missing |
-| `cuKernelGetLibrary` | Missing |
-| `cuKernelGetName` | Missing |
-| `cuKernelGetParamCount` | Missing |
-| `cuKernelGetParamInfo` | Missing |
-| `cuKernelSetAttribute` | Missing |
-| `cuKernelSetCacheConfig` | Missing |
-| `cuLaunch` | Missing |
 | `cuLaunchCooperativeKernel` | Stream::launchCooperativeKernel(Function &, unsigned, unsigned, unsigned, unsigned, unsigned, unsigned, unsigned, const std::vector<const void *> &) |
-| `cuLaunchCooperativeKernelMultiDevice` | Missing |
-| `cuLaunchGrid` | Missing |
-| `cuLaunchGridAsync` | Missing |
 | `cuLaunchHostFunc` | Stream::launchHostFunc() |
 | `cuLaunchKernel` | Stream::launchKernel(Function &, unsigned, unsigned, unsigned, unsigned, unsigned, unsigned, unsigned, const std::vector<const void *> &) |
 | `cuLaunchKernelEx` | Missing |
-| `cuLinkAddData` | Missing |
-| `cuLinkAddFile` | Missing |
-| `cuLinkCreate` | Missing |
-| `cuParamSetSize` | Missing |
-| `cuParamSetTexRef` | Missing |
-| `cuParamSetf` | Missing |
-| `cuParamSeti` | Missing |
-| `cuParamSetv` | Missing |
 
 ## Graph Management
 
 | CUDA Driver API | cudawrappers interface |
 |---|---|
+| `cuDeviceGetGraphMemAttribute` | Device::getGraphMemAttribute() |
+| `cuDeviceGraphMemTrim` | Device::graphMemTrim() |
+| `cuDeviceSetGraphMemAttribute` | Device::setGraphMemAttribute() |
 | `cuGraphAddBatchMemOpNode` | Missing |
 | `cuGraphAddChildGraphNode` | Missing |
 | `cuGraphAddDependencies` | Missing |
@@ -504,6 +462,9 @@ Sections marked with ✅ are fully covered in the document, sections marked with
 | `cuGraphRemoveDependencies` | Missing |
 | `cuGraphRetainUserObject` | Missing |
 | `cuGraphUpload` | Missing |
+| `cuUserObjectCreate` | Missing |
+| `cuUserObjectRelease` | Missing |
+| `cuUserObjectRetain` | Missing |
 
 ## Occupancy
 
@@ -570,7 +531,6 @@ Sections marked with ✅ are fully covered in the document, sections marked with
 
 | CUDA Driver API | cudawrappers interface |
 |---|---|
-| `cuGetExportTable` | Missing |
 | `cuGetProcAddress` | Missing |
 
 ## Coredump Attributes Control API
@@ -590,7 +550,12 @@ Sections marked with ✅ are fully covered in the document, sections marked with
 
 | CUDA Driver API | cudawrappers interface |
 |---|---|
-| `cuCtxFromGreenCtx` | Context::fromGreenCtx(GreenContext &) |
+| `cuCtxFromGreenCtx` | Implemented |
+| `cuCtxGetDevResource` | Missing |
+| `cuDevResourceGenerateDesc` | Missing |
+| `cuDevSmResourceSplit` | Missing |
+| `cuDevSmResourceSplitByCount` | Missing |
+| `cuDeviceGetDevResource` | Device::getDevResource() |
 | `cuGreenCtxCreate` | GreenContext::GreenContext(CUdevResourceDesc, Device &, unsigned int) |
 | `cuGreenCtxDestroy` | GreenContext destructor |
 | `cuGreenCtxGetDevResource` | GreenContext::getDevResource(CUdevResource &, CUdevResourceType) |
@@ -598,6 +563,7 @@ Sections marked with ✅ are fully covered in the document, sections marked with
 | `cuGreenCtxRecordEvent` | GreenContext::recordEvent(Event &) |
 | `cuGreenCtxStreamCreate` | GreenContext::createStream(unsigned int, int) |
 | `cuGreenCtxWaitEvent` | GreenContext::waitEvent(Event &) |
+| `cuStreamGetDevResource` | Missing |
 | `cuStreamGetGreenCtx` | Stream::getGreenCtx() |
 
 ## Error Log Management Functions
@@ -627,37 +593,3 @@ Sections marked with ✅ are fully covered in the document, sections marked with
 |---|---|
 | `cuProfilerStart` | Missing |
 | `cuProfilerStop` | Missing |
-
-## Array Object Management
-
-| CUDA Driver API | cudawrappers interface |
-|---|---|
-| `cuArray3DCreate` | Array::Array(unsigned width, unsigned height, unsigned depth, CUarray_format format, unsigned numChannels) |
-| `cuArray3DGetDescriptor` | Missing |
-| `cuArrayCreate` | Array::Array(unsigned width, unsigned height, CUarray_format format, unsigned numChannels) |
-| `cuArrayDestroy` | Array destructor |
-| `cuArrayGetDescriptor` | Missing |
-| `cuArrayGetMemoryRequirements` | Missing |
-| `cuArrayGetPlane` | Missing |
-| `cuArrayGetSparseProperties` | Missing |
-
-## Mipmapped Array Object Management
-
-| CUDA Driver API | cudawrappers interface |
-|---|---|
-| `cuMipmappedArrayCreate` | Missing |
-| `cuMipmappedArrayDestroy` | Missing |
-| `cuMipmappedArrayGetLevel` | Missing |
-| `cuMipmappedArrayGetMemoryRequirements` | Missing |
-| `cuMipmappedArrayGetSparseProperties` | Missing |
-
-## Interprocess Communication
-
-| CUDA Driver API | cudawrappers interface |
-|---|---|
-| `cuIpcCloseMemHandle` | Missing |
-| `cuIpcGetEventHandle` | Missing |
-| `cuIpcGetMemHandle` | Missing |
-| `cuIpcOpenEventHandle` | Missing |
-| `cuIpcOpenMemHandle` | Missing |
-
