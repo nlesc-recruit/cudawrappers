@@ -4,48 +4,43 @@ This document summarizes CUDA Driver API coverage for `cudawrappers` against CUD
 
 Reference: https://docs.nvidia.com/cuda/cuda-driver-api/index.html
 
-| Section | Coverage |
-|---|---|
-| Error Handling | ✅ |
-| Initialization | ✅ |
-| Version Management | ✅ |
-| Device Management | ✅ |
-| Unified Addressing | ✅ |
-| Event Management | ✅ |
-| Peer Context Memory Access | ✅ |
-| Green Contexts | ✅ |
-| Context Management | ⌛ (14/27) |
-| Stream Memory Operations | ⌛ (18/41) |
-| Module Management | ⌛ (6/14) |
-| Memory Management | ⌛ (12/37) |
-| Stream Management | ⌛ (10/32) |
-| Execution Control | ⌛ (6/28) |
-| Occupancy | ⌛ (1/7) |
-| Graph Management | ⌛ (9/84) |
-| Other | ⌛ (5/44) |
+Sections marked with ✅ are fully covered in the document, sections marked with ⌛ are partially covered, and sections marked with ❌ are not implemented. The detailed tables below provide the specific API-by-API coverage for each section.
 
-> Internal-only variants such as `_v2`, `_v3`, and `_ptsz` are listed in each section and excluded from the coverage count calculations.
-
-### Not Implemented Sections
-- Primary Context Management
-- Library Management
-- Virtual Memory Management
-- Stream Ordered Memory Allocator
-- Multicast Object Management
-- Logical Endpoint
-- External Resource Interoperability
-- Texture Object Management
-- Surface Object Management
-- Tensor Map Object Management
-- Graphics Interoperability
-- Driver Entry Point Access
-- Coredump Attributes Control API
-- Error Log Management Functions
-- CUDA Checkpointing
-- Profiler Control
-
-### Deprecated APIs
-- Texture Reference Management [DEPRECATED] — not implemented
+- Error Handling — ✅
+- Initialization — ✅
+- Version Management — ✅
+- Device Management — ✅
+- Primary Context Management — ❌
+- Context Management — ⌛
+- Module Management — ⌛
+- Library Management — ❌
+- Memory Management — ⌛
+- Virtual Memory Management — ❌
+- Stream Ordered Memory Allocator — ❌
+- Multicast Object Management — ❌
+- Logical Endpoint — ❌
+- Unified Addressing — ✅
+- Stream Management — ⌛
+- Event Management — ✅
+- External Resource Interoperability — ⌛
+- Stream Memory Operations — ⌛
+- Execution Control — ⌛
+- Graph Management — ⌛
+- Occupancy — ⌛
+- Texture Object Management — ❌
+- Surface Object Management — ❌
+- Tensor Map Object Management — ❌
+- Peer Context Memory Access — ✅
+- Graphics Interoperability — ❌
+- Driver Entry Point Access — ❌
+- Coredump Attributes Control API — ❌
+- Green Contexts — ✅
+- Error Log Management Functions — ❌
+- CUDA Checkpointing — ❌
+- Profiler Control — ❌
+- Array Object Management — ⌛
+- Mipmapped Array Object Management — ❌
+- Interprocess Communication — ❌
 
 ## Error Handling
 
@@ -95,6 +90,7 @@ Reference: https://docs.nvidia.com/cuda/cuda-driver-api/index.html
 | `cuDeviceUnregisterAsyncNotification` | Device::unregisterAsyncNotification() |
 
 ## Primary Context Management
+
 | CUDA Driver API | cudawrappers interface |
 |---|---|
 | `cuDevicePrimaryCtxGetState` | Missing |
@@ -104,8 +100,6 @@ Reference: https://docs.nvidia.com/cuda/cuda-driver-api/index.html
 | `cuDevicePrimaryCtxSetFlags` | Missing |
 
 ## Context Management
-
-> Internal APIs not counted in coverage: `cuCtxCreate_v2`, `cuCtxCreate_v3`, `cuCtxGetDevice_v2`, `cuCtxSynchronize_v2`
 
 | CUDA Driver API | cudawrappers interface |
 |---|---|
@@ -172,8 +166,6 @@ Reference: https://docs.nvidia.com/cuda/cuda-driver-api/index.html
 | `cuLibraryUnload` | Missing |
 
 ## Memory Management
-
-> Internal APIs not counted in coverage: `cuMemPrefetchAsync_ptsz`, `cuMemPrefetchAsync_v2`
 
 | CUDA Driver API | cudawrappers interface |
 |---|---|
@@ -242,8 +234,6 @@ Reference: https://docs.nvidia.com/cuda/cuda-driver-api/index.html
 
 ## Multicast Object Management
 
-> Internal APIs not counted in coverage: `cuMulticastBindAddr_v2`, `cuMulticastBindMem_v2`
-
 | CUDA Driver API | cudawrappers interface |
 |---|---|
 | `cuMulticastAddDevice` | Missing |
@@ -280,8 +270,6 @@ Reference: https://docs.nvidia.com/cuda/cuda-driver-api/index.html
 | `cuPointerSetAttribute` | pointerSetAttribute() |
 
 ## Stream Management
-
-> Internal APIs not counted in coverage: `cuStreamBatchMemOp_ptsz`, `cuStreamBatchMemOp_v2`, `cuStreamBeginCapture_ptsz`, `cuStreamBeginCapture_v2`, `cuStreamGetCaptureInfo_ptsz`, `cuStreamGetCaptureInfo_v2`, `cuStreamGetCaptureInfo_v2_ptsz`, `cuStreamGetCaptureInfo_v3`, `cuStreamGetCtx_v2`, `cuStreamUpdateCaptureDependencies_ptsz`, `cuStreamUpdateCaptureDependencies_v2`, `cuStreamWaitValue32_ptsz`, `cuStreamWaitValue32_v2`, `cuStreamWaitValue64_ptsz`, `cuStreamWaitValue64_v2`, `cuStreamWriteValue32_ptsz`, `cuStreamWriteValue32_v2`, `cuStreamWriteValue64_ptsz`, `cuStreamWriteValue64_v2`
 
 | CUDA Driver API | cudawrappers interface |
 |---|---|
@@ -340,10 +328,10 @@ Reference: https://docs.nvidia.com/cuda/cuda-driver-api/index.html
 | `cuExternalMemoryGetMappedMipmappedArray` | Missing |
 | `cuImportExternalMemory` | Missing |
 | `cuImportExternalSemaphore` | Missing |
+| `cuSignalExternalSemaphoresAsync` | Missing |
+| `cuWaitExternalSemaphoresAsync` | Missing |
 
 ## Stream Memory Operations
-
-> Internal APIs not counted in coverage: `cuMemcpy2DAsync_v2`, `cuMemcpy2DUnaligned_v2`, `cuMemcpy2D_v2`, `cuMemcpy3DAsync_v2`, `cuMemcpy3DBatchAsync_ptsz`, `cuMemcpy3DBatchAsync_v2`, `cuMemcpy3D_v2`, `cuMemcpyAtoA_v2`, `cuMemcpyAtoD_v2`, `cuMemcpyAtoHAsync_v2`, `cuMemcpyAtoH_v2`, `cuMemcpyBatchAsync_ptsz`, `cuMemcpyBatchAsync_v2`, `cuMemcpyDtoA_v2`, `cuMemcpyDtoDAsync_v2`, `cuMemcpyDtoD_v2`, `cuMemcpyDtoHAsync_v2`, `cuMemcpyDtoH_v2`, `cuMemcpyHtoAAsync_v2`, `cuMemcpyHtoA_v2`, `cuMemcpyHtoDAsync_v2`, `cuMemcpyHtoD_v2`, `cuMemsetD16_v2`, `cuMemsetD2D16_v2`, `cuMemsetD2D32_v2`, `cuMemsetD2D8_v2`, `cuMemsetD32_v2`, `cuMemsetD8_v2`
 
 | CUDA Driver API | cudawrappers interface |
 |---|---|
@@ -391,8 +379,6 @@ Reference: https://docs.nvidia.com/cuda/cuda-driver-api/index.html
 
 ## Execution Control
 
-> Internal APIs not counted in coverage: `cuLaunchHostFunc_v2`
-
 | CUDA Driver API | cudawrappers interface |
 |---|---|
 | `cuFuncGetAttribute` | Function::getAttribute() |
@@ -410,23 +396,29 @@ Reference: https://docs.nvidia.com/cuda/cuda-driver-api/index.html
 | `cuKernelGetAttribute` | Missing |
 | `cuKernelGetFunction` | Missing |
 | `cuKernelGetLibrary` | Missing |
-| `cudaGraphKernelNodeSetParam` | Missing |
 | `cuKernelGetName` | Missing |
 | `cuKernelGetParamCount` | Missing |
 | `cuKernelGetParamInfo` | Missing |
 | `cuKernelSetAttribute` | Missing |
 | `cuKernelSetCacheConfig` | Missing |
+| `cuLaunch` | Missing |
 | `cuLaunchCooperativeKernel` | Stream::launchCooperativeKernel(Function &, unsigned, unsigned, unsigned, unsigned, unsigned, unsigned, unsigned, const std::vector<const void *> &) |
+| `cuLaunchCooperativeKernelMultiDevice` | Missing |
+| `cuLaunchGrid` | Missing |
+| `cuLaunchGridAsync` | Missing |
 | `cuLaunchHostFunc` | Stream::launchHostFunc() |
 | `cuLaunchKernel` | Stream::launchKernel(Function &, unsigned, unsigned, unsigned, unsigned, unsigned, unsigned, unsigned, const std::vector<const void *> &) |
 | `cuLaunchKernelEx` | Missing |
 | `cuLinkAddData` | Missing |
 | `cuLinkAddFile` | Missing |
 | `cuLinkCreate` | Missing |
+| `cuParamSetSize` | Missing |
+| `cuParamSetTexRef` | Missing |
+| `cuParamSetf` | Missing |
+| `cuParamSeti` | Missing |
+| `cuParamSetv` | Missing |
 
 ## Graph Management
-
-> Internal APIs not counted in coverage: `cuGraphInstantiate_v2`
 
 | CUDA Driver API | cudawrappers interface |
 |---|---|
@@ -451,10 +443,8 @@ Reference: https://docs.nvidia.com/cuda/cuda-driver-api/index.html
 | `cuGraphClone` | Missing |
 | `cuGraphConditionalHandleCreate` | Missing |
 | `cuGraphCreate` | Graph::Graph(Context &, unsigned int) |
-| `cudaGraphKernelNodeUpdatesApply` | Missing |
 | `cuGraphDebugDotPrint` | Graph::debugDotPrint() |
 | `cuGraphDestroy` | Graph destructor |
-| `cudaGraphLaunch` | Missing |
 | `cuGraphDestroyNode` | Missing |
 | `cuGraphEventRecordNodeGetEvent` | Missing |
 | `cuGraphEventRecordNodeSetEvent` | Missing |
@@ -527,40 +517,6 @@ Reference: https://docs.nvidia.com/cuda/cuda-driver-api/index.html
 | `cuOccupancyMaxPotentialBlockSizeWithFlags` | Missing |
 | `cuOccupancyMaxPotentialClusterSize` | Missing |
 
-## Texture Reference Management [DEPRECATED]
-
-> Internal APIs not counted in coverage: `cuTexRefSetAddress2D_v2`
-
-| CUDA Driver API | cudawrappers interface |
-|---|---|
-| `cuTexRefCreate` | Missing |
-| `cuTexRefDestroy` | Missing |
-| `cuTexRefGetAddress` | Missing |
-| `cuTexRefGetAddressMode` | Missing |
-| `cuTexRefGetArray` | Missing |
-| `cuTexRefGetBorderColor` | Missing |
-| `cuTexRefGetFilterMode` | Missing |
-| `cuTexRefGetFlags` | Missing |
-| `cuTexRefGetFormat` | Missing |
-| `cuTexRefGetMaxAnisotropy` | Missing |
-| `cuTexRefGetMipmapFilterMode` | Missing |
-| `cuTexRefGetMipmapLevelBias` | Missing |
-| `cuTexRefGetMipmapLevelClamp` | Missing |
-| `cuTexRefGetMipmappedArray` | Missing |
-| `cuTexRefSetAddress` | Missing |
-| `cuTexRefSetAddress2D` | Missing |
-| `cuTexRefSetAddressMode` | Missing |
-| `cuTexRefSetArray` | Missing |
-| `cuTexRefSetBorderColor` | Missing |
-| `cuTexRefSetFilterMode` | Missing |
-| `cuTexRefSetFlags` | Missing |
-| `cuTexRefSetFormat` | Missing |
-| `cuTexRefSetMaxAnisotropy` | Missing |
-| `cuTexRefSetMipmapFilterMode` | Missing |
-| `cuTexRefSetMipmapLevelBias` | Missing |
-| `cuTexRefSetMipmapLevelClamp` | Missing |
-| `cuTexRefSetMipmappedArray` | Missing |
-
 ## Texture Object Management
 
 | CUDA Driver API | cudawrappers interface |
@@ -611,8 +567,6 @@ Reference: https://docs.nvidia.com/cuda/cuda-driver-api/index.html
 | `cuGraphicsUnregisterResource` | Missing |
 
 ## Driver Entry Point Access
-
-> Internal APIs not counted in coverage: `cuGetProcAddress_v2`, `cuGetProcAddress_v2_ptsz`
 
 | CUDA Driver API | cudawrappers interface |
 |---|---|
@@ -674,7 +628,7 @@ Reference: https://docs.nvidia.com/cuda/cuda-driver-api/index.html
 | `cuProfilerStart` | Missing |
 | `cuProfilerStop` | Missing |
 
-## Other
+## Array Object Management
 
 | CUDA Driver API | cudawrappers interface |
 |---|---|
@@ -686,45 +640,24 @@ Reference: https://docs.nvidia.com/cuda/cuda-driver-api/index.html
 | `cuArrayGetMemoryRequirements` | Missing |
 | `cuArrayGetPlane` | Missing |
 | `cuArrayGetSparseProperties` | Missing |
-| `cuDevResourceGenerateDesc` | devResourceGenerateDesc(CUdevResourceDesc *, CUdevResource *, unsigned int) |
-| `cuDevSmResourceSplit` | Missing |
-| `cuDevSmResourceSplitByCount` | devSmResourceSplitByCount(CUdevResource *, unsigned int *, CUdevResource *, CUdevResource *, unsigned int, unsigned int) |
-| `cuFlushGPUDirectRDMAWrites` | Missing |
-| `cuIpcCloseMemHandle` | Missing |
-| `cuIpcGetEventHandle` | Missing |
-| `cuIpcGetMemHandle` | Missing |
-| `cuIpcOpenEventHandle` | Missing |
-| `cuIpcOpenMemHandle` | Missing |
-| `cuLaunch` | Missing |
-| `cuLaunchCooperativeKernelMultiDevice` | Missing |
-| `cuLaunchGrid` | Missing |
-| `cuLaunchGridAsync` | Missing |
+
+## Mipmapped Array Object Management
+
+| CUDA Driver API | cudawrappers interface |
+|---|---|
 | `cuMipmappedArrayCreate` | Missing |
 | `cuMipmappedArrayDestroy` | Missing |
 | `cuMipmappedArrayGetLevel` | Missing |
 | `cuMipmappedArrayGetMemoryRequirements` | Missing |
 | `cuMipmappedArrayGetSparseProperties` | Missing |
-| `cuParamSetSize` | Missing |
-| `cuParamSetTexRef` | Missing |
-| `cuParamSetf` | Missing |
-| `cuParamSeti` | Missing |
-| `cuParamSetv` | Missing |
-| `cuSignalExternalSemaphoresAsync` | Missing |
-| `cuSurfRefGetArray` | Missing |
-| `cuSurfRefSetArray` | Missing |
-| `cuThreadExchangeStreamCaptureMode` | Missing |
-| `cuUserObjectCreate` | Missing |
-| `cuUserObjectRelease` | Missing |
-| `cuUserObjectRetain` | Missing |
-| `cuWaitExternalSemaphoresAsync` | Missing |
-| `cudaDeviceGetTexture1DLinearMaxWidth` | Missing |
-| `cudaDeviceSynchronize` | Missing |
-| `cudaGetLastError` | Missing |
-| `cudaGridDependencySynchronize` | Missing |
-| `cudaTriggerProgrammaticLaunchCompletion` | Missing |
 
-## Summary
+## Interprocess Communication
 
-- Total CUDA driver APIs: 547
-- Implemented in cudawrappers: 94
-- Missing implementations: 453
+| CUDA Driver API | cudawrappers interface |
+|---|---|
+| `cuIpcCloseMemHandle` | Missing |
+| `cuIpcGetEventHandle` | Missing |
+| `cuIpcGetMemHandle` | Missing |
+| `cuIpcOpenEventHandle` | Missing |
+| `cuIpcOpenMemHandle` | Missing |
+
