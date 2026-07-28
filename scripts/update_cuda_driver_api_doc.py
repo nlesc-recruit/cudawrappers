@@ -96,6 +96,8 @@ def read_existing_doc(path: Path) -> Tuple[Dict[str, Dict[str, str]], List[str]]
         line = raw_line.rstrip()
         if line.startswith("## "):
             heading = line[3:].strip()
+            heading = re.sub(r"\s+[✅🟡❌]\s*\([^)]*\)$", "", heading)
+            heading = re.sub(r"\s+[✅🟡❌]$", "", heading)
             if heading in {"Coverage summary", "Summary"}:
                 current = None
                 continue
@@ -124,10 +126,36 @@ def load_overrides(path: Path) -> Dict[str, str]:
     return data.get("overrides", {})
 
 
+def normalize_wrapper(wrapper: str | None) -> str:
+    if not wrapper:
+        return "Missing"
+    text = wrapper.strip()
+    if not text:
+        return "Missing"
+    return text.strip("`").strip()
+
+
 def describe_wrapper(wrapper: str | None) -> str:
+    wrapper = normalize_wrapper(wrapper)
     if not wrapper or wrapper == "Missing":
         return "Missing"
     return f"`{wrapper}`"
+
+
+def describe_section_heading(section_name: str, rows: List[Tuple[str, str]]) -> str:
+    implemented = sum(
+        1 for _, wrapper in rows if normalize_wrapper(wrapper) != "Missing"
+    )
+    total = len(rows)
+    if total == 0:
+        return f"## {section_name}"
+    if implemented == total:
+        status = "✅"
+    elif implemented == 0:
+        status = "❌"
+    else:
+        status = "🟡"
+    return f"## {section_name} {status} ({implemented}/{total})"
 
 
 def build_markdown(
@@ -157,11 +185,11 @@ def build_markdown(
     out_lines = list(intro_lines)
     out_lines.append("")
     for section_name in sections:
-        out_lines.append(f"## {section_name}")
+        rows = sections[section_name]
+        out_lines.append(describe_section_heading(section_name, rows))
         out_lines.append("")
         out_lines.append("| CUDA Driver API | cudawrappers interface |")
         out_lines.append("|---|---|")
-        rows = sections[section_name]
         for api, wrapper in rows:
             out_lines.append(f"| `{api}` | {describe_wrapper(wrapper)} |")
         out_lines.append("")

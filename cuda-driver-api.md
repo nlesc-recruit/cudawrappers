@@ -5,26 +5,26 @@ This document summarizes CUDA Driver API coverage for `cudawrappers` against CUD
 Reference: https://docs.nvidia.com/cuda/cuda-driver-api/index.html
 
 
-## Error Handling
+## Error Handling ✅ (2/2)
 
 | CUDA Driver API | cudawrappers interface |
 |---|---|
 | `cuGetErrorName` | `cu::getErrorName(CUresult)` |
 | `cuGetErrorString` | `cu::Error::what()` |
 
-## Initialization
+## Initialization ✅ (1/1)
 
 | CUDA Driver API | cudawrappers interface |
 |---|---|
 | `cuInit` | `cu::init()` |
 
-## Version Management
+## Version Management ✅ (1/1)
 
 | CUDA Driver API | cudawrappers interface |
 |---|---|
 | `cuDriverGetVersion` | `cu::driverGetVersion()` |
 
-## Device Management
+## Device Management 🟡 (13/15)
 
 | CUDA Driver API | cudawrappers interface |
 |---|---|
@@ -44,7 +44,7 @@ Reference: https://docs.nvidia.com/cuda/cuda-driver-api/index.html
 | `cuDeviceTotalMem` | `Device::totalMem()` |
 | `cuFlushGPUDirectRDMAWrites` | Missing |
 
-## Primary Context Management
+## Primary Context Management ❌ (0/5)
 
 | CUDA Driver API | cudawrappers interface |
 |---|---|
@@ -54,7 +54,7 @@ Reference: https://docs.nvidia.com/cuda/cuda-driver-api/index.html
 | `cuDevicePrimaryCtxRetain` | Missing |
 | `cuDevicePrimaryCtxSetFlags` | Missing |
 
-## Context Management
+## Context Management 🟡 (13/21)
 
 | CUDA Driver API | cudawrappers interface |
 |---|---|
@@ -80,7 +80,7 @@ Reference: https://docs.nvidia.com/cuda/cuda-driver-api/index.html
 | `cuCtxSynchronize` | `Context::synchronize()` |
 | `cuCtxWaitEvent` | Missing |
 
-## Module Management
+## Module Management 🟡 (6/15)
 
 | CUDA Driver API | cudawrappers interface |
 |---|---|
@@ -100,7 +100,7 @@ Reference: https://docs.nvidia.com/cuda/cuda-driver-api/index.html
 | `cuModuleLoadFatBinary` | Missing |
 | `cuModuleUnload` | `Module destructor` |
 
-## Library Management
+## Library Management 🟡 (1/18)
 
 | CUDA Driver API | cudawrappers interface |
 |---|---|
@@ -123,7 +123,7 @@ Reference: https://docs.nvidia.com/cuda/cuda-driver-api/index.html
 | `cuLibraryLoadFromFile` | Missing |
 | `cuLibraryUnload` | Missing |
 
-## Memory Management
+## Memory Management 🟡 (34/77)
 
 | CUDA Driver API | cudawrappers interface |
 |---|---|
@@ -205,7 +205,7 @@ Reference: https://docs.nvidia.com/cuda/cuda-driver-api/index.html
 | `cuMipmappedArrayGetMemoryRequirements` | Missing |
 | `cuMipmappedArrayGetSparseProperties` | Missing |
 
-## Virtual Memory Management
+## Virtual Memory Management ❌ (0/14)
 
 | CUDA Driver API | cudawrappers interface |
 |---|---|
@@ -224,7 +224,7 @@ Reference: https://docs.nvidia.com/cuda/cuda-driver-api/index.html
 | `cuMemSetAccess` | Missing |
 | `cuMemUnmap` | Missing |
 
-## Stream Ordered Memory Allocator
+## Stream Ordered Memory Allocator 🟡 (2/17)
 
 | CUDA Driver API | cudawrappers interface |
 |---|---|
@@ -246,7 +246,7 @@ Reference: https://docs.nvidia.com/cuda/cuda-driver-api/index.html
 | `cuMemPoolTrimTo` | Missing |
 | `cuMemSetMemPool` | Missing |
 
-## Multicast Object Management
+## Multicast Object Management ❌ (0/6)
 
 | CUDA Driver API | cudawrappers interface |
 |---|---|
@@ -257,7 +257,7 @@ Reference: https://docs.nvidia.com/cuda/cuda-driver-api/index.html
 | `cuMulticastGetGranularity` | Missing |
 | `cuMulticastUnbind` | Missing |
 
-## Logical Endpoint
+## Logical Endpoint ❌ (0/12)
 
 | CUDA Driver API | cudawrappers interface |
 |---|---|
@@ -274,7 +274,7 @@ Reference: https://docs.nvidia.com/cuda/cuda-driver-api/index.html
 | `cuLogicalEndpointQuery` | Missing |
 | `cuLogicalEndpointUnbind` | Missing |
 
-## Unified Addressing
+## Unified Addressing 🟡 (4/10)
 
 | CUDA Driver API | cudawrappers interface |
 |---|---|
@@ -289,7 +289,7 @@ Reference: https://docs.nvidia.com/cuda/cuda-driver-api/index.html
 | `cuPointerGetAttributes` | `Implemented` |
 | `cuPointerSetAttribute` | `pointerSetAttribute()` |
 
-## Stream Management
+## Stream Management 🟡 (6/26)
 
 | CUDA Driver API | cudawrappers interface |
 |---|---|
@@ -320,7 +320,7 @@ Reference: https://docs.nvidia.com/cuda/cuda-driver-api/index.html
 | `cuStreamWaitEvent` | `Stream::wait(Event &)` |
 | `cuThreadExchangeStreamCaptureMode` | Missing |
 
-## Event Management
+## Event Management ✅ (7/7)
 
 | CUDA Driver API | cudawrappers interface |
 |---|---|
@@ -332,7 +332,7 @@ Reference: https://docs.nvidia.com/cuda/cuda-driver-api/index.html
 | `cuEventRecordWithFlags` | `Event::record(Stream &, unsigned int) / Stream::record(Event &, unsigned int)` |
 | `cuEventSynchronize` | `Event::synchronize()` |
 
-## External Resource Interoperability
+## External Resource Interoperability ❌ (0/8)
 
 | CUDA Driver API | cudawrappers interface |
 |---|---|
@@ -345,7 +345,7 @@ Reference: https://docs.nvidia.com/cuda/cuda-driver-api/index.html
 | `cuSignalExternalSemaphoresAsync` | Missing |
 | `cuWaitExternalSemaphoresAsync` | Missing |
 
-## Stream Memory Operations
+## Stream Memory Operations 🟡 (3/5)
 
 | CUDA Driver API | cudawrappers interface |
 |---|---|
@@ -355,7 +355,7 @@ Reference: https://docs.nvidia.com/cuda/cuda-driver-api/index.html
 | `cuStreamWriteValue32` | `Stream::writeValue32()` |
 | `cuStreamWriteValue64` | Missing |
 
-## Execution Control
+## Execution Control 🟡 (6/13)
 
 | CUDA Driver API | cudawrappers interface |
 |---|---|
@@ -373,7 +373,7 @@ Reference: https://docs.nvidia.com/cuda/cuda-driver-api/index.html
 | `cuLaunchKernel` | `Stream::launchKernel(Function &, unsigned, unsigned, unsigned, unsigned, unsigned, unsigned, unsigned, const std::vector<const void *> &)` |
 | `cuLaunchKernelEx` | Missing |
 
-## Graph Management
+## Graph Management 🟡 (12/88)
 
 | CUDA Driver API | cudawrappers interface |
 |---|---|
@@ -466,7 +466,7 @@ Reference: https://docs.nvidia.com/cuda/cuda-driver-api/index.html
 | `cuUserObjectRelease` | Missing |
 | `cuUserObjectRetain` | Missing |
 
-## Occupancy
+## Occupancy 🟡 (1/7)
 
 | CUDA Driver API | cudawrappers interface |
 |---|---|
@@ -478,7 +478,7 @@ Reference: https://docs.nvidia.com/cuda/cuda-driver-api/index.html
 | `cuOccupancyMaxPotentialBlockSizeWithFlags` | Missing |
 | `cuOccupancyMaxPotentialClusterSize` | Missing |
 
-## Texture Object Management
+## Texture Object Management ❌ (0/5)
 
 | CUDA Driver API | cudawrappers interface |
 |---|---|
@@ -488,7 +488,7 @@ Reference: https://docs.nvidia.com/cuda/cuda-driver-api/index.html
 | `cuTexObjectGetResourceViewDesc` | Missing |
 | `cuTexObjectGetTextureDesc` | Missing |
 
-## Surface Object Management
+## Surface Object Management ❌ (0/3)
 
 | CUDA Driver API | cudawrappers interface |
 |---|---|
@@ -496,7 +496,7 @@ Reference: https://docs.nvidia.com/cuda/cuda-driver-api/index.html
 | `cuSurfObjectDestroy` | Missing |
 | `cuSurfObjectGetResourceDesc` | Missing |
 
-## Tensor Map Object Management
+## Tensor Map Object Management ❌ (0/4)
 
 | CUDA Driver API | cudawrappers interface |
 |---|---|
@@ -505,7 +505,7 @@ Reference: https://docs.nvidia.com/cuda/cuda-driver-api/index.html
 | `cuTensorMapEncodeTiled` | Missing |
 | `cuTensorMapReplaceAddress` | Missing |
 
-## Peer Context Memory Access
+## Peer Context Memory Access ✅ (5/5)
 
 | CUDA Driver API | cudawrappers interface |
 |---|---|
@@ -515,7 +515,7 @@ Reference: https://docs.nvidia.com/cuda/cuda-driver-api/index.html
 | `cuDeviceGetP2PAtomicCapabilities` | `Device::getP2PAtomicCapabilities()` |
 | `cuDeviceGetP2PAttribute` | `Device::getP2PAttribute()` |
 
-## Graphics Interoperability
+## Graphics Interoperability ❌ (0/7)
 
 | CUDA Driver API | cudawrappers interface |
 |---|---|
@@ -527,13 +527,13 @@ Reference: https://docs.nvidia.com/cuda/cuda-driver-api/index.html
 | `cuGraphicsUnmapResources` | Missing |
 | `cuGraphicsUnregisterResource` | Missing |
 
-## Driver Entry Point Access
+## Driver Entry Point Access ❌ (0/1)
 
 | CUDA Driver API | cudawrappers interface |
 |---|---|
 | `cuGetProcAddress` | Missing |
 
-## Coredump Attributes Control API
+## Coredump Attributes Control API ❌ (0/8)
 
 | CUDA Driver API | cudawrappers interface |
 |---|---|
@@ -546,15 +546,15 @@ Reference: https://docs.nvidia.com/cuda/cuda-driver-api/index.html
 | `cuCoredumpSetAttribute` | Missing |
 | `cuCoredumpSetAttributeGlobal` | Missing |
 
-## Green Contexts
+## Green Contexts 🟡 (12/15)
 
 | CUDA Driver API | cudawrappers interface |
 |---|---|
-| `cuCtxFromGreenCtx` | `Implemented` |
+| `cuCtxFromGreenCtx` | `Context::fromGreenCtx(GreenContext &)` |
 | `cuCtxGetDevResource` | Missing |
-| `cuDevResourceGenerateDesc` | Missing |
+| `cuDevResourceGenerateDesc` | `cu::devResourceGenerateDesc(CUdevResourceDesc *, CUdevResource *, unsigned int)` |
 | `cuDevSmResourceSplit` | Missing |
-| `cuDevSmResourceSplitByCount` | Missing |
+| `cuDevSmResourceSplitByCount` | `cu::devSmResourceSplitByCount(CUdevResource *, unsigned int *, const CUdevResource *, CUdevResource *, unsigned int, unsigned int)` |
 | `cuDeviceGetDevResource` | `Device::getDevResource()` |
 | `cuGreenCtxCreate` | `GreenContext::GreenContext(CUdevResourceDesc, Device &, unsigned int)` |
 | `cuGreenCtxDestroy` | `GreenContext destructor` |
@@ -566,7 +566,7 @@ Reference: https://docs.nvidia.com/cuda/cuda-driver-api/index.html
 | `cuStreamGetDevResource` | Missing |
 | `cuStreamGetGreenCtx` | `Stream::getGreenCtx()` |
 
-## Error Log Management Functions
+## Error Log Management Functions ❌ (0/5)
 
 | CUDA Driver API | cudawrappers interface |
 |---|---|
@@ -576,7 +576,7 @@ Reference: https://docs.nvidia.com/cuda/cuda-driver-api/index.html
 | `cuLogsRegisterCallback` | Missing |
 | `cuLogsUnregisterCallback` | Missing |
 
-## CUDA Checkpointing
+## CUDA Checkpointing ❌ (0/6)
 
 | CUDA Driver API | cudawrappers interface |
 |---|---|
@@ -587,7 +587,7 @@ Reference: https://docs.nvidia.com/cuda/cuda-driver-api/index.html
 | `cuCheckpointProcessRestore` | Missing |
 | `cuCheckpointProcessUnlock` | Missing |
 
-## Profiler Control
+## Profiler Control ❌ (0/2)
 
 | CUDA Driver API | cudawrappers interface |
 |---|---|
