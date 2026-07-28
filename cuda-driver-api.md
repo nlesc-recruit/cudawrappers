@@ -111,8 +111,6 @@ Reference: https://docs.nvidia.com/cuda/cuda-driver-api/index.html
 |---|---|
 | `cuCtxAttach` | Missing |
 | `cuCtxCreate` | Context::Context(int flags, Device &device) |
-| `cuCtxCreate_v2` | Missing |
-| `cuCtxCreate_v3` | Missing |
 | `cuCtxDestroy` | Context destructor |
 | `cuCtxDetach` | Missing |
 | `cuCtxFromGreenCtx` | Context::fromGreenCtx(GreenContext &) |
@@ -121,7 +119,6 @@ Reference: https://docs.nvidia.com/cuda/cuda-driver-api/index.html
 | `cuCtxGetCurrent` | Context::getCurrent() |
 | `cuCtxGetDevResource` | Missing |
 | `cuCtxGetDevice` | Context::getDevice() |
-| `cuCtxGetDevice_v2` | Missing |
 | `cuCtxGetExecAffinity` | Missing |
 | `cuCtxGetFlags` | Missing |
 | `cuCtxGetId` | Missing |
@@ -138,7 +135,6 @@ Reference: https://docs.nvidia.com/cuda/cuda-driver-api/index.html
 | `cuCtxSetLimit` | Context::setLimit() |
 | `cuCtxSetSharedMemConfig` | Missing |
 | `cuCtxSynchronize` | Context::synchronize() |
-| `cuCtxSynchronize_v2` | Missing |
 | `cuCtxWaitEvent` | Missing |
 
 ## Module Management
@@ -211,8 +207,6 @@ Reference: https://docs.nvidia.com/cuda/cuda-driver-api/index.html
 | `cuMemImportFromShareableHandle` | Missing |
 | `cuMemMapArrayAsync` | Missing |
 | `cuMemPrefetchAsync` | Stream::memPrefetchAsync(DeviceMemory &, size_t) / Stream::memPrefetchAsync(DeviceMemory &, size_t, Device &) |
-| `cuMemPrefetchAsync_ptsz` | Missing |
-| `cuMemPrefetchAsync_v2` | Missing |
 | `cuMemPrefetchBatchAsync` | Missing |
 | `cuMemRangeGetAttribute` | Missing |
 | `cuMemRangeGetAttributes` | Missing |
@@ -254,9 +248,7 @@ Reference: https://docs.nvidia.com/cuda/cuda-driver-api/index.html
 |---|---|
 | `cuMulticastAddDevice` | Missing |
 | `cuMulticastBindAddr` | Missing |
-| `cuMulticastBindAddr_v2` | Missing |
 | `cuMulticastBindMem` | Missing |
-| `cuMulticastBindMem_v2` | Missing |
 | `cuMulticastCreate` | Missing |
 | `cuMulticastGetGranularity` | Missing |
 | `cuMulticastUnbind` | Missing |
@@ -296,13 +288,9 @@ Reference: https://docs.nvidia.com/cuda/cuda-driver-api/index.html
 | `cuStreamAddCallback` | Stream::addCallback() |
 | `cuStreamAttachMemAsync` | Missing |
 | `cuStreamBatchMemOp` | Stream::batchMemOp() |
-| `cuStreamBatchMemOp_ptsz` | Missing |
-| `cuStreamBatchMemOp_v2` | Missing |
 | `cuStreamBeginCapture` | Missing |
 | `cuStreamBeginCaptureToCig` | Missing |
 | `cuStreamBeginCaptureToGraph` | Missing |
-| `cuStreamBeginCapture_ptsz` | Missing |
-| `cuStreamBeginCapture_v2` | Missing |
 | `cuStreamBeginRecaptureToGraph` | Missing |
 | `cuStreamCopyAttributes` | Missing |
 | `cuStreamCreate` | Stream::Stream(unsigned int) |
@@ -312,12 +300,7 @@ Reference: https://docs.nvidia.com/cuda/cuda-driver-api/index.html
 | `cuStreamEndCaptureToCig` | Missing |
 | `cuStreamGetAttribute` | Missing |
 | `cuStreamGetCaptureInfo` | Missing |
-| `cuStreamGetCaptureInfo_ptsz` | Missing |
-| `cuStreamGetCaptureInfo_v2` | Missing |
-| `cuStreamGetCaptureInfo_v2_ptsz` | Missing |
-| `cuStreamGetCaptureInfo_v3` | Missing |
 | `cuStreamGetCtx` | Missing |
-| `cuStreamGetCtx_v2` | Missing |
 | `cuStreamGetDevResource` | Missing |
 | `cuStreamGetDevice` | Missing |
 | `cuStreamGetFlags` | Missing |
@@ -329,21 +312,11 @@ Reference: https://docs.nvidia.com/cuda/cuda-driver-api/index.html
 | `cuStreamSetAttribute` | Missing |
 | `cuStreamSynchronize` | Stream::synchronize() |
 | `cuStreamUpdateCaptureDependencies` | Missing |
-| `cuStreamUpdateCaptureDependencies_ptsz` | Missing |
-| `cuStreamUpdateCaptureDependencies_v2` | Missing |
 | `cuStreamWaitEvent` | Stream::wait(Event &) |
 | `cuStreamWaitValue32` | Stream::waitValue32() |
-| `cuStreamWaitValue32_ptsz` | Missing |
-| `cuStreamWaitValue32_v2` | Missing |
 | `cuStreamWaitValue64` | Missing |
-| `cuStreamWaitValue64_ptsz` | Missing |
-| `cuStreamWaitValue64_v2` | Missing |
 | `cuStreamWriteValue32` | Stream::writeValue32() |
-| `cuStreamWriteValue32_ptsz` | Missing |
-| `cuStreamWriteValue32_v2` | Missing |
 | `cuStreamWriteValue64` | Missing |
-| `cuStreamWriteValue64_ptsz` | Missing |
-| `cuStreamWriteValue64_v2` | Missing |
 
 ## Event Management
 
@@ -378,71 +351,43 @@ Reference: https://docs.nvidia.com/cuda/cuda-driver-api/index.html
 | `cuMemcpy` | Missing |
 | `cuMemcpy2D` | Missing |
 | `cuMemcpy2DAsync` | Stream::memcpyHtoD2DAsync / Stream::memcpyDtoH2DAsync |
-| `cuMemcpy2DAsync_v2` | Missing |
 | `cuMemcpy2DUnaligned` | Missing |
-| `cuMemcpy2DUnaligned_v2` | Missing |
-| `cuMemcpy2D_v2` | Missing |
 | `cuMemcpy3D` | Missing |
 | `cuMemcpy3DAsync` | Missing |
-| `cuMemcpy3DAsync_v2` | Missing |
 | `cuMemcpy3DBatchAsync` | Missing |
-| `cuMemcpy3DBatchAsync_ptsz` | Missing |
-| `cuMemcpy3DBatchAsync_v2` | Missing |
 | `cuMemcpy3DPeer` | Missing |
 | `cuMemcpy3DPeerAsync` | Missing |
 | `cuMemcpy3DWithAttributesAsync` | Missing |
-| `cuMemcpy3D_v2` | Missing |
 | `cuMemcpyAsync` | Stream::memcpyHtoHAsync(void *, const void *, size_t) / Stream::memcpyDtoDAsync(DeviceMemory &, DeviceMemory &, size_t) |
 | `cuMemcpyAtoA` | Missing |
-| `cuMemcpyAtoA_v2` | Missing |
 | `cuMemcpyAtoD` | Missing |
-| `cuMemcpyAtoD_v2` | Missing |
 | `cuMemcpyAtoH` | Missing |
 | `cuMemcpyAtoHAsync` | Missing |
-| `cuMemcpyAtoHAsync_v2` | Missing |
-| `cuMemcpyAtoH_v2` | Missing |
 | `cuMemcpyBatchAsync` | Missing |
-| `cuMemcpyBatchAsync_ptsz` | Missing |
-| `cuMemcpyBatchAsync_v2` | Missing |
 | `cuMemcpyDtoA` | Missing |
-| `cuMemcpyDtoA_v2` | Missing |
 | `cuMemcpyDtoD` | Missing |
 | `cuMemcpyDtoDAsync` | Missing |
-| `cuMemcpyDtoDAsync_v2` | Missing |
-| `cuMemcpyDtoD_v2` | Missing |
 | `cuMemcpyDtoH` | cu::memcpyDtoH(void *, CUdeviceptr, size_t) |
 | `cuMemcpyDtoHAsync` | Stream::memcpyDtoHAsync() |
-| `cuMemcpyDtoHAsync_v2` | Missing |
-| `cuMemcpyDtoH_v2` | Missing |
 | `cuMemcpyHtoA` | Missing |
 | `cuMemcpyHtoAAsync` | Missing |
-| `cuMemcpyHtoAAsync_v2` | Missing |
-| `cuMemcpyHtoA_v2` | Missing |
 | `cuMemcpyHtoD` | cu::memcpyHtoD(CUdeviceptr, const void *, size_t) |
 | `cuMemcpyHtoDAsync` | Stream::memcpyHtoDAsync() |
-| `cuMemcpyHtoDAsync_v2` | Missing |
-| `cuMemcpyHtoD_v2` | Missing |
 | `cuMemcpyPeer` | Missing |
 | `cuMemcpyPeerAsync` | Missing |
 | `cuMemcpyWithAttributesAsync` | Missing |
 | `cuMemsetD16` | DeviceMemory::memset(unsigned short, size_t) |
 | `cuMemsetD16Async` | Stream::memsetAsync(DeviceMemory &, unsigned short, size_t) |
-| `cuMemsetD16_v2` | Missing |
 | `cuMemsetD2D16` | DeviceMemory::memset2D(unsigned short, size_t, size_t, size_t) |
 | `cuMemsetD2D16Async` | Stream::memset2DAsync(DeviceMemory &, unsigned short, size_t, size_t, size_t) |
-| `cuMemsetD2D16_v2` | Missing |
 | `cuMemsetD2D32` | DeviceMemory::memset2D(unsigned int, size_t, size_t, size_t) |
 | `cuMemsetD2D32Async` | Stream::memset2DAsync(DeviceMemory &, unsigned int, size_t, size_t, size_t) |
-| `cuMemsetD2D32_v2` | Missing |
 | `cuMemsetD2D8` | DeviceMemory::memset2D(unsigned char, size_t, size_t, size_t) |
 | `cuMemsetD2D8Async` | Stream::memset2DAsync(DeviceMemory &, unsigned char, size_t, size_t, size_t) |
-| `cuMemsetD2D8_v2` | Missing |
 | `cuMemsetD32` | DeviceMemory::memset(unsigned int, size_t) |
 | `cuMemsetD32Async` | Stream::memsetAsync(DeviceMemory &, unsigned int, size_t) |
-| `cuMemsetD32_v2` | Missing |
 | `cuMemsetD8` | DeviceMemory::memset(unsigned char, size_t) |
 | `cuMemsetD8Async` | Stream::memsetAsync(DeviceMemory &, unsigned char, size_t) |
-| `cuMemsetD8_v2` | Missing |
 
 ## Execution Control
 
@@ -473,7 +418,6 @@ Reference: https://docs.nvidia.com/cuda/cuda-driver-api/index.html
 | `cuKernelSetCacheConfig` | Missing |
 | `cuLaunchCooperativeKernel` | Stream::launchCooperativeKernel(Function &, unsigned, unsigned, unsigned, unsigned, unsigned, unsigned, unsigned, const std::vector<const void *> &) |
 | `cuLaunchHostFunc` | Stream::launchHostFunc() |
-| `cuLaunchHostFunc_v2` | Missing |
 | `cuLaunchKernel` | Stream::launchKernel(Function &, unsigned, unsigned, unsigned, unsigned, unsigned, unsigned, unsigned, const std::vector<const void *> &) |
 | `cuLaunchKernelEx` | Missing |
 | `cuLinkAddData` | Missing |
@@ -543,7 +487,6 @@ Reference: https://docs.nvidia.com/cuda/cuda-driver-api/index.html
 | `cuGraphHostNodeSetParams` | Missing |
 | `cuGraphInstantiate` | Missing |
 | `cuGraphInstantiateWithParams` | Missing |
-| `cuGraphInstantiate_v2` | Missing |
 | `cuGraphKernelNodeCopyAttributes` | Missing |
 | `cuGraphKernelNodeGetAttribute` | Missing |
 | `cuGraphKernelNodeGetParams` | Missing |
@@ -606,7 +549,6 @@ Reference: https://docs.nvidia.com/cuda/cuda-driver-api/index.html
 | `cuTexRefGetMipmappedArray` | Missing |
 | `cuTexRefSetAddress` | Missing |
 | `cuTexRefSetAddress2D` | Missing |
-| `cuTexRefSetAddress2D_v2` | Missing |
 | `cuTexRefSetAddressMode` | Missing |
 | `cuTexRefSetArray` | Missing |
 | `cuTexRefSetBorderColor` | Missing |
@@ -676,8 +618,6 @@ Reference: https://docs.nvidia.com/cuda/cuda-driver-api/index.html
 |---|---|
 | `cuGetExportTable` | Missing |
 | `cuGetProcAddress` | Missing |
-| `cuGetProcAddress_v2` | Missing |
-| `cuGetProcAddress_v2_ptsz` | Missing |
 
 ## Coredump Attributes Control API
 
