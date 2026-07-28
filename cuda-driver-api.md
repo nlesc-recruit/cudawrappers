@@ -9,8 +9,8 @@ Reference: https://docs.nvidia.com/cuda/cuda-driver-api/index.html
 
 | CUDA Driver API | cudawrappers interface |
 |---|---|
-| `cuGetErrorName` | `cu::getErrorName()` |
-| `cuGetErrorString` | Error::what() (internal cu::Error wrapper) |
+| `cuGetErrorName` | cu::getErrorName(CUresult) |
+| `cuGetErrorString` | cu::Error::what() |
 
 ## Initialization
 
@@ -111,7 +111,7 @@ Reference: https://docs.nvidia.com/cuda/cuda-driver-api/index.html
 | `cuKernelGetParamCount` | Missing |
 | `cuKernelGetParamInfo` | Missing |
 | `cuKernelSetAttribute` | Missing |
-| `cuKernelSetCacheConfig` | Function::setCacheConfig() |
+| `cuKernelSetCacheConfig` | Function::setCacheConfig(CUfunc_cache) |
 | `cuLibraryEnumerateKernels` | Missing |
 | `cuLibraryGetGlobal` | Missing |
 | `cuLibraryGetKernel` | Missing |
@@ -153,7 +153,7 @@ Reference: https://docs.nvidia.com/cuda/cuda-driver-api/index.html
 | `cuMemFreeHost` | HostMemory destructor |
 | `cuMemGetAddressRange` | Missing |
 | `cuMemGetHandleForAddressRange` | Missing |
-| `cuMemGetInfo` | Context::getFreeMemory()/Context::getTotalMemory() |
+| `cuMemGetInfo` | Context::getFreeMemory() / Context::getTotalMemory() |
 | `cuMemHostAlloc` | HostMemory::HostMemory(size_t, unsigned int) |
 | `cuMemHostGetDevicePointer` | DeviceMemory::DeviceMemory(const HostMemory &) |
 | `cuMemHostGetFlags` | Missing |
@@ -228,9 +228,9 @@ Reference: https://docs.nvidia.com/cuda/cuda-driver-api/index.html
 
 | CUDA Driver API | cudawrappers interface |
 |---|---|
-| `cuMemAllocAsync` | Stream::memAllocAsync() |
+| `cuMemAllocAsync` | Stream::memAllocAsync(size_t) |
 | `cuMemAllocFromPoolAsync` | Missing |
-| `cuMemFreeAsync` | Stream::memFreeAsync() |
+| `cuMemFreeAsync` | Stream::memFreeAsync(DeviceMemory &) |
 | `cuMemGetDefaultMemPool` | Missing |
 | `cuMemGetMemPool` | Missing |
 | `cuMemPoolCreate` | Missing |
@@ -293,7 +293,7 @@ Reference: https://docs.nvidia.com/cuda/cuda-driver-api/index.html
 
 | CUDA Driver API | cudawrappers interface |
 |---|---|
-| `cuStreamAddCallback` | Stream::addCallback() |
+| `cuStreamAddCallback` | Stream::addCallback(CUstreamCallback, void *, unsigned int) |
 | `cuStreamAttachMemAsync` | Missing |
 | `cuStreamBeginCapture` | Missing |
 | `cuStreamBeginCaptureToCig` | Missing |
@@ -349,7 +349,7 @@ Reference: https://docs.nvidia.com/cuda/cuda-driver-api/index.html
 
 | CUDA Driver API | cudawrappers interface |
 |---|---|
-| `cuStreamBatchMemOp` | Stream::batchMemOp() |
+| `cuStreamBatchMemOp` | Stream::batchMemOp(unsigned count, CUstreamBatchMemOpParams *, unsigned flags) |
 | `cuStreamWaitValue32` | Stream::waitValue32() |
 | `cuStreamWaitValue64` | Missing |
 | `cuStreamWriteValue32` | Stream::writeValue32() |
@@ -359,15 +359,15 @@ Reference: https://docs.nvidia.com/cuda/cuda-driver-api/index.html
 
 | CUDA Driver API | cudawrappers interface |
 |---|---|
-| `cuFuncGetAttribute` | Function::getAttribute() |
+| `cuFuncGetAttribute` | Function::getAttribute(CUfunction_attribute/hipFunction_attribute) |
 | `cuFuncGetModule` | Missing |
 | `cuFuncGetName` | Missing |
 | `cuFuncGetParamCount` | Missing |
 | `cuFuncGetParamInfo` | Missing |
 | `cuFuncIsLoaded` | Missing |
 | `cuFuncLoad` | Missing |
-| `cuFuncSetAttribute` | Function::setAttribute() |
-| `cuFuncSetCacheConfig` | Function::setCacheConfig() |
+| `cuFuncSetAttribute` | Function::setAttribute(CUfunction_attribute, int) |
+| `cuFuncSetCacheConfig` | Function::setCacheConfig(CUfunc_cache) |
 | `cuLaunchCooperativeKernel` | Stream::launchCooperativeKernel(Function &, unsigned, unsigned, unsigned, unsigned, unsigned, unsigned, unsigned, const std::vector<const void *> &) |
 | `cuLaunchHostFunc` | Stream::launchHostFunc() |
 | `cuLaunchKernel` | Stream::launchKernel(Function &, unsigned, unsigned, unsigned, unsigned, unsigned, unsigned, unsigned, const std::vector<const void *> &) |
@@ -440,7 +440,7 @@ Reference: https://docs.nvidia.com/cuda/cuda-driver-api/index.html
 | `cuGraphKernelNodeGetParams` | Missing |
 | `cuGraphKernelNodeSetAttribute` | Missing |
 | `cuGraphKernelNodeSetParams` | Missing |
-| `cuGraphLaunch` | Stream::graphLaunch() |
+| `cuGraphLaunch` | Stream::graphLaunch(GraphExec &) |
 | `cuGraphMemAllocNodeGetParams` | Missing |
 | `cuGraphMemFreeNodeGetParams` | Missing |
 | `cuGraphMemcpyNodeGetParams` | Missing |
@@ -471,7 +471,7 @@ Reference: https://docs.nvidia.com/cuda/cuda-driver-api/index.html
 | CUDA Driver API | cudawrappers interface |
 |---|---|
 | `cuOccupancyAvailableDynamicSMemPerBlock` | Missing |
-| `cuOccupancyMaxActiveBlocksPerMultiprocessor` | Function::occupancyMaxActiveBlocksPerMultiprocessor() |
+| `cuOccupancyMaxActiveBlocksPerMultiprocessor` | Function::occupancyMaxActiveBlocksPerMultiprocessor(int, size_t) |
 | `cuOccupancyMaxActiveBlocksPerMultiprocessorWithFlags` | Missing |
 | `cuOccupancyMaxActiveClusters` | Missing |
 | `cuOccupancyMaxPotentialBlockSize` | Missing |
