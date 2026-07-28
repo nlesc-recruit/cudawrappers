@@ -127,7 +127,7 @@ def load_overrides(path: Path) -> Dict[str, str]:
 def describe_wrapper(wrapper: str | None) -> str:
     if not wrapper or wrapper == "Missing":
         return "Missing"
-    return wrapper
+    return f"`{wrapper}`"
 
 
 def build_markdown(
