@@ -85,6 +85,7 @@ inline void devResourceGenerateDesc(CUdevResourceDesc *phDesc,
   checkCudaCall(cuDevResourceGenerateDesc(phDesc, resources, nbResources));
 }
 
+#if CUDA_VERSION >= 13010
 inline void devSmResourceSplit(
     CUdevResource *result, unsigned int nbGroups, const CUdevResource *input,
     CUdevResource *remainder, unsigned int flags,
@@ -99,6 +100,7 @@ inline void devSmResourceSplitByCount(
   checkCudaCall(cuDevSmResourceSplitByCount(result, nbGroups, input, remaining,
                                             useFlags, minCount));
 }
+#endif
 #endif
 
 class Context;
@@ -480,7 +482,7 @@ class Context : public Wrapper<CUcontext> {
 #endif
   }
 
-#if !defined(__HIP__)
+#if !defined(__HIP__) && CUDA_VERSION >= 13010
   void getDevResource(CUdevResource &resource, CUdevResourceType type) const {
     checkCudaCall(cuCtxGetDevResource(_obj, &resource, type));
   }
@@ -1357,11 +1359,13 @@ class Stream : public Wrapper<CUstream> {
 
   void wait(Event &event) { checkCudaCall(cuStreamWaitEvent(_obj, event, 0)); }
 
-#if !defined(__HIP__)
+#if !defined(__HIP__) && CUDA_VERSION >= 13010
   void getDevResource(CUdevResource &resource, CUdevResourceType type) const {
     checkCudaCall(cuStreamGetDevResource(_obj, &resource, type));
   }
+#endif
 
+#if !defined(__HIP__)
   CUgreenCtx getGreenCtx() const {
     CUgreenCtx greenCtx;
     checkCudaCall(cuStreamGetGreenCtx(_obj, &greenCtx));
