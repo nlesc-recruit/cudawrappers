@@ -145,8 +145,20 @@ def normalize_wrapper(wrapper: str | None) -> str:
     return text.strip("`").strip()
 
 
-def describe_wrapper(wrapper: str | None) -> str:
+def shorten_wrapper(wrapper: str | None, width: int = 80) -> str:
     wrapper = normalize_wrapper(wrapper)
+    if not wrapper or wrapper == "Missing":
+        return "Missing"
+    if len(wrapper) <= width:
+        return wrapper
+    if "(" in wrapper and ")" in wrapper:
+        prefix = wrapper.split("(", 1)[0]
+        return f"{prefix}(...)"
+    return wrapper[: width - 3] + "..."
+
+
+def describe_wrapper(wrapper: str | None) -> str:
+    wrapper = shorten_wrapper(wrapper)
     if not wrapper or wrapper == "Missing":
         return "Missing"
     return f"`{wrapper}`"
@@ -172,37 +184,50 @@ def build_markdown(
     sections: Dict[str, List[Tuple[str, str]]], cuda_version: str | None = None
 ) -> str:
     intro_lines = [
+        "",
         "# CUDA Driver API Coverage for cudawrappers",
         "",
     ]
     if cuda_version:
-        intro_lines.append(
-            f"This document summarizes CUDA Driver API coverage for `cudawrappers` against CUDA {cuda_version}. It lists the APIs in the upstream Driver API sectioning and records whether a wrapper is represented in the project."
+        intro_lines.extend(
+            [
+                "This document summarizes CUDA Driver API coverage for "
+                "`cudawrappers` against CUDA "
+                f"{cuda_version}. It lists the APIs in the upstream "
+                "Driver API sectioning and records whether a wrapper is "
+                "represented in the project.",
+                "",
+                "Reference: [CUDA Driver API reference](https://docs.nvidia.com/"
+                "cuda/cuda-driver-api/index.html)",
+                "",
+            ]
         )
     else:
-        intro_lines.append(
-            "This document summarizes CUDA Driver API coverage for `cudawrappers` against the NVIDIA Driver API reference. It lists the APIs in the upstream sectioning and records whether a wrapper is represented in the project."
+        intro_lines.extend(
+            [
+                "This document summarizes CUDA Driver API coverage for "
+                "`cudawrappers` against the NVIDIA Driver API reference. "
+                "It lists the APIs in the upstream sectioning and records "
+                "whether a wrapper is represented in the project.",
+                "",
+                "Reference: [CUDA Driver API reference](https://docs.nvidia.com/"
+                "cuda/cuda-driver-api/index.html)",
+                "",
+            ]
         )
 
-    intro_lines.extend(
-        [
-            "",
-            "Reference: https://docs.nvidia.com/cuda/cuda-driver-api/index.html",
-            "",
-        ]
-    )
-
     out_lines = list(intro_lines)
-    out_lines.append("")
-    for section_name in sections:
+    section_names = list(sections.keys())
+    for index, section_name in enumerate(section_names):
         rows = sections[section_name]
         out_lines.append(describe_section_heading(section_name, rows))
         out_lines.append("")
         out_lines.append("| CUDA Driver API | cudawrappers interface |")
-        out_lines.append("|---|---|")
+        out_lines.append("| --- | --- |")
         for api, wrapper in rows:
             out_lines.append(f"| `{api}` | {describe_wrapper(wrapper)} |")
-        out_lines.append("")
+        if index < len(section_names) - 1:
+            out_lines.append("")
 
     return "\n".join(out_lines).rstrip() + "\n"
 
