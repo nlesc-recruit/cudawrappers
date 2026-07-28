@@ -258,7 +258,7 @@ def main() -> int:
 
     # Preserve all sections already present in the markdown, then add the upstream-driven sections.
     ordered_sections = OrderedDict()
-    for section_name in list(existing_sections.keys()):
+    for section_name in existing_sections.keys():
         ordered_sections[section_name] = []
 
     for section_name, group_slug in SECTION_GROUPS:
