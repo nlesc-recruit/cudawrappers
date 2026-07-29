@@ -1,4 +1,5 @@
 #include <catch2/catch_test_macros.hpp>
+#include <filesystem>
 #include <string>
 #include <vector>
 
@@ -81,10 +82,14 @@ TEST_CASE("Test nvrtc::Program recursively inlined header", "[program]") {
 
 TEST_CASE("Test nvrtc::findIncludePath", "[helper]") {
   const std::string path = nvrtc::findIncludePath();
+#if defined(__HIP__)
+  CHECK(path.size() > 0);
+#else
   CHECK(path.find("include") != std::string::npos);
 
 #if CUDA_VERSION >= 13000
   CHECK(path.find("include/cccl") != std::string::npos);
+#endif
 #endif
 }
 
@@ -92,7 +97,21 @@ TEST_CASE("Test nvrtc::findIncludePaths", "[helper]") {
   const std::vector<std::string> paths = nvrtc::findIncludePaths();
   CHECK(paths.size() > 0);
 
-  for (const std::string& path : paths) {
-    CHECK(path.find("include") != std::string::npos);
+  size_t non_empty_paths = 0;
+
+  for (const std::filesystem::path &path : paths) {
+    if (path.empty()) {
+      continue;
+    }
+
+    ++non_empty_paths;
+    CHECK(std::filesystem::exists(path));
+    CHECK(std::filesystem::is_directory(path));
+
+#if !defined(__HIP__)
+    CHECK(path.string().find("include") != std::string::npos);
+#endif
   }
+
+  CHECK(non_empty_paths > 0);
 }

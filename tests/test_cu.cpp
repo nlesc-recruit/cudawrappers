@@ -35,6 +35,60 @@ TEST_CASE("Test cu::Device", "[device]") {
     const int dev_ordinal = device.getOrdinal();
     CHECK(dev_ordinal >= 0);
   }
+
+  SECTION("Test Device.getComputeCapability", "[device]") {
+    int major;
+    int minor;
+    device.getComputeCapability(major, minor);
+    CHECK(major >= 0);
+    CHECK(minor >= 0);
+  }
+
+  SECTION("Test Device.getPCIBusId and Device.getByPCIBusId", "[device]") {
+    const std::string pciBusId = device.getPCIBusId();
+    CHECK(pciBusId.size() > 0);
+
+    const cu::Device deviceByPci = cu::Device::getByPCIBusId(pciBusId);
+    CHECK(deviceByPci.getOrdinal() == device.getOrdinal());
+    CHECK(deviceByPci.getName() == device.getName());
+  }
+
+#if !defined(__HIP__)
+  SECTION("Test Device.getTexture1DLinearMaxWidth", "[device]") {
+    const size_t maxWidth =
+        device.getTexture1DLinearMaxWidth(CU_AD_FORMAT_UNSIGNED_INT8, 1);
+    CHECK(maxWidth > 0);
+  }
+#endif
+
+  SECTION("Test Device memory pool APIs", "[device]") {
+    if (!device.getAttribute(CU_DEVICE_ATTRIBUTE_MEMORY_POOLS_SUPPORTED)) {
+      WARN("Device does not support memory pools");
+      return;
+    }
+
+    CUmemoryPool pool{};
+    device.getDefaultMemPool(pool);
+    CHECK(pool != 0);
+
+    device.getMemPool(pool);
+    device.setMemPool(pool);
+  }
+
+#if !defined(__HIP__)
+  SECTION("Test Device.getExecAffinitySupport", "[device]") {
+    int pi = 0;
+    device.getExecAffinitySupport(pi, CU_EXEC_AFFINITY_TYPE_SM_COUNT);
+    CHECK(pi >= 0);
+  }
+
+  SECTION("Test Device.getProperties", "[device]") {
+    CUdevprop properties;
+    device.getProperties(properties);
+    CHECK(properties.maxThreadsPerBlock > 0);
+    CHECK(properties.clockRate > 0);
+  }
+#endif
 }
 
 TEST_CASE("Test context::getDevice", "[device]") {
@@ -215,6 +269,15 @@ TEST_CASE("Test cu::DeviceMemory", "[devicememory]") {
     stream.synchronize();
 
     CHECK(static_cast<bool>(memcmp(src, tgt, size)));
+  }
+
+  SECTION("Test cuPointerSetAttribute") {
+    const size_t size = 256;
+    cu::DeviceMemory mem(size);
+    unsigned int syncMemOps = 1;
+
+    CHECK_NOTHROW(cu::pointerSetAttribute(
+        &syncMemOps, CU_POINTER_ATTRIBUTE_SYNC_MEMOPS, mem));
   }
 
   SECTION("Test cu::DeviceMemory memcpy asynchronously") {
@@ -410,6 +473,70 @@ TEMPLATE_LIST_TEST_CASE("Test memset 2D", "[memset]", TestTypes) {
   }
 }
 
+TEST_CASE("Test cu::Event", "[event]") {
+  cu::init();
+  cu::Device device(0);
+  cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, device);
+  cu::Stream stream;
+  cu::Event start;
+  cu::Event end;
+  constexpr unsigned int record_flags = 0;
+
+  SECTION("Test Event::record(Stream&, unsigned int)") {
+    context.setCurrent();
+    start.record(stream, record_flags);
+    end.record(stream, record_flags);
+    stream.synchronize();
+    CHECK(end.elapsedTime(start) >= 0.0f);
+  }
+
+  SECTION("Test Stream::record(Event&, unsigned int)") {
+    context.setCurrent();
+    stream.record(start, record_flags);
+    stream.record(end, record_flags);
+    stream.synchronize();
+    CHECK(end.elapsedTime(start) >= 0.0f);
+  }
+}
+
+#if !defined(__HIP__)
+TEST_CASE("Test cu::GreenContext", "[greencontext]") {
+  cu::init();
+
+  cu::Device device(0);
+  cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, device);
+  context.setCurrent();
+
+  CUdevResource input{};
+  device.getDevResource(input, CU_DEV_RESOURCE_TYPE_SM);
+
+  unsigned int nbGroups = 1;
+  auto minCount = static_cast<unsigned int>(input.sm.smCount * 0.4f);
+  std::array<CUdevResource, 2> resources{};
+#if CUDA_VERSION >= 13010
+  CHECK_NOTHROW(cu::devSmResourceSplitByCount(&resources[0], &nbGroups, &input,
+                                              &resources[1], 0, minCount));
+#endif
+
+  CUdevResourceDesc desc{};
+  CHECK_NOTHROW(cu::devResourceGenerateDesc(&desc, &resources[0], 1));
+
+  cu::GreenContext greenContext(desc, device, CU_GREEN_CTX_DEFAULT_STREAM);
+  cu::Context greenContextBase = cu::Context::fromGreenCtx(greenContext);
+  greenContextBase.setCurrent();
+
+  cu::Stream stream = greenContext.createStream(CU_STREAM_NON_BLOCKING, 0);
+
+  const size_t size = 1024;
+  cu::DeviceMemory a(size);
+  cu::HostMemory b(size);
+
+  CHECK_NOTHROW(cu::memcpyHtoD(a, b, size));
+  CHECK_NOTHROW(stream.memcpyHtoDAsync(a, b, size));
+  CHECK_NOTHROW(stream.synchronize());
+}
+#endif
+
 TEST_CASE("Test cu::Stream", "[stream]") {
   cu::init();
   cu::Device device(0);
@@ -417,6 +544,7 @@ TEST_CASE("Test cu::Stream", "[stream]") {
   cu::Stream stream;
 
   SECTION("Test memAllocAsync") {
+    context.setCurrent();
     const size_t size = 1024;
     cu::DeviceMemory mem = stream.memAllocAsync(size);
     CHECK(mem.size() == size);

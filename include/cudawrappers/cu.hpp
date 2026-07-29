@@ -53,6 +53,12 @@ inline int driverGetVersion() {
   return version;
 }
 
+inline const char *getErrorName(CUresult result) {
+  const char *str;
+  checkCudaCall(cuGetErrorName(result, &str));
+  return str;
+}
+
 inline void memcpyHtoD(CUdeviceptr dst, const void *src, size_t size) {
 #if defined(__HIP__) && HIP_VERSION_MAJOR < 7
   // const_cast is a temp fix for https://github.com/ROCm/ROCm/issues/2977
@@ -66,8 +72,41 @@ inline void memcpyDtoH(void *dst, CUdeviceptr src, size_t size) {
   checkCudaCall(cuMemcpyDtoH(dst, src, size));
 }
 
+inline void pointerSetAttribute(const void *value,
+                                CUpointer_attribute attribute,
+                                CUdeviceptr ptr) {
+  checkCudaCall(cuPointerSetAttribute(value, attribute, ptr));
+}
+
+#if !defined(__HIP__)
+inline void devResourceGenerateDesc(CUdevResourceDesc *phDesc,
+                                    CUdevResource *resources,
+                                    unsigned int nbResources) {
+  checkCudaCall(cuDevResourceGenerateDesc(phDesc, resources, nbResources));
+}
+
+#if CUDA_VERSION >= 13010
+inline void devSmResourceSplit(
+    CUdevResource *result, unsigned int nbGroups, const CUdevResource *input,
+    CUdevResource *remainder, unsigned int flags,
+    CU_DEV_SM_RESOURCE_GROUP_PARAMS *groupParams = nullptr) {
+  checkCudaCall(cuDevSmResourceSplit(result, nbGroups, input, remainder, flags,
+                                     groupParams));
+}
+
+inline void devSmResourceSplitByCount(
+    CUdevResource *result, unsigned int *nbGroups, const CUdevResource *input,
+    CUdevResource *remaining, unsigned int useFlags, unsigned int minCount) {
+  checkCudaCall(cuDevSmResourceSplitByCount(result, nbGroups, input, remaining,
+                                            useFlags, minCount));
+}
+#endif
+#endif
+
 class Context;
 class Stream;
+class Event;
+class GreenContext;
 
 template <typename T>
 class Wrapper {
@@ -137,7 +176,7 @@ class Device : public Wrapper<CUdevice> {
 #endif
   }
 
-  explicit Device(CUdevice device) : Wrapper<CUdevice>(device) {
+  explicit Device(CUdevice device) : Wrapper<CUdevice>(device), _ordinal(-1) {
     int count = 0;
     checkCudaCall(cuDeviceGetCount(&count));
 
@@ -146,6 +185,7 @@ class Device : public Wrapper<CUdevice> {
       checkCudaCall(cuDeviceGet(&current_device, ordinal));
       if (current_device == device) {
         _ordinal = ordinal;
+        break;
       }
     }
   }
@@ -210,6 +250,143 @@ class Device : public Wrapper<CUdevice> {
     return "sm_" + std::to_string(10 * major + minor);
 #endif
   }
+
+  void getComputeCapability(int &major, int &minor) const {
+    major = getAttribute<CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MAJOR>();
+    minor = getAttribute<CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MINOR>();
+  }
+
+  static Device getByPCIBusId(const std::string &pciBusId) {
+    CUdevice device{};
+    checkCudaCall(cuDeviceGetByPCIBusId(&device, pciBusId.c_str()));
+    return Device(device);
+  }
+
+  std::string getPCIBusId() const {
+    const size_t pciBusIdLength{64};
+    std::array<char, pciBusIdLength> pciBusId{};
+    checkCudaCall(cuDeviceGetPCIBusId(pciBusId.data(), pciBusId.size(), _obj));
+    return std::string(pciBusId.data());
+  }
+
+#if !defined(__HIP__)
+  size_t getTexture1DLinearMaxWidth(CUarray_format format,
+                                    unsigned numChannels) const {
+    size_t maxWidth{};
+    checkCudaCall(cuDeviceGetTexture1DLinearMaxWidth(&maxWidth, format,
+                                                     numChannels, _obj));
+    return maxWidth;
+  }
+#endif
+
+  void getDefaultMemPool(CUmemoryPool &pool) const {
+    checkCudaCall(cuDeviceGetDefaultMemPool(&pool, _obj));
+  }
+
+  void getMemPool(CUmemoryPool &pool) const {
+    checkCudaCall(cuDeviceGetMemPool(&pool, _obj));
+  }
+
+  void setMemPool(CUmemoryPool pool) const {
+    checkCudaCall(cuDeviceSetMemPool(_obj, pool));
+  }
+
+#if !defined(__HIP__)
+  void graphMemTrim() const { checkCudaCall(cuDeviceGraphMemTrim(_obj)); }
+
+  void getGraphMemAttribute(CUgraphMem_attribute attr, void *value) const {
+    checkCudaCall(cuDeviceGetGraphMemAttribute(_obj, attr, value));
+  }
+
+  void setGraphMemAttribute(CUgraphMem_attribute attr, void *value) const {
+    checkCudaCall(cuDeviceSetGraphMemAttribute(_obj, attr, value));
+  }
+
+  std::array<unsigned char, 8> getLuid(unsigned int &deviceNodeMask) const {
+    std::array<unsigned char, 8> luid{};
+    checkCudaCall(cuDeviceGetLuid(reinterpret_cast<char *>(luid.data()),
+                                  &deviceNodeMask, _obj));
+    return luid;
+  }
+
+  void getExecAffinitySupport(int &pi, CUexecAffinityType type) const {
+    checkCudaCall(cuDeviceGetExecAffinitySupport(&pi, type, _obj));
+  }
+
+  void getProperties(CUdevprop &prop) const {
+    prop.maxThreadsPerBlock =
+        getAttribute<CU_DEVICE_ATTRIBUTE_MAX_THREADS_PER_BLOCK>();
+    prop.maxThreadsDim[0] = getAttribute<CU_DEVICE_ATTRIBUTE_MAX_BLOCK_DIM_X>();
+    prop.maxThreadsDim[1] = getAttribute<CU_DEVICE_ATTRIBUTE_MAX_BLOCK_DIM_Y>();
+    prop.maxThreadsDim[2] = getAttribute<CU_DEVICE_ATTRIBUTE_MAX_BLOCK_DIM_Z>();
+    prop.maxGridSize[0] = getAttribute<CU_DEVICE_ATTRIBUTE_MAX_GRID_DIM_X>();
+    prop.maxGridSize[1] = getAttribute<CU_DEVICE_ATTRIBUTE_MAX_GRID_DIM_Y>();
+    prop.maxGridSize[2] = getAttribute<CU_DEVICE_ATTRIBUTE_MAX_GRID_DIM_Z>();
+    prop.sharedMemPerBlock =
+        getAttribute<CU_DEVICE_ATTRIBUTE_MAX_SHARED_MEMORY_PER_BLOCK>();
+    prop.totalConstantMemory =
+        getAttribute<CU_DEVICE_ATTRIBUTE_TOTAL_CONSTANT_MEMORY>();
+    prop.SIMDWidth = getAttribute<CU_DEVICE_ATTRIBUTE_WARP_SIZE>();
+    prop.memPitch = getAttribute<CU_DEVICE_ATTRIBUTE_MAX_PITCH>();
+    prop.regsPerBlock =
+        getAttribute<CU_DEVICE_ATTRIBUTE_MAX_REGISTERS_PER_BLOCK>();
+    prop.clockRate = getAttribute<CU_DEVICE_ATTRIBUTE_CLOCK_RATE>();
+    prop.textureAlign = getAttribute<CU_DEVICE_ATTRIBUTE_TEXTURE_ALIGNMENT>();
+  }
+
+  void getDevResource(CUdevResource &resource, CUdevResourceType type) const {
+    checkCudaCall(cuDeviceGetDevResource(_obj, &resource, type));
+  }
+
+  void getNvSciSyncAttributes(void *nvSciSyncAttrList, int flags) const {
+    checkCudaCall(
+        cuDeviceGetNvSciSyncAttributes(nvSciSyncAttrList, _obj, flags));
+  }
+
+#if !defined(__HIP__) && CUDA_VERSION >= 13000
+  void getHostAtomicCapabilities(unsigned int *capabilities,
+                                 const CUatomicOperation *operations,
+                                 unsigned int count) const {
+    checkCudaCall(cuDeviceGetHostAtomicCapabilities(capabilities, operations,
+                                                    count, _obj));
+  }
+#endif
+
+  static int getP2PAttribute(CUdevice_P2PAttribute attrib,
+                             const Device &srcDevice, const Device &dstDevice) {
+    int value{};
+    checkCudaCall(
+        cuDeviceGetP2PAttribute(&value, attrib, srcDevice, dstDevice));
+    return value;
+  }
+
+#if !defined(__HIP__) && CUDA_VERSION >= 13000
+  static void getP2PAtomicCapabilities(unsigned int *capabilities,
+                                       const CUatomicOperation *operations,
+                                       unsigned int count,
+                                       const Device &srcDevice,
+                                       const Device &dstDevice) {
+    checkCudaCall(cuDeviceGetP2PAtomicCapabilities(
+        capabilities, operations, count, srcDevice, dstDevice));
+  }
+#endif
+
+  static bool canAccessPeer(const Device &device, const Device &peerDevice) {
+    int canAccess{};
+    checkCudaCall(cuDeviceCanAccessPeer(&canAccess, device, peerDevice));
+    return static_cast<bool>(canAccess);
+  }
+
+  void registerAsyncNotification(CUasyncCallback callbackFunc, void *userData,
+                                 CUasyncCallbackHandle *callback) const {
+    checkCudaCall(cuDeviceRegisterAsyncNotification(_obj, callbackFunc,
+                                                    userData, callback));
+  }
+
+  void unregisterAsyncNotification(CUasyncCallbackHandle callback) const {
+    checkCudaCall(cuDeviceUnregisterAsyncNotification(_obj, callback));
+  }
+#endif
 
   size_t totalMem() const {
     size_t size{};
@@ -293,6 +470,24 @@ class Context : public Wrapper<CUcontext> {
 #endif
   }
 
+  void enablePeerAccess(Context &peerContext, unsigned int flags = 0) {
+#if !defined(__HIP__)
+    checkCudaCall(cuCtxEnablePeerAccess(peerContext, flags));
+#endif
+  }
+
+  void disablePeerAccess(Context &peerContext) {
+#if !defined(__HIP__)
+    checkCudaCall(cuCtxDisablePeerAccess(peerContext));
+#endif
+  }
+
+#if !defined(__HIP__) && CUDA_VERSION >= 13010
+  void getDevResource(CUdevResource &resource, CUdevResourceType type) const {
+    checkCudaCall(cuCtxGetDevResource(_obj, &resource, type));
+  }
+#endif
+
   Device getDevice() {
     CUdevice device;
 #if !defined(__HIP__)
@@ -322,6 +517,10 @@ class Context : public Wrapper<CUcontext> {
   static void setLimit(size_t value) {
     setLimit(limit, value);
   }
+
+#if !defined(__HIP__)
+  static Context fromGreenCtx(GreenContext &greenContext);
+#endif
 
   size_t getFreeMemory() const {
     size_t free;
@@ -558,6 +757,7 @@ class Event : public Wrapper<CUevent> {
   void record() { checkCudaCall(cuEventRecord(_obj, 0)); }
 
   void record(Stream &);
+  void record(Stream &stream, unsigned int flags);
 
   void synchronize() { checkCudaCall(cuEventSynchronize(_obj)); }
 };
@@ -922,6 +1122,16 @@ class Stream : public Wrapper<CUstream> {
 
   explicit Stream(CUstream stream) : Wrapper<CUstream>(stream) {}
 
+  Stream(CUstream stream, bool takeOwnership) : Wrapper<CUstream>(stream) {
+    if (takeOwnership) {
+      manager =
+          std::shared_ptr<CUstream>(new CUstream(stream), [](CUstream *ptr) {
+            checkCudaCall(cuStreamDestroy(*ptr));
+            delete ptr;
+          });
+    }
+  }
+
   DeviceMemory memAllocAsync(size_t size) {
     CUdeviceptr ptr;
     checkCudaCall(cuMemAllocAsync(&ptr, size, _obj));
@@ -1149,6 +1359,20 @@ class Stream : public Wrapper<CUstream> {
 
   void wait(Event &event) { checkCudaCall(cuStreamWaitEvent(_obj, event, 0)); }
 
+#if !defined(__HIP__) && CUDA_VERSION >= 13010
+  void getDevResource(CUdevResource &resource, CUdevResourceType type) const {
+    checkCudaCall(cuStreamGetDevResource(_obj, &resource, type));
+  }
+#endif
+
+#if !defined(__HIP__)
+  CUgreenCtx getGreenCtx() const {
+    CUgreenCtx greenCtx;
+    checkCudaCall(cuStreamGetGreenCtx(_obj, &greenCtx));
+    return greenCtx;
+  }
+#endif
+
   void addCallback(CUstreamCallback callback, void *userData,
                    unsigned int flags = 0) {
     checkCudaCall(cuStreamAddCallback(_obj, callback, userData, flags));
@@ -1159,6 +1383,10 @@ class Stream : public Wrapper<CUstream> {
   }
 
   void record(Event &event) { checkCudaCall(cuEventRecord(event, _obj)); }
+
+  void record(Event &event, unsigned int flags) {
+    checkCudaCall(cuEventRecordWithFlags(event, _obj, flags));
+  }
 
 #if !defined(__HIP__)
   void batchMemOp(unsigned count, CUstreamBatchMemOpParams *paramArray,
@@ -1176,8 +1404,66 @@ class Stream : public Wrapper<CUstream> {
   }
 };
 
+#if !defined(__HIP__)
+class GreenContext : public Wrapper<CUgreenCtx> {
+ public:
+  GreenContext(CUdevResourceDesc desc, Device &device,
+               unsigned int flags = CU_GREEN_CTX_DEFAULT_STREAM)
+      : _device(device) {
+    checkCudaCall(cuGreenCtxCreate(&_obj, desc, device, flags));
+    manager =
+        std::shared_ptr<CUgreenCtx>(new CUgreenCtx(_obj), [](CUgreenCtx *ptr) {
+          if (*ptr) cuGreenCtxDestroy(*ptr);
+          delete ptr;
+        });
+  }
+
+  void getDevResource(CUdevResource &resource, CUdevResourceType type) const {
+    checkCudaCall(cuGreenCtxGetDevResource(_obj, &resource, type));
+  }
+
+#if CUDA_VERSION >= 13000
+  unsigned long long getId() const {
+    unsigned long long id{};
+    checkCudaCall(cuGreenCtxGetId(_obj, &id));
+    return id;
+  }
+#endif
+
+  Stream createStream(unsigned int flags = 0, int priority = 0) const {
+    CUstream stream;
+    checkCudaCall(cuGreenCtxStreamCreate(&stream, _obj, flags, priority));
+    return Stream(stream, true);
+  }
+
+  void recordEvent(Event &event) const {
+    checkCudaCall(cuGreenCtxRecordEvent(_obj, static_cast<CUevent>(event)));
+  }
+
+  void waitEvent(Event &event) const {
+    checkCudaCall(cuGreenCtxWaitEvent(_obj, static_cast<CUevent>(event)));
+  }
+
+  Device &getDevice() { return _device; }
+  const Device &getDevice() const { return _device; }
+
+ private:
+  Device &_device;
+};
+
+inline Context Context::fromGreenCtx(GreenContext &greenContext) {
+  CUcontext context{};
+  checkCudaCall(cuCtxFromGreenCtx(&context, greenContext));
+  return Context(context, greenContext.getDevice());
+}
+#endif
+
 inline void Event::record(Stream &stream) {
   checkCudaCall(cuEventRecord(_obj, stream._obj));
+}
+
+inline void Event::record(Stream &stream, unsigned int flags) {
+  checkCudaCall(cuEventRecordWithFlags(_obj, stream._obj, flags));
 }
 }  // namespace cu
 

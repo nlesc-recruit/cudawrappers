@@ -24,7 +24,7 @@ jobs:
           echo "GITHUB_REF_NAME = $GITHUB_REF_NAME"
 
       - name: Install CUDA ${{ matrix.cuda-version }}
-        uses: Jimver/cuda-toolkit@v0.2.29
+        uses: Jimver/cuda-toolkit@v0.2.35
         with:
           cuda: ${{ matrix.cuda-version }}
           method: "network"
@@ -49,8 +49,8 @@ jobs:
     name: build (HIP)
     runs-on: ubuntu-24.04
     env:
-      hip-version: "6.4.4"
-      amdgpu-version: "6.4.60404-1_all"
+      hip-version: "7.0.2"
+      amdgpu-version: "7.0.2.70002-1_all"
     steps:
       - uses: actions/checkout@v3
         with:
@@ -73,6 +73,6 @@ jobs:
       - name: Build in HIP mode
         shell: bash -el {0}
         run: |
-          cmake -DCUDAWRAPPERS_BUILD_TESTING=True -DCUDAWRAPPERS_COMPONENTS='cu;cufft;nvrtc' -DCUDAWRAPPERS_BACKEND=HIP -DAMDGPU_TARGETS=gfx1101 -S . -B build -DCMAKE_INSTALL_PREFIX=install
+          cmake -DCUDAWRAPPERS_BUILD_TESTING=True -DCUDAWRAPPERS_COMPONENTS='cu;cufft;nvrtc' -DCUDAWRAPPERS_BACKEND=HIP -DGPU_TARGETS=gfx1101 -S . -B build -DCMAKE_INSTALL_PREFIX=install
           cmake --build build -j
           cmake --install build

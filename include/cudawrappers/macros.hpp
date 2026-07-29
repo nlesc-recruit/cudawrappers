@@ -535,6 +535,9 @@ typedef uint32_t cuuint32_t;
 #define cuCtxGetCurrent hipCtxGetCurrent
 #define cuCtxGetDevice hipCtxGetDevice
 #define cuCtxGetFlags hipCtxGetFlags
+#define cuCtxEnablePeerAccess hipCtxEnablePeerAccess
+#define cuCtxDisablePeerAccess hipCtxDisablePeerAccess
+#define cuDeviceCanAccessPeer hipDeviceCanAccessPeer
 #define cuCtxGetLimit hipDeviceGetLimit
 #define cuCtxGetSharedMemConfig hipCtxGetSharedMemConfig
 #define cuCtxGetStreamPriorityRange hipDeviceGetStreamPriorityRange
@@ -569,6 +572,7 @@ typedef uint32_t cuuint32_t;
 #define cuEventElapsedTime hipEventElapsedTime
 #define cuEventQuery hipEventQuery
 #define cuEventRecord hipEventRecord
+#define cuEventRecordWithFlags 	hipEventRecordWithFlags
 #define cuEventSynchronize hipEventSynchronize
 #define cuFloatComplex hipFloatComplex
 #define cuFuncGetAttribute hipFuncGetAttribute
