@@ -3,6 +3,31 @@
 All notable changes to this project will be documented in this file. This
 project adheres to [Semantic Versioning](http://semver.org/).
 
+## Unreleasd
+
+### Added
+
+- Added `cu::getErrorName`, `cu::pointerSetAttribute`,
+  `cu::devResourceGenerateDesc`, `cu::devSmResourceSplit`, and
+  `cu::devSmResourceSplitByCount`
+- Added
+  `cu::Device::{getComputeCapability, getByPCIBusId, getPCIBusId, getTexture1DLinearMaxWidth, getLuid, getExecAffinitySupport, getProperties, getDevResource, getNvSciSyncAttributes, getHostAtomicCapabilities, getP2PAttribute, getP2PAtomicCapabilities, canAccessPeer, registerAsyncNotification, unregisterAsyncNotification}`
+  and
+  `cu::Device::{getDefaultMemPool, getMemPool, setMemPool, graphMemTrim, getGraphMemAttribute, setGraphMemAttribute}`
+- Added
+  `cu::Context::{enablePeerAccess, disablePeerAccess, getDevResource, fromGreenCtx}`
+- Added `cu::Event::record(Stream&, unsigned int)` and
+  `cu::Stream::record(Event&, unsigned int)` overloads with flags
+- Added `cu::Stream` constructor with ownership flag,
+  `cu::Stream::getDevResource`, and `cu::Stream::getGreenCtx`
+- Added `cu::GreenContext` class (CUDA-only)
+- Added `cuEventRecordWithFlags` HIP mapping
+
+### Changed
+
+- `nvrtc::findIncludePaths` now returns `std::vector<std::filesystem::path>`
+  instead of `std::vector<std::string>`
+
 ## [1.0.0] - 2026-04-29
 
 ### Added
