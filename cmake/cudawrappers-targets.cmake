@@ -173,8 +173,66 @@ else()
     if(CUDAWRAPPERS_BUILD_NVTX)
       set(LINK_nvtx hip::host)
     endif()
+
+    foreach(component ${CUDAWRAPPERS_COMPONENTS})
+      add_library(${component} INTERFACE)
+      add_library(${PROJECT_NAME}::${component} ALIAS ${component})
+      target_link_libraries(${component} INTERFACE ${LINK_${component}})
+      target_include_directories(
+        ${component} INTERFACE $<BUILD_INTERFACE:${CUDAWRAPPERS_INCLUDE_DIR}>
+                               $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+      )
+      set_target_properties(
+        ${component}
+        PROPERTIES PUBLIC_HEADER
+                   ${CUDAWRAPPERS_INCLUDE_DIR}/cudawrappers/${component}.hpp
+      )
+    endforeach()
   else()
-    set(LINK_cu CUDA::cuda_driver)
+    # CUDA-only single-backend: compile cu.cpp and backend into static library
+    set(LINK_cu CUDA::cuda_driver ${CMAKE_DL_LIBS})
+
+    add_library(cudawrappers_cuda_backend OBJECT
+                ${CMAKE_CURRENT_LIST_DIR}/../cuda_backend.cpp)
+    target_include_directories(
+      cudawrappers_cuda_backend PRIVATE ${CUDAWRAPPERS_INCLUDE_DIR}
+    )
+    target_link_libraries(cudawrappers_cuda_backend PRIVATE CUDA::cuda_driver)
+    set_source_files_properties(
+      ${CMAKE_CURRENT_LIST_DIR}/../cuda_backend.cpp PROPERTIES LANGUAGE CXX
+    )
+    set_target_properties(cudawrappers_cuda_backend PROPERTIES POSITION_INDEPENDENT_CODE ON)
+
+    add_library(cudawrappers_hip_stub OBJECT
+                ${CMAKE_CURRENT_LIST_DIR}/../hip_backend_stub.cpp)
+    target_include_directories(
+      cudawrappers_hip_stub PRIVATE ${CUDAWRAPPERS_INCLUDE_DIR}
+    )
+    set_target_properties(cudawrappers_hip_stub PROPERTIES POSITION_INDEPENDENT_CODE ON)
+
+    add_library(cudawrappers_cu_impl STATIC ${CMAKE_CURRENT_LIST_DIR}/../cu.cpp
+                                             ${CMAKE_CURRENT_LIST_DIR}/../cu_loader.cpp)
+    target_include_directories(
+      cudawrappers_cu_impl PRIVATE ${CUDAWRAPPERS_INCLUDE_DIR}
+    )
+    target_compile_options(cudawrappers_cu_impl PRIVATE -fpermissive)
+    set_target_properties(cudawrappers_cu_impl PROPERTIES POSITION_INDEPENDENT_CODE ON)
+    target_link_libraries(cudawrappers_cu_impl PRIVATE ${CMAKE_DL_LIBS} CUDA::cuda_driver)
+
+    add_library(cu STATIC $<TARGET_OBJECTS:cudawrappers_cu_impl>
+                           $<TARGET_OBJECTS:cudawrappers_cuda_backend>
+                           $<TARGET_OBJECTS:cudawrappers_hip_stub>)
+    target_include_directories(
+      cu PUBLIC $<BUILD_INTERFACE:${CUDAWRAPPERS_INCLUDE_DIR}>
+                $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+    )
+    target_link_libraries(cu PUBLIC CUDA::cuda_driver ${CMAKE_DL_LIBS})
+    add_library(${PROJECT_NAME}::cu ALIAS cu)
+    set_target_properties(
+      cu PROPERTIES PUBLIC_HEADER
+                    ${CUDAWRAPPERS_INCLUDE_DIR}/cudawrappers/cu.hpp
+    )
+
     if(CUDAWRAPPERS_BUILD_CUFFT)
       set(LINK_cufft CUDA::cuda_driver CUDA::cufft)
     endif()
@@ -184,29 +242,28 @@ else()
     if(CUDAWRAPPERS_BUILD_NVRTC)
       set(LINK_nvrtc CUDA::cuda_driver CUDA::nvrtc ${CMAKE_DL_LIBS})
     endif()
-    # NVTX 3 is header only, so don't link nvToolsExt
     if(CUDAWRAPPERS_BUILD_NVTX AND NOT CUDAWRAPPERS_USE_NVTX3)
       set(LINK_nvtx CUDA::nvToolsExt)
     endif()
+
+    foreach(component ${CUDAWRAPPERS_COMPONENTS})
+      if(${component} STREQUAL "cu")
+        continue()
+      endif()
+      add_library(${component} INTERFACE)
+      add_library(${PROJECT_NAME}::${component} ALIAS ${component})
+      target_link_libraries(${component} INTERFACE ${LINK_${component}})
+      target_include_directories(
+        ${component} INTERFACE $<BUILD_INTERFACE:${CUDAWRAPPERS_INCLUDE_DIR}>
+                               $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+      )
+      set_target_properties(
+        ${component}
+        PROPERTIES PUBLIC_HEADER
+                   ${CUDAWRAPPERS_INCLUDE_DIR}/cudawrappers/${component}.hpp
+      )
+    endforeach()
   endif()
-
-  foreach(component ${CUDAWRAPPERS_COMPONENTS})
-    add_library(${component} INTERFACE)
-    # cudawrappers exposes targets like, cudawrappers::cu, so an alias is created
-    add_library(${PROJECT_NAME}::${component} ALIAS ${component})
-    target_link_libraries(${component} INTERFACE ${LINK_${component}})
-
-    target_include_directories(
-      ${component} INTERFACE $<BUILD_INTERFACE:${CUDAWRAPPERS_INCLUDE_DIR}>
-                             $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
-    )
-
-    set_target_properties(
-      ${component}
-      PROPERTIES PUBLIC_HEADER
-                 ${CUDAWRAPPERS_INCLUDE_DIR}/cudawrappers/${component}.hpp
-    )
-  endforeach()
 endif()
 
 if(CUDAWRAPPERS_BUILD_CUFFT)

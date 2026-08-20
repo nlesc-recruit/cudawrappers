@@ -13,7 +13,14 @@
 #include <utility>
 #include <vector>
 
-// Unified CUDA types (compatible with both CUDA and HIP backends)
+// When building cudawrappers internally (CUDAWRAPPERS_INTERNAL) or for HIP,
+// define manual types compatible with the backend abstraction.
+// For consumers on CUDA, include the real CUDA headers.
+#if !defined(__HIP__) && !defined(CUDAWRAPPERS_INTERNAL)
+#include <cuda_runtime.h>
+#include <cuda.h>
+#else
+// Unified CUDA types (compatible with HIP and backend abstraction)
 typedef int CUresult;
 typedef int CUdevice;
 typedef void* CUcontext;
@@ -226,8 +233,6 @@ constexpr unsigned int CU_MEM_ATTACH_GLOBAL = 0x01;
 constexpr unsigned int CU_MEM_ATTACH_SINGLE = 0x02;
 constexpr unsigned int CU_MEM_ATTACH_HOST = 0x04;
 
-constexpr unsigned int CU_GRAPH_DEFAULT = 0;
-
 constexpr unsigned int CU_CTX_SCHED_BLOCKING_SYNC = 0x04;
 constexpr unsigned int CU_CTX_SCHED_SPIN = 0x01;
 constexpr unsigned int CU_CTX_SCHED_YIELD = 0x02;
@@ -323,6 +328,10 @@ enum CUjit_option {
   CU_JIT_FAST_COMPILE = 16,
   CU_JIT_NUM_OPTIONS = 17,
 };
+
+#endif  // !defined(__HIP__) && !defined(CUDAWRAPPERS_INTERNAL)
+
+constexpr unsigned int CU_GRAPH_DEFAULT = 0;
 
 namespace cu {
 
@@ -659,6 +668,10 @@ class Stream : public Wrapper<CUstream> {
                      size_t width, size_t height);
   void zero(DeviceMemory& dst, size_t size);
   void zero2D(DeviceMemory& dst, size_t pitch, size_t width, size_t height);
+  void launchKernel(Function& function, unsigned gridX, unsigned gridY,
+                    unsigned gridZ, unsigned blockX, unsigned blockY,
+                    unsigned blockZ, unsigned sharedMemBytes,
+                    const std::vector<const void*>& parameters);
   void graphLaunch(GraphExec& graphExec);
   void query();
   void synchronize();
