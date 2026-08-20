@@ -7,6 +7,32 @@
 
 #include <cudawrappers/cu.hpp>
 
+TEST_CASE("Test list all GPUs", "[device]") {
+  cu::init();
+  const int count = cu::Device::getCount();
+  CHECK(count >= 0);
+  std::cout << "Number of devices: " << count << std::endl;
+
+  for (int i = 0; i < count; i++) {
+    cu::Device device(i);
+    std::cout << "Device " << i << ":" << std::endl;
+    std::cout << "  Name:         " << device.getName() << std::endl;
+    std::cout << "  Arch:         " << device.getArch() << std::endl;
+    std::cout << "  Total memory: "
+              << (device.totalMem() / (1024 * 1024)) << " MiB" << std::endl;
+
+    int major;
+    int minor;
+    device.getComputeCapability(major, minor);
+    std::cout << "  Compute capability: " << major << "." << minor << std::endl;
+
+    std::cout << "  PCI bus ID:   " << device.getPCIBusId() << std::endl;
+    std::cout << "  UUID:         " << device.getUuid() << std::endl;
+  }
+
+  CHECK(count >= 1);
+}
+
 TEST_CASE("Test cu::Device", "[device]") {
   cu::init();
   cu::Device device(0);
