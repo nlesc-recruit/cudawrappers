@@ -14,7 +14,7 @@ TEST_CASE("Test list all GPUs", "[device]") {
   std::cout << "Number of devices: " << count << std::endl;
 
   for (int i = 0; i < count; i++) {
-    cu::Device device(i);
+    cu::Device device(static_cast<unsigned int>(i));
     std::cout << "Device " << i << ":" << std::endl;
     std::cout << "  Name:         " << device.getName() << std::endl;
     std::cout << "  Arch:         " << device.getArch() << std::endl;
@@ -79,7 +79,7 @@ TEST_CASE("Test cu::Device", "[device]") {
     CHECK(deviceByPci.getName() == device.getName());
   }
 
-#if !defined(__HIP__)
+#if defined(CUDA_VERSION)
   SECTION("Test Device.getTexture1DLinearMaxWidth", "[device]") {
     const size_t maxWidth =
         device.getTexture1DLinearMaxWidth(CU_AD_FORMAT_UNSIGNED_INT8, 1);
@@ -101,7 +101,7 @@ TEST_CASE("Test cu::Device", "[device]") {
     device.setMemPool(pool);
   }
 
-#if !defined(__HIP__)
+#if defined(CUDA_VERSION)
   SECTION("Test Device.getExecAffinitySupport", "[device]") {
     int pi = 0;
     device.getExecAffinitySupport(pi, CU_EXEC_AFFINITY_TYPE_SM_COUNT);
@@ -525,7 +525,7 @@ TEST_CASE("Test cu::Event", "[event]") {
   }
 }
 
-#if !defined(__HIP__)
+#if !defined(__HIP__) && defined(CUDA_VERSION)
 TEST_CASE("Test cu::GreenContext", "[greencontext]") {
   cu::init();
 
