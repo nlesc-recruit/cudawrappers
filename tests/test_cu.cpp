@@ -579,6 +579,7 @@ TEST_CASE("Test cu::Stream", "[stream]") {
   }
 
   SECTION("Test launchHostFunc") {
+    context.setCurrent();
     int value = 0;
     stream.launchHostFunc(
         +[](void* data) { *static_cast<int*>(data) = 42; }, &value);

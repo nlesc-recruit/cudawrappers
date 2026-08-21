@@ -38,6 +38,13 @@ if(CUDAWRAPPERS_BACKEND_ALL)
     target_link_libraries(test_nvml PUBLIC cudawrappers::nvml_cuda)
   endif()
 
+  # Tests that include nvrtc.hpp need the nvrtc_cuda library
+  if(CUDAWRAPPERS_BUILD_NVRTC)
+    target_link_libraries(test_nvrtc PUBLIC cudawrappers::nvrtc_cuda)
+    target_link_libraries(test_vector_add PUBLIC cudawrappers::nvrtc_cuda)
+    target_link_libraries(test_graph PUBLIC cudawrappers::nvrtc_cuda)
+  endif()
+
   # NVRTC kernels
   target_include_directories(
     test_nvrtc PRIVATE "${CMAKE_SOURCE_DIR}/include"

@@ -7,60 +7,21 @@ get_filename_component(
 
 # Define all the individual components that cudawrappers provides
 if(CUDAWRAPPERS_BACKEND_ALL)
-  # --- Dual-backend mode: unified cu library with runtime dispatch ---
+  # --- Dual-backend mode: header-only cu library with runtime dispatch ---
 
   list(APPEND CUDAWRAPPERS_COMPONENTS macros)
   set(LINK_macros_hip hip::host)
 
-  # CUDA backend: compile cuda_backend.cpp with CUDA headers
-  add_library(cudawrappers_cuda_backend OBJECT
-              ${CMAKE_SOURCE_DIR}/cuda_backend.cpp)
+  # cu: header-only, needs both CUDA and HIP headers for compilation
+  add_library(cu INTERFACE)
+  add_library(${PROJECT_NAME}::cu ALIAS cu)
   target_include_directories(
-    cudawrappers_cuda_backend
-    PRIVATE ${CUDAWRAPPERS_INCLUDE_DIR}
-  )
-  target_link_libraries(cudawrappers_cuda_backend PRIVATE CUDA::cuda_driver)
-  set_source_files_properties(
-    ${CMAKE_SOURCE_DIR}/cuda_backend.cpp PROPERTIES LANGUAGE CXX
-  )
-
-  # HIP backend: compile hip_backend.cpp with HIP language
-  set(hip_backend_wrapper "${CMAKE_CURRENT_BINARY_DIR}/hip_backend_wrapper.cpp")
-  file(
-    WRITE "${hip_backend_wrapper}"
-    "#include \"${CMAKE_SOURCE_DIR}/hip_backend.cpp\"\n"
-  )
-  set_source_files_properties("${hip_backend_wrapper}" PROPERTIES LANGUAGE HIP)
-  add_library(cudawrappers_hip_backend OBJECT "${hip_backend_wrapper}")
-  target_include_directories(
-    cudawrappers_hip_backend
-    PRIVATE ${CUDAWRAPPERS_INCLUDE_DIR}
-  )
-  target_link_libraries(cudawrappers_hip_backend PRIVATE hip::host)
-
-  # Common source files (compiled as C++)
-  add_library(
-    cudawrappers_common OBJECT ${CMAKE_SOURCE_DIR}/cu.cpp
-                                ${CMAKE_SOURCE_DIR}/cu_loader.cpp
-  )
-  target_include_directories(
-    cudawrappers_common PRIVATE ${CUDAWRAPPERS_INCLUDE_DIR}
-  )
-  target_link_libraries(cudawrappers_common PRIVATE ${CMAKE_DL_LIBS})
-
-  # Unified cu library: links both backends
-  add_library(cu STATIC $<TARGET_OBJECTS:cudawrappers_common>
-                         $<TARGET_OBJECTS:cudawrappers_cuda_backend>
-                         $<TARGET_OBJECTS:cudawrappers_hip_backend>
-  )
-  target_include_directories(
-    cu PUBLIC $<BUILD_INTERFACE:${CUDAWRAPPERS_INCLUDE_DIR}>
-              $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+    cu INTERFACE $<BUILD_INTERFACE:${CUDAWRAPPERS_INCLUDE_DIR}>
+                 $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
   )
   target_link_libraries(
-    cu PUBLIC CUDA::cuda_driver hip::host ${CMAKE_DL_LIBS}
+    cu INTERFACE CUDA::cuda_driver hip::host ${CMAKE_DL_LIBS}
   )
-  add_library(${PROJECT_NAME}::cu ALIAS cu)
   set_target_properties(
     cu PROPERTIES PUBLIC_HEADER
                    ${CUDAWRAPPERS_INCLUDE_DIR}/cudawrappers/cu.hpp
@@ -152,12 +113,12 @@ if(CUDAWRAPPERS_BACKEND_ALL)
   endif()
 
 else()
-  # --- Single-backend mode: existing behavior ---
+  # --- Single-backend mode: header-only ---
 
   if(${CUDAWRAPPERS_BACKEND_HIP})
     list(APPEND CUDAWRAPPERS_COMPONENTS macros)
     set(LINK_macros hip::host)
-    set(LINK_cu hip::host)
+    set(LINK_cu hip::host ${CMAKE_DL_LIBS})
     if(CUDAWRAPPERS_BUILD_CUFFT)
       set(LINK_cufft hip::host hip::hipfft)
     endif()
@@ -189,49 +150,23 @@ else()
       )
     endforeach()
   else()
-    # CUDA-only single-backend: compile cu.cpp and backend into static library
+    # CUDA-only single-backend: header-only
     set(LINK_cu CUDA::cuda_driver ${CMAKE_DL_LIBS})
 
-    add_library(cudawrappers_cuda_backend OBJECT
-                ${CMAKE_CURRENT_LIST_DIR}/../cuda_backend.cpp)
-    target_include_directories(
-      cudawrappers_cuda_backend PRIVATE ${CUDAWRAPPERS_INCLUDE_DIR}
-    )
-    target_link_libraries(cudawrappers_cuda_backend PRIVATE CUDA::cuda_driver)
-    set_source_files_properties(
-      ${CMAKE_CURRENT_LIST_DIR}/../cuda_backend.cpp PROPERTIES LANGUAGE CXX
-    )
-    set_target_properties(cudawrappers_cuda_backend PROPERTIES POSITION_INDEPENDENT_CODE ON)
-
-    add_library(cudawrappers_hip_stub OBJECT
-                ${CMAKE_CURRENT_LIST_DIR}/../hip_backend_stub.cpp)
-    target_include_directories(
-      cudawrappers_hip_stub PRIVATE ${CUDAWRAPPERS_INCLUDE_DIR}
-    )
-    set_target_properties(cudawrappers_hip_stub PROPERTIES POSITION_INDEPENDENT_CODE ON)
-
-    add_library(cudawrappers_cu_impl STATIC ${CMAKE_CURRENT_LIST_DIR}/../cu.cpp
-                                             ${CMAKE_CURRENT_LIST_DIR}/../cu_loader.cpp)
-    target_include_directories(
-      cudawrappers_cu_impl PRIVATE ${CUDAWRAPPERS_INCLUDE_DIR}
-    )
-    target_compile_options(cudawrappers_cu_impl PRIVATE -fpermissive)
-    set_target_properties(cudawrappers_cu_impl PROPERTIES POSITION_INDEPENDENT_CODE ON)
-    target_link_libraries(cudawrappers_cu_impl PRIVATE ${CMAKE_DL_LIBS} CUDA::cuda_driver)
-
-    add_library(cu STATIC $<TARGET_OBJECTS:cudawrappers_cu_impl>
-                           $<TARGET_OBJECTS:cudawrappers_cuda_backend>
-                           $<TARGET_OBJECTS:cudawrappers_hip_stub>)
-    target_include_directories(
-      cu PUBLIC $<BUILD_INTERFACE:${CUDAWRAPPERS_INCLUDE_DIR}>
-                $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
-    )
-    target_link_libraries(cu PUBLIC CUDA::cuda_driver ${CMAKE_DL_LIBS})
-    add_library(${PROJECT_NAME}::cu ALIAS cu)
-    set_target_properties(
-      cu PROPERTIES PUBLIC_HEADER
-                    ${CUDAWRAPPERS_INCLUDE_DIR}/cudawrappers/cu.hpp
-    )
+    foreach(component ${CUDAWRAPPERS_COMPONENTS})
+      add_library(${component} INTERFACE)
+      add_library(${PROJECT_NAME}::${component} ALIAS ${component})
+      target_link_libraries(${component} INTERFACE ${LINK_${component}})
+      target_include_directories(
+        ${component} INTERFACE $<BUILD_INTERFACE:${CUDAWRAPPERS_INCLUDE_DIR}>
+                               $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+      )
+      set_target_properties(
+        ${component}
+        PROPERTIES PUBLIC_HEADER
+                   ${CUDAWRAPPERS_INCLUDE_DIR}/cudawrappers/${component}.hpp
+      )
+    endforeach()
 
     if(CUDAWRAPPERS_BUILD_CUFFT)
       set(LINK_cufft CUDA::cuda_driver CUDA::cufft)
