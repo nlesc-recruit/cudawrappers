@@ -28,9 +28,15 @@ if(CUDAWRAPPERS_BACKEND_ALL)
     target_include_directories(
       ${test_name} PRIVATE "${CMAKE_SOURCE_DIR}/include"
     )
-    target_link_libraries(
-      ${test_name} PUBLIC Catch2::Catch2WithMain cudawrappers::cu gcov
-    )
+    if(${component} STREQUAL "comprehensive")
+      target_link_libraries(
+        ${test_name} PUBLIC Catch2::Catch2 cudawrappers::cu gcov
+      )
+    else()
+      target_link_libraries(
+        ${test_name} PUBLIC Catch2::Catch2WithMain cudawrappers::cu gcov
+      )
+    endif()
     catch_discover_tests(${test_name})
   endforeach()
 
