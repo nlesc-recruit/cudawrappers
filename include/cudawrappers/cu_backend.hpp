@@ -632,61 +632,70 @@ inline Backend loadCudaBackend() {
 
 #endif  // __has_include(<cuda.h>) && !defined(__HIP__)
 
-// --- CUDA-to-HIP attribute mapping (no HIP headers needed) ---
+// --- CUDA-to-HIP attribute mapping (HIP only) ---
+
+#if defined(__HIP__)
+#include <hip/hip_runtime.h>
 
 namespace {
 
 inline int cudaToHipDeviceAttribute(int cudaAttr) {
   switch (cudaAttr) {
-    case 1: return 55;   // MAX_THREADS_PER_BLOCK
-    case 2: return 25;   // MAX_BLOCK_DIM_X
-    case 3: return 26;   // MAX_BLOCK_DIM_Y
-    case 4: return 27;   // MAX_BLOCK_DIM_Z
-    case 5: return 28;   // MAX_GRID_DIM_X
-    case 6: return 29;   // MAX_GRID_DIM_Y
-    case 7: return 30;   // MAX_GRID_DIM_Z
-    case 8: return 73;   // MAX_SHARED_MEMORY_PER_BLOCK
-    case 9: return 5;    // COMPUTE_MODE
-    case 10: return 86;  // WARP_SIZE
-    case 11: return 57;  // MAX_PITCH
-    case 12: return 70;  // MAX_REGISTERS_PER_BLOCK
-    case 13: return 4;   // CLOCK_RATE
-    case 14: return 80;  // TEXTURE_ALIGNMENT
-    case 15: return 17;  // KERNEL_EXEC_TIMEOUT
-    case 16: return 62;  // MULTIPROCESSOR_COUNT
-    case 18: return 15;  // INTEGRATED
-    case 31: return 255; // ECC_ENABLED
-    case 32: return 1;   // ASYNC_ENGINE_COUNT
-    case 33: return 66;  // PCI_BUS_ID
-    case 34: return 67;  // PCI_DEVICE_ID
-    case 35: return 68;  // PCI_DOMAIN_ID
-    case 36: return 59;  // MEMORY_CLOCK_RATE
-    case 37: return 58;  // GLOBAL_MEMORY_BUS_WIDTH
-    case 38: return 18;  // L2_CACHE_SIZE
-    case 39: return 23;  // MANAGED_MEMORY
-    case 40: return 8;   // CONCURRENT_MANAGED_ACCESS
-    case 42: return 14;  // HOST_NATIVE_ATOMIC_SUPPORTED
-    case 43: return 13;  // GLOBAL_L1_CACHE_SUPPORTED
-    case 44: return 19;  // LOCAL_L1_CACHE_SUPPORTED
-    case 45: return 71;  // MAX_REGISTERS_PER_MULTIPROCESSOR
-    case 46: return 92;  // MAX_SHARED_MEMORY_PER_MULTIPROCESSOR
-    case 47: return 56;  // MAX_THREADS_PER_MULTIPROCESSOR
-    case 53: return 3;   // CAN_USE_HOST_POINTER_FOR_REGISTERED_MEM
-    case 67: return 87;  // MEMORY_POOLS_SUPPORTED
-    case 68: return 6;   // COMPUTE_PREEMPTION_SUPPORTED
-    case 75: return 23;  // COMPUTE_CAPABILITY_MAJOR
-    case 76: return 61;  // COMPUTE_CAPABILITY_MINOR
+    case 1: return hipDeviceAttributeMaxThreadsPerBlock;
+    case 2: return hipDeviceAttributeMaxBlockDimX;
+    case 3: return hipDeviceAttributeMaxBlockDimY;
+    case 4: return hipDeviceAttributeMaxBlockDimZ;
+    case 5: return hipDeviceAttributeMaxGridDimX;
+    case 6: return hipDeviceAttributeMaxGridDimY;
+    case 7: return hipDeviceAttributeMaxGridDimZ;
+    case 8: return hipDeviceAttributeMaxSharedMemoryPerBlock;
+    case 9: return hipDeviceAttributeTotalConstantMemory;  // COMPUTE_MODE shares value 9
+    case 10: return hipDeviceAttributeWarpSize;
+    case 11: return hipDeviceAttributeMaxPitch;
+    case 12: return hipDeviceAttributeMaxRegistersPerBlock;
+    case 13: return hipDeviceAttributeClockRate;
+    case 14: return hipDeviceAttributeTextureAlignment;
+    case 15: return hipDeviceAttributeKernelExecTimeout;
+    case 16: return hipDeviceAttributeMultiprocessorCount;
+    case 18: return hipDeviceAttributeIntegrated;
+    case 31: return hipDeviceAttributeEccEnabled;
+    case 32: return hipDeviceAttributeAsyncEngineCount;
+    case 33: return hipDeviceAttributePciBusId;
+    case 34: return hipDeviceAttributePciDeviceId;
+    case 35: return hipDeviceAttributePciDomainID;
+    case 36: return hipDeviceAttributeMemoryClockRate;
+    case 37: return hipDeviceAttributeMemoryBusWidth;
+    case 38: return hipDeviceAttributeL2CacheSize;
+    case 39: return hipDeviceAttributeManagedMemory;
+    case 40: return hipDeviceAttributeConcurrentManagedAccess;
+    case 42: return hipDeviceAttributeHostNativeAtomicSupported;
+    case 43: return hipDeviceAttributeGlobalL1CacheSupported;
+    case 44: return hipDeviceAttributeLocalL1CacheSupported;
+    case 45: return hipDeviceAttributeMaxRegistersPerMultiprocessor;
+    case 46: return hipDeviceAttributeSharedMemPerMultiprocessor;
+    case 47: return hipDeviceAttributeMaxThreadsPerMultiProcessor;
+    case 48: return hipDeviceAttributeMaxBlocksPerMultiProcessor;
+    case 51: return hipDeviceAttributeTccDriver;
+    case 53: return hipDeviceAttributeCanUseHostPointerForRegisteredMem;
+    case 54: return hipDeviceAttributeIsMultiGpuBoard;
+    case 56: return hipDeviceAttributeDirectManagedMemAccessFromHost;
+    case 58: return hipDeviceAttributePageableMemoryAccess;
+    case 59: return hipDeviceAttributePageableMemoryAccessUsesHostPageTables;
+    case 67: return hipDeviceAttributeMemoryPoolsSupported;
+    case 68: return hipDeviceAttributeComputePreemptionSupported;
+    case 75: return hipDeviceAttributeComputeCapabilityMajor;
+    case 76: return hipDeviceAttributeComputeCapabilityMinor;
     default: return cudaAttr;  // pass through as-is
   }
 }
 
 }  // anonymous namespace
 
+#endif  // __HIP__
+
 // --- HIP wrapper functions (only available when compiling with HIP) ---
 
 #if defined(__HIP__)
-
-#include <hip/hip_runtime.h>
 
 namespace {
 
@@ -801,6 +810,48 @@ inline int hipMemsetD2D32Async_wrap(CUdeviceptr_b dst, size_t pitch,
 }  // anonymous namespace
 
 #endif  // defined(__HIP__)
+
+inline int hipEventRecordWrapper(void* stream, void* event) {
+  Backend& b = getBackend();
+  if (!b.lib) return 1;
+  using Fn = int (*)(void*, void*);
+  static Fn fn = reinterpret_cast<Fn>(dlsym(b.lib, "hipEventRecord"));
+  if (!fn) return 1;
+  return fn(event, stream);
+}
+
+// hipStreamWaitEvent takes a trailing flags argument that has no CUDA
+// counterpart; bind it through a wrapper so that the argument is always zero.
+// Passing an uninitialized value here crashes the ROCm runtime (it enables a
+// graph-capture code path in hipStreamWaitEvent).
+inline int hipStreamWaitEventWrapper(void* stream, void* event) {
+  Backend& b = getBackend();
+  if (!b.lib) return 1;
+  using Fn = int (*)(void*, void*, unsigned int);
+  static Fn fn = reinterpret_cast<Fn>(dlsym(b.lib, "hipStreamWaitEvent"));
+  if (!fn) return 1;
+  return fn(stream, event, 0);
+}
+
+// hipModuleLaunchCooperativeKernel lacks the trailing extra argument of its
+// CUDA counterpart; bind it through a wrapper to prevent the remaining
+// arguments from shifting.
+inline int hipLaunchCooperativeKernelWrapper(
+    void* f, unsigned int gridDimX, unsigned int gridDimY,
+    unsigned int gridDimZ, unsigned int blockDimX, unsigned int blockDimY,
+    unsigned int blockDimZ, unsigned int sharedMemBytes, void* stream,
+    void** kernelParams, void** /* extra */) {
+  Backend& b = getBackend();
+  if (!b.lib) return 1;
+  using Fn = int (*)(void*, unsigned int, unsigned int, unsigned int,
+                     unsigned int, unsigned int, unsigned int, unsigned int,
+                     void*, void**);
+  static Fn fn = reinterpret_cast<Fn>(
+      dlsym(b.lib, "hipModuleLaunchCooperativeKernel"));
+  if (!fn) return 1;
+  return fn(f, gridDimX, gridDimY, gridDimZ, blockDimX, blockDimY, blockDimZ,
+            sharedMemBytes, stream, kernelParams);
+}
 
 // --- HIP backend loader (uses dlsym, works without HIP headers) ---
 
@@ -920,7 +971,8 @@ inline Backend loadHipBackend() {
   LOAD(streamDestroy, "hipStreamDestroy");
   LOAD(streamSynchronize, "hipStreamSynchronize");
   LOAD(streamQuery, "hipStreamQuery");
-  LOAD(streamWaitEvent, "hipStreamWaitEvent");
+  b.streamWaitEvent =
+      reinterpret_cast<decltype(Backend::streamWaitEvent)>(hipStreamWaitEventWrapper);
   LOAD(streamGetFlags, "hipStreamGetFlags");
   LOAD(streamGetPriority, "hipStreamGetPriority");
   LOAD(streamAddCallback, "hipStreamAddCallback");
@@ -933,7 +985,7 @@ inline Backend loadHipBackend() {
   LOAD(eventSynchronize, "hipEventSynchronize");
   LOAD(eventElapsedTime, "hipEventElapsedTime");
   LOAD(eventQuery, "hipEventQuery");
-  LOAD(streamRecordEvent, "hipEventRecord");
+  b.streamRecordEvent = reinterpret_cast<decltype(Backend::streamRecordEvent)>(hipEventRecordWrapper);
 
   LOAD(moduleLoad, "hipModuleLoad");
   LOAD(moduleLoadData, "hipModuleLoadData");
@@ -959,7 +1011,8 @@ inline Backend loadHipBackend() {
   LOAD(graphAddMemAllocNode, "hipGraphAddMemAllocNode");
 
   LOAD(launchKernel, "hipModuleLaunchKernel");
-  LOAD(launchCooperativeKernel, "hipModuleLaunchCooperativeKernel");
+  b.launchCooperativeKernel = reinterpret_cast<decltype(Backend::launchCooperativeKernel)>(
+      hipLaunchCooperativeKernelWrapper);
 
   LOAD(getExportTable, "hipGetExportTable");
 

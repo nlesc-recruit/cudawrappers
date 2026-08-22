@@ -21,7 +21,23 @@
 #include <hip/hip_runtime.h>
 #include <hip/hiprtc.h>
 
-#include <cudawrappers/macros.hpp>
+// Map nvrtc names to HIP equivalents without including macros.hpp
+// (which would conflict with cu.hpp type definitions).
+typedef hiprtcResult nvrtcResult;
+typedef hiprtcProgram nvrtcProgram;
+#define NVRTC_SUCCESS HIPRTC_SUCCESS
+#define nvrtcCreateProgram hiprtcCreateProgram
+#define nvrtcDestroyProgram hiprtcDestroyProgram
+#define nvrtcCompileProgram hiprtcCompileProgram
+#define nvrtcGetPTXSize hiprtcGetCodeSize
+#define nvrtcGetPTX hiprtcGetCode
+#define nvrtcGetCUBINSize hiprtcGetCUBINSize
+#define nvrtcGetCUBIN hiprtcGetCUBIN
+#define nvrtcGetProgramLogSize hiprtcGetProgramLogSize
+#define nvrtcGetProgramLog hiprtcGetProgramLog
+#define nvrtcAddNameExpression hiprtcAddNameExpression
+#define nvrtcGetLoweredName hiprtcGetLoweredName
+#define nvrtcGetErrorString hiprtcGetErrorString
 #endif
 #include <cudawrappers/config.h>
 namespace {

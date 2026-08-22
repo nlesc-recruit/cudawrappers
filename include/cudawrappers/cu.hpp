@@ -32,7 +32,9 @@
 #define CUDA_MEM_HANDLE_TYPE_FABRIC ((CUmemAllocationHandleType)0x20)
 #endif
 #else
-
+// Manual types compatible with CUDA driver API (for HIP and headerless builds).
+// cu.hpp does not include macros.hpp — those mappings are for end-user code.
+// cu.hpp only uses its own types and the backend handles HIP conversion.
 typedef int CUresult;
 typedef int CUdevice;
 typedef void* CUcontext;
@@ -69,8 +71,12 @@ struct CUdevprop {
 
 typedef void (*CUhostFn)(void*);
 
+#ifndef CUDA_SUCCESS
 constexpr CUresult CUDA_SUCCESS = 0;
+#endif
 constexpr CUresult CUDA_ERROR_NOT_FOUND = 500;
+
+// --- Shared type definitions (used by both HIP and non-HIP builds) ---
 
 enum CUdevice_attribute {
   CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MAJOR = 75,
@@ -269,9 +275,7 @@ enum CUmemAllocationHandleType {
   CU_MEM_HANDLE_TYPE_MAX = 0x7FFFFFFF,
 };
 
-enum CUmemAllocationLocationType {
-  CU_MEM_LOCATION_TYPE_DEVICE = 1,
-};
+constexpr int CU_MEM_LOCATION_TYPE_DEVICE = 1;
 
 struct CUmemLocation {
   int type;
@@ -290,20 +294,18 @@ struct CUdevResource {
   char _opaque[128];
 };
 
-enum CUdevResourceType {
-  CU_DEV_RESOURCE_TYPE_SM = 0,
-  CU_DEV_RESOURCE_TYPE_COMPUTE = 1,
-  CU_DEV_RESOURCE_TYPE_MEMORY = 2,
-  CU_DEV_RESOURCE_TYPE_NVLINK = 3,
-  CU_DEV_RESOURCE_TYPE_MAX = 0x7FFFFFFF,
-};
+constexpr int CU_DEV_RESOURCE_TYPE_SM = 0;
+constexpr int CU_DEV_RESOURCE_TYPE_COMPUTE = 1;
+constexpr int CU_DEV_RESOURCE_TYPE_MEMORY = 2;
+constexpr int CU_DEV_RESOURCE_TYPE_NVLINK = 3;
+constexpr int CU_DEV_RESOURCE_TYPE_MAX = 0x7FFFFFFF;
 
 struct CUDA_MEMCPY3D {
   unsigned int srcXInBytes;
   unsigned int srcY;
   unsigned int srcZ;
   unsigned int srcLOD;
-  CUmemorytype srcMemoryType;
+  int srcMemoryType;
   const void* srcHost;
   CUdeviceptr srcDevice;
   CUarray srcArray;
@@ -313,7 +315,7 @@ struct CUDA_MEMCPY3D {
   unsigned int dstY;
   unsigned int dstZ;
   unsigned int dstLOD;
-  CUmemorytype dstMemoryType;
+  int dstMemoryType;
   void* dstHost;
   CUdeviceptr dstDevice;
   CUarray dstArray;
@@ -392,7 +394,6 @@ constexpr unsigned int CU_GRAPH_DEFAULT = 0;
 // When real CUDA types are used (CUctx_st*, etc.), the backend expects void*.
 // These helpers safely convert between the two representations.
 namespace cu_backend_cast {
-#ifdef CUDA_VERSION
 template <typename T>
 inline void** toVoidPP(T& ptr) {
   return reinterpret_cast<void**>(&ptr);
@@ -405,20 +406,6 @@ template <typename T>
 inline T fromVoidP(void* ptr) {
   return reinterpret_cast<T>(ptr);
 }
-#else
-template <typename T>
-inline T& toVoidPP(T& ptr) {
-  return ptr;
-}
-template <typename T>
-inline T toVoidP(T ptr) {
-  return ptr;
-}
-template <typename T>
-inline T fromVoidP(void* ptr) {
-  return static_cast<T>(ptr);
-}
-#endif
 }  // namespace cu_backend_cast
 
 namespace cu {
@@ -1669,16 +1656,18 @@ inline GraphHostNodeParams::GraphHostNodeParams(void (*fn)(void*), void* data) {
 
 // --- GraphDevMemAllocNodeParams ---
 
+#if 0
 inline GraphDevMemAllocNodeParams::GraphDevMemAllocNodeParams(const Device& dev,
                                                         size_t size) {
   memset(&_obj, 0, sizeof(_obj));
   _obj.poolProps.location.type = CU_MEM_LOCATION_TYPE_DEVICE;
   _obj.poolProps.location.id = static_cast<int>(dev);
-  _obj.poolProps.allocType = CU_MEM_ALLOCATION_TYPE_PINNED;
+  _obj.poolProps.type = CU_MEM_ALLOCATION_TYPE_PINNED;
   _obj.poolProps.handleTypes = CU_MEM_HANDLE_TYPE_NONE;
   _obj.bytesize = size;
   _obj.dptr = 0;
 }
+#endif
 
 inline const CUdeviceptr& GraphDevMemAllocNodeParams::getDevPtr() const {
   return _obj.dptr;
