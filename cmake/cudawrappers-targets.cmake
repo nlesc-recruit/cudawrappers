@@ -153,21 +153,6 @@ else()
     # CUDA-only single-backend: header-only
     set(LINK_cu CUDA::cuda_driver ${CMAKE_DL_LIBS})
 
-    foreach(component ${CUDAWRAPPERS_COMPONENTS})
-      add_library(${component} INTERFACE)
-      add_library(${PROJECT_NAME}::${component} ALIAS ${component})
-      target_link_libraries(${component} INTERFACE ${LINK_${component}})
-      target_include_directories(
-        ${component} INTERFACE $<BUILD_INTERFACE:${CUDAWRAPPERS_INCLUDE_DIR}>
-                               $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
-      )
-      set_target_properties(
-        ${component}
-        PROPERTIES PUBLIC_HEADER
-                   ${CUDAWRAPPERS_INCLUDE_DIR}/cudawrappers/${component}.hpp
-      )
-    endforeach()
-
     if(CUDAWRAPPERS_BUILD_CUFFT)
       set(LINK_cufft CUDA::cuda_driver CUDA::cufft)
     endif()
@@ -182,9 +167,6 @@ else()
     endif()
 
     foreach(component ${CUDAWRAPPERS_COMPONENTS})
-      if(${component} STREQUAL "cu")
-        continue()
-      endif()
       add_library(${component} INTERFACE)
       add_library(${PROJECT_NAME}::${component} ALIAS ${component})
       target_link_libraries(${component} INTERFACE ${LINK_${component}})
@@ -236,7 +218,9 @@ if(CUDAWRAPPERS_BACKEND_ALL)
   endif()
 else()
   foreach(component ${CUDAWRAPPERS_COMPONENTS})
-    list(APPEND CUDAWRAPPERS_INSTALL_TARGETS ${component})
+    if(NOT "${component}" STREQUAL "cu")
+      list(APPEND CUDAWRAPPERS_INSTALL_TARGETS ${component})
+    endif()
   endforeach()
 endif()
 

@@ -10,7 +10,8 @@ FetchContent_MakeAvailable(Catch2)
 list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/contrib)
 include(Catch)
 
-set(COMPONENTS ${CUDAWRAPPERS_MANDATORY_COMPONENTS} vector_add graph)
+set(COMPONENTS ${CUDAWRAPPERS_MANDATORY_COMPONENTS} vector_add graph
+               comprehensive)
 foreach(component ${CUDAWRAPPERS_COMPONENTS})
   list(FIND COMPONENTS ${component} _found)
   if(_found EQUAL -1)

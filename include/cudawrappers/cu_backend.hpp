@@ -530,7 +530,7 @@ inline Backend loadCudaBackend() {
   LOAD(pointerGetAttribute, "cuPointerGetAttribute");
   LOAD(pointerGetAttributes, "cuPointerGetAttributes");
 
-  LOAD(arrayCreate, "cuArrayCreate");
+  LOAD(arrayCreate, "cuArrayCreate_v2");
   LOAD(array3DCreate, "cuArray3DCreate_v2");
   LOAD(arrayDestroy, "cuArrayDestroy");
 
@@ -547,7 +547,7 @@ inline Backend loadCudaBackend() {
 
   LOAD(eventCreate, "cuEventCreate");
   LOAD(eventDestroy, "cuEventDestroy");
-  LOAD(eventRecord, "cuEventRecord_v2");
+  LOAD(eventRecord, "cuEventRecord");
   LOAD(eventRecordWithFlags, "cuEventRecordWithFlags");
   LOAD(eventSynchronize, "cuEventSynchronize");
   LOAD(eventElapsedTime, "cuEventElapsedTime");
@@ -632,66 +632,62 @@ inline Backend loadCudaBackend() {
 
 #endif  // __has_include(<cuda.h>) && !defined(__HIP__)
 
-// --- CUDA-to-HIP attribute mapping (HIP only) ---
-
-#if defined(__HIP__)
-#include <hip/hip_runtime.h>
+// --- CUDA-to-HIP attribute mapping ---
 
 namespace {
 
 inline int cudaToHipDeviceAttribute(int cudaAttr) {
+  // Values from hipDeviceAttribute_t (rocclr/hip_runtime_api.h)
   switch (cudaAttr) {
-    case 1: return hipDeviceAttributeMaxThreadsPerBlock;
-    case 2: return hipDeviceAttributeMaxBlockDimX;
-    case 3: return hipDeviceAttributeMaxBlockDimY;
-    case 4: return hipDeviceAttributeMaxBlockDimZ;
-    case 5: return hipDeviceAttributeMaxGridDimX;
-    case 6: return hipDeviceAttributeMaxGridDimY;
-    case 7: return hipDeviceAttributeMaxGridDimZ;
-    case 8: return hipDeviceAttributeMaxSharedMemoryPerBlock;
-    case 9: return hipDeviceAttributeTotalConstantMemory;  // COMPUTE_MODE shares value 9
-    case 10: return hipDeviceAttributeWarpSize;
-    case 11: return hipDeviceAttributeMaxPitch;
-    case 12: return hipDeviceAttributeMaxRegistersPerBlock;
-    case 13: return hipDeviceAttributeClockRate;
-    case 14: return hipDeviceAttributeTextureAlignment;
-    case 15: return hipDeviceAttributeKernelExecTimeout;
-    case 16: return hipDeviceAttributeMultiprocessorCount;
-    case 18: return hipDeviceAttributeIntegrated;
-    case 31: return hipDeviceAttributeEccEnabled;
-    case 32: return hipDeviceAttributeAsyncEngineCount;
-    case 33: return hipDeviceAttributePciBusId;
-    case 34: return hipDeviceAttributePciDeviceId;
-    case 35: return hipDeviceAttributePciDomainID;
-    case 36: return hipDeviceAttributeMemoryClockRate;
-    case 37: return hipDeviceAttributeMemoryBusWidth;
-    case 38: return hipDeviceAttributeL2CacheSize;
-    case 39: return hipDeviceAttributeManagedMemory;
-    case 40: return hipDeviceAttributeConcurrentManagedAccess;
-    case 42: return hipDeviceAttributeHostNativeAtomicSupported;
-    case 43: return hipDeviceAttributeGlobalL1CacheSupported;
-    case 44: return hipDeviceAttributeLocalL1CacheSupported;
-    case 45: return hipDeviceAttributeMaxRegistersPerMultiprocessor;
-    case 46: return hipDeviceAttributeSharedMemPerMultiprocessor;
-    case 47: return hipDeviceAttributeMaxThreadsPerMultiProcessor;
-    case 48: return hipDeviceAttributeMaxBlocksPerMultiProcessor;
-    case 51: return hipDeviceAttributeTccDriver;
-    case 53: return hipDeviceAttributeCanUseHostPointerForRegisteredMem;
-    case 54: return hipDeviceAttributeIsMultiGpuBoard;
-    case 56: return hipDeviceAttributeDirectManagedMemAccessFromHost;
-    case 58: return hipDeviceAttributePageableMemoryAccess;
-    case 59: return hipDeviceAttributePageableMemoryAccessUsesHostPageTables;
-    case 67: return hipDeviceAttributeMemoryPoolsSupported;
-    case 68: return hipDeviceAttributeComputePreemptionSupported;
-    case 75: return hipDeviceAttributeComputeCapabilityMajor;
-    case 76: return hipDeviceAttributeComputeCapabilityMinor;
+    case 1: return 1;   // hipDeviceAttributeMaxThreadsPerBlock = 1
+    case 2: return 2;   // hipDeviceAttributeMaxBlockDimX
+    case 3: return 3;   // hipDeviceAttributeMaxBlockDimY
+    case 4: return 4;   // hipDeviceAttributeMaxBlockDimZ
+    case 5: return 5;   // hipDeviceAttributeMaxGridDimX
+    case 6: return 6;   // hipDeviceAttributeMaxGridDimY
+    case 7: return 7;   // hipDeviceAttributeMaxGridDimZ
+    case 8: return 73;  // hipDeviceAttributeMaxSharedMemoryPerBlock
+    case 9: return 5;   // COMPUTE_MODE → hipDeviceAttributeTotalConstantMemory
+    case 10: return 86; // hipDeviceAttributeWarpSize
+    case 11: return 57; // hipDeviceAttributeMaxPitch
+    case 12: return 70; // hipDeviceAttributeMaxRegistersPerBlock
+    case 13: return 4;  // hipDeviceAttributeClockRate
+    case 14: return 80; // hipDeviceAttributeTextureAlignment
+    case 15: return 17; // hipDeviceAttributeKernelExecTimeout
+    case 16: return 62; // hipDeviceAttributeMultiprocessorCount
+    case 18: return 15; // hipDeviceAttributeIntegrated
+    case 31: return 255;// hipDeviceAttributeEccEnabled
+    case 32: return 1;  // hipDeviceAttributeAsyncEngineCount
+    case 33: return 66; // hipDeviceAttributePciBusId
+    case 34: return 67; // hipDeviceAttributePciDeviceId
+    case 35: return 68; // hipDeviceAttributePciDomainID
+    case 36: return 59; // hipDeviceAttributeMemoryClockRate
+    case 37: return 58; // hipDeviceAttributeMemoryBusWidth
+    case 38: return 18; // hipDeviceAttributeL2CacheSize
+    case 39: return 23; // hipDeviceAttributeManagedMemory
+    case 40: return 8;  // hipDeviceAttributeConcurrentManagedAccess
+    case 42: return 14; // hipDeviceAttributeHostNativeAtomicSupported
+    case 43: return 13; // hipDeviceAttributeGlobalL1CacheSupported
+    case 44: return 19; // hipDeviceAttributeLocalL1CacheSupported
+    case 45: return 71; // hipDeviceAttributeMaxRegistersPerMultiprocessor
+    case 46: return 92; // hipDeviceAttributeSharedMemPerMultiprocessor
+    case 47: return 56; // hipDeviceAttributeMaxThreadsPerMultiProcessor
+    case 48: return 72; // hipDeviceAttributeMaxBlocksPerMultiProcessor
+    case 51: return 51; // hipDeviceAttributeTccDriver
+    case 53: return 3;  // hipDeviceAttributeCanUseHostPointerForRegisteredMem
+    case 54: return 6;  // hipDeviceAttributeIsMultiGpuBoard
+    case 56: return 20; // hipDeviceAttributeDirectManagedMemAccessFromHost
+    case 58: return 63; // hipDeviceAttributePageableMemoryAccess
+    case 59: return 64; // hipDeviceAttributePageableMemoryAccessUsesHostPageTables
+    case 67: return 87; // hipDeviceAttributeMemoryPoolsSupported
+    case 68: return 6;  // hipDeviceAttributeComputePreemptionSupported
+    case 75: return 23; // hipDeviceAttributeComputeCapabilityMajor
+    case 76: return 61; // hipDeviceAttributeComputeCapabilityMinor
     default: return cudaAttr;  // pass through as-is
   }
 }
 
 }  // anonymous namespace
-
-#endif  // __HIP__
 
 // --- HIP wrapper functions (only available when compiling with HIP) ---
 

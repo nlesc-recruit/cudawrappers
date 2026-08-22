@@ -1656,18 +1656,16 @@ inline GraphHostNodeParams::GraphHostNodeParams(void (*fn)(void*), void* data) {
 
 // --- GraphDevMemAllocNodeParams ---
 
-#if 0
 inline GraphDevMemAllocNodeParams::GraphDevMemAllocNodeParams(const Device& dev,
                                                         size_t size) {
   memset(&_obj, 0, sizeof(_obj));
   _obj.poolProps.location.type = CU_MEM_LOCATION_TYPE_DEVICE;
   _obj.poolProps.location.id = static_cast<int>(dev);
-  _obj.poolProps.type = CU_MEM_ALLOCATION_TYPE_PINNED;
+  _obj.poolProps.allocType = CU_MEM_ALLOCATION_TYPE_PINNED;
   _obj.poolProps.handleTypes = CU_MEM_HANDLE_TYPE_NONE;
   _obj.bytesize = size;
   _obj.dptr = 0;
 }
-#endif
 
 inline const CUdeviceptr& GraphDevMemAllocNodeParams::getDevPtr() const {
   return _obj.dptr;
