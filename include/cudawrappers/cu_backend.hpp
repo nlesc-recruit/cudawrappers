@@ -5,6 +5,7 @@
 #include <cstdio>
 #include <cstring>
 #include <dlfcn.h>
+#include <unordered_map>
 #include <vector>
 
 typedef int CUresult_b;
@@ -941,6 +942,7 @@ inline Backend loadHipBackend() {
     using DeviceSynchronizeFn = int (*)();
     using DeviceGetCacheConfigFn = int (*)(int*);
     using DeviceSetCacheConfigFn = int (*)(int);
+    using DeviceSetDeviceFn = int (*)(int);
 
     static PrimaryCtxRetainFn hipPrimaryCtxRetain =
         reinterpret_cast<PrimaryCtxRetainFn>(dlsym(b.lib, "hipDevicePrimaryCtxRetain"));
@@ -952,13 +954,49 @@ inline Backend loadHipBackend() {
         reinterpret_cast<DeviceGetCacheConfigFn>(dlsym(b.lib, "hipDeviceGetCacheConfig"));
     static DeviceSetCacheConfigFn hipDeviceSetCacheConfig =
         reinterpret_cast<DeviceSetCacheConfigFn>(dlsym(b.lib, "hipDeviceSetCacheConfig"));
+    static DeviceSetDeviceFn hipSetDeviceFn =
+        reinterpret_cast<DeviceSetDeviceFn>(dlsym(b.lib, "hipSetDevice"));
+
+    // Map primary contexts to their device ordinal. Unlike CUDA's
+    // cuCtxSetCurrent, the HIP runtime API has no way to activate a context;
+    // the equivalent is hipSetDevice(). Track which device each retained
+    // primary context belongs to so ctxCreate/ctxSetCurrent can rebind the
+    // calling thread to the correct device.
+    struct PrimaryCtxDevices {
+      std::unordered_map<void*, int>& get() {
+        static std::unordered_map<void*, int> map;
+        return map;
+      }
+    };
+    static PrimaryCtxDevices primaryCtxDevices;
 
     b.ctxCreate = [](void** ctx, unsigned int /*flags*/, int device) -> CUresult_b {
       if (!hipPrimaryCtxRetain) return 1;
-      return hipPrimaryCtxRetain(ctx, device);
+      CUresult_b result = hipPrimaryCtxRetain(ctx, device);
+      if (result == 0 && ctx && *ctx) {
+        primaryCtxDevices.get()[*ctx] = device;
+        // Like cuCtxCreate, make the new context current.
+        if (hipSetDeviceFn) result = hipSetDeviceFn(device);
+      }
+      return result;
     };
-    b.ctxDestroy = [](void* /*ctx*/) -> CUresult_b {
+    b.ctxDestroy = [](void* ctx) -> CUresult_b {
+      if (ctx) primaryCtxDevices.get().erase(ctx);
       return 0;
+    };
+    b.ctxSetCurrent = [](void* ctx) -> CUresult_b {
+      auto& map = primaryCtxDevices.get();
+      auto it = map.find(ctx);
+      if (it != map.end()) {
+        if (!hipSetDeviceFn) return 1;
+        return hipSetDeviceFn(it->second);
+      }
+      // Unknown context: fall back to the legacy HIP API.
+      using CtxSetCurrentFn = int (*)(void*);
+      static CtxSetCurrentFn fn =
+          reinterpret_cast<CtxSetCurrentFn>(dlsym(getBackend().lib, "hipCtxSetCurrent"));
+      if (!fn) return 1;
+      return fn(ctx);
     };
     b.ctxSynchronize = []() -> CUresult_b {
       if (!hipDeviceSynchronize) return 1;
