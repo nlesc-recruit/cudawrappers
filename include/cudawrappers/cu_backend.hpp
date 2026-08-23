@@ -348,6 +348,18 @@ inline size_t getBackendCount() { return getBackends().size(); }
 
 inline Backend& getBackend(int idx) { return getBackends().at(idx); }
 
+// Resolve a backend by flavor. API-adapter wrappers (arg-order/arity fixes)
+// must dlsym against the library of their OWN flavor: the no-index "front()"
+// choice is only correct in single-backend builds and silently resolves
+// against the wrong library in dual-backend (CUDA;HIP) builds.
+inline Backend& getFlavorBackend(bool cuda) {
+  for (Backend& b : getBackends()) {
+    if (b.is_cuda == cuda) return b;
+  }
+  static Backend empty{};
+  return empty;
+}
+
 inline Backend& getBackend() {
   static Backend empty{};
   auto& backends = getBackends();
@@ -359,7 +371,7 @@ inline Backend& getBackend() {
 
 // --- CUDA backend (loaded entirely via dlsym, no CUDA headers needed) ---
 
-#if __has_include(<cuda.h>) && !defined(__HIP__)
+#if __has_include(<cuda.h>)
 
 namespace {
 
@@ -386,7 +398,7 @@ struct CUDA_MEMCPY2D_compat {
 inline int cudaMemcpy2DAsyncWrapper(void* dst, size_t dpitch, const void* src,
                                      size_t spitch, size_t width, size_t height,
                                      int kind, void* stream) {
-  Backend& b = getBackend();
+  Backend& b = getFlavorBackend(true);
   if (!b.lib) return 1;
   CUDA_MEMCPY2D_compat copyParams = {};
   copyParams.WidthInBytes = width;
@@ -411,7 +423,7 @@ inline int cudaMemcpy2DAsyncWrapper(void* dst, size_t dpitch, const void* src,
 }
 
 inline int cuEventRecordWrapper(void* stream, void* event) {
-  Backend& b = getBackend();
+  Backend& b = getFlavorBackend(true);
   if (!b.lib) return 1;
   using Fn = CUresult_b (*)(void*, void*);
   static Fn fn = reinterpret_cast<Fn>(dlsym(b.lib, "cuEventRecord"));
@@ -420,7 +432,7 @@ inline int cuEventRecordWrapper(void* stream, void* event) {
 }
 
 inline int cuStreamWaitEventWrapper(void* stream, void* event) {
-  Backend& b = getBackend();
+  Backend& b = getFlavorBackend(true);
   if (!b.lib) return 1;
   using Fn = CUresult_b (*)(void*, void*, unsigned int);
   static Fn fn = reinterpret_cast<Fn>(dlsym(b.lib, "cuStreamWaitEvent"));
@@ -603,7 +615,7 @@ inline Backend loadCudaBackend() {
     struct ArchNameHelper {
       static CUresult_b getArchName(char* name, int maxLen,
                                      CUdevice_b device) {
-        Backend& bb = getBackend();
+        Backend& bb = getFlavorBackend(true);
         auto getAttr = reinterpret_cast<CUresult_b (*)(int*, int, CUdevice_b)>(
             dlsym(bb.lib, "cuDeviceGetAttribute"));
         if (!getAttr) return 500;
@@ -631,7 +643,7 @@ inline Backend loadCudaBackend() {
   return b;
 }
 
-#endif  // __has_include(<cuda.h>) && !defined(__HIP__)
+#endif  // __has_include(<cuda.h>)
 
 // --- CUDA-to-HIP attribute mapping ---
 
@@ -707,128 +719,9 @@ inline int cudaToHipDeviceAttribute(int cudaAttr) {
 
 }  // anonymous namespace
 
-// --- HIP wrapper functions (only available when compiling with HIP) ---
-
-#if defined(__HIP__)
-
-#include <hip/hip_runtime.h>
-
-namespace {
-
-inline int hipModuleLoadDataEx_wrap(CUmodule_b* module, const void* image,
-                                     unsigned int numOptions, int* options,
-                                     void** optionValues) {
-  hipJitOption* jitOpts = nullptr;
-  if (numOptions > 0 && options) {
-    jitOpts = reinterpret_cast<hipJitOption*>(options);
-  }
-  return hipModuleLoadDataEx(reinterpret_cast<hipModule_t*>(module), image,
-                              numOptions, jitOpts, optionValues);
-}
-
-inline int hipGraphAddMemcpyNode_wrap(CUgraphNode_b* node, CUgraph_b graph,
-                                       const CUgraphNode_b* deps, size_t numDeps,
-                                       const CUDA_MEMCPY3D_b* p,
-                                       CUcontext_b ctx) {
-  hipMemcpy3DParms par{};
-  memset(&par, 0, sizeof(par));
-
-  if (p->srcMemoryType == 1 && p->dstMemoryType == 2) {
-    par.srcPtr = make_hipPitchedPtr(const_cast<void*>(p->srcHost),
-                                     p->srcPitch, p->WidthInBytes, p->Height);
-    par.dstPtr = make_hipPitchedPtr(reinterpret_cast<void*>(p->dstDevice),
-                                     p->dstPitch, p->WidthInBytes, p->Height);
-    par.extent = make_hipExtent(p->WidthInBytes, p->Height, p->Depth);
-    par.kind = hipMemcpyHostToDevice;
-  } else if (p->srcMemoryType == 2 && p->dstMemoryType == 1) {
-    par.srcPtr = make_hipPitchedPtr(reinterpret_cast<void*>(p->srcDevice),
-                                     p->srcPitch, p->WidthInBytes, p->Height);
-    par.dstPtr = make_hipPitchedPtr(p->dstHost, p->dstPitch, p->WidthInBytes,
-                                     p->Height);
-    par.extent = make_hipExtent(p->WidthInBytes, p->Height, p->Depth);
-    par.kind = hipMemcpyDeviceToHost;
-  } else {
-    return 1;
-  }
-
-  (void)ctx;
-  return hipGraphAddMemcpyNode(
-      reinterpret_cast<hipGraphNode_t*>(node),
-      reinterpret_cast<hipGraph_t>(graph),
-      reinterpret_cast<const hipGraphNode_t*>(deps), numDeps, &par);
-}
-
-inline int hipDeviceGetAttribute_wrap(int* pi, int attr, int device) {
-  return hipDeviceGetAttribute(
-      pi, static_cast<hipDeviceAttribute_t>(cudaToHipDeviceAttribute(attr)),
-      device);
-}
-
-inline int hipMemsetD2D8_wrap(CUdeviceptr_b dst, size_t pitch,
-                               unsigned char value, size_t width,
-                               size_t height) {
-  return hipMemset2D(reinterpret_cast<void*>(dst), pitch, value, width, height);
-}
-
-inline int hipMemsetD2D16_wrap(CUdeviceptr_b dst, size_t pitch,
-                                unsigned short value, size_t width,
-                                size_t height) {
-  for (size_t row = 0; row < height; ++row) {
-    hipError_t err = hipMemsetD16(
-        reinterpret_cast<void*>(dst + row * pitch), value, width);
-    if (err != hipSuccess) return static_cast<int>(err);
-  }
-  return 0;
-}
-
-inline int hipMemsetD2D32_wrap(CUdeviceptr_b dst, size_t pitch,
-                                unsigned int value, size_t width,
-                                size_t height) {
-  for (size_t row = 0; row < height; ++row) {
-    hipError_t err = hipMemsetD32(
-        reinterpret_cast<void*>(dst + row * pitch), value, width);
-    if (err != hipSuccess) return static_cast<int>(err);
-  }
-  return 0;
-}
-
-inline int hipMemsetD2D8Async_wrap(CUdeviceptr_b dst, size_t pitch,
-                                    unsigned char value, size_t width,
-                                    size_t height, CUstream_b stream) {
-  return hipMemset2DAsync(reinterpret_cast<void*>(dst), pitch, value, width,
-                           height, reinterpret_cast<hipStream_t>(stream));
-}
-
-inline int hipMemsetD2D16Async_wrap(CUdeviceptr_b dst, size_t pitch,
-                                     unsigned short value, size_t width,
-                                     size_t height, CUstream_b stream) {
-  for (size_t row = 0; row < height; ++row) {
-    hipError_t err = hipMemsetD16Async(
-        reinterpret_cast<void*>(dst + row * pitch), value, width,
-        reinterpret_cast<hipStream_t>(stream));
-    if (err != hipSuccess) return static_cast<int>(err);
-  }
-  return 0;
-}
-
-inline int hipMemsetD2D32Async_wrap(CUdeviceptr_b dst, size_t pitch,
-                                     unsigned int value, size_t width,
-                                     size_t height, CUstream_b stream) {
-  for (size_t row = 0; row < height; ++row) {
-    hipError_t err = hipMemsetD32Async(
-        reinterpret_cast<void*>(dst + row * pitch), value, width,
-        reinterpret_cast<hipStream_t>(stream));
-    if (err != hipSuccess) return static_cast<int>(err);
-  }
-  return 0;
-}
-
-}  // anonymous namespace
-
-#endif  // defined(__HIP__)
-
+// --- HIP dlsym-based wrappers (header-free) ---
 inline int hipEventRecordWrapper(void* stream, void* event) {
-  Backend& b = getBackend();
+  Backend& b = getFlavorBackend(false);
   if (!b.lib) return 1;
   using Fn = int (*)(void*, void*);
   static Fn fn = reinterpret_cast<Fn>(dlsym(b.lib, "hipEventRecord"));
@@ -841,7 +734,7 @@ inline int hipEventRecordWrapper(void* stream, void* event) {
 // Passing an uninitialized value here crashes the ROCm runtime (it enables a
 // graph-capture code path in hipStreamWaitEvent).
 inline int hipStreamWaitEventWrapper(void* stream, void* event) {
-  Backend& b = getBackend();
+  Backend& b = getFlavorBackend(false);
   if (!b.lib) return 1;
   using Fn = int (*)(void*, void*, unsigned int);
   static Fn fn = reinterpret_cast<Fn>(dlsym(b.lib, "hipStreamWaitEvent"));
@@ -857,7 +750,7 @@ inline int hipLaunchCooperativeKernelWrapper(
     unsigned int gridDimZ, unsigned int blockDimX, unsigned int blockDimY,
     unsigned int blockDimZ, unsigned int sharedMemBytes, void* stream,
     void** kernelParams, void** /* extra */) {
-  Backend& b = getBackend();
+  Backend& b = getFlavorBackend(false);
   if (!b.lib) return 1;
   using Fn = int (*)(void*, unsigned int, unsigned int, unsigned int,
                      unsigned int, unsigned int, unsigned int, unsigned int,
@@ -892,10 +785,6 @@ inline Backend loadHipBackend() {
   LOAD(getErrorName, "hipDrvGetErrorName");
   LOAD(deviceGetCount, "hipGetDeviceCount");
   LOAD(deviceGet, "hipDeviceGet");
-#if defined(__HIP__)
-  b.deviceGetAttribute = reinterpret_cast<decltype(Backend::deviceGetAttribute)>(
-      hipDeviceGetAttribute_wrap);
-#else
   {
     using hipGetAttrFn = int (*)(int*, int, int);
     static hipGetAttrFn rawGetAttr =
@@ -905,7 +794,6 @@ inline Backend loadHipBackend() {
       return rawGetAttr(pi, cudaToHipDeviceAttribute(attr), device);
     };
   }
-#endif
   LOAD(deviceGetName, "hipDeviceGetName");
   LOAD(deviceGetUuid, "hipDeviceGetUuid");
   LOAD(deviceGetPCIBusId, "hipDeviceGetPCIBusId");
@@ -994,7 +882,7 @@ inline Backend loadHipBackend() {
       // Unknown context: fall back to the legacy HIP API.
       using CtxSetCurrentFn = int (*)(void*);
       static CtxSetCurrentFn fn =
-          reinterpret_cast<CtxSetCurrentFn>(dlsym(getBackend().lib, "hipCtxSetCurrent"));
+          reinterpret_cast<CtxSetCurrentFn>(dlsym(getFlavorBackend(false).lib, "hipCtxSetCurrent"));
       if (!fn) return 1;
       return fn(ctx);
     };
@@ -1038,14 +926,6 @@ inline Backend loadHipBackend() {
   LOAD(memsetD8Async, "hipMemsetD8Async");
   LOAD(memsetD16Async, "hipMemsetD16Async");
   LOAD(memsetD32Async, "hipMemsetD32Async");
-#if defined(__HIP__)
-  b.memsetD2D8 = reinterpret_cast<decltype(Backend::memsetD2D8)>(hipMemsetD2D8_wrap);
-  b.memsetD2D16 = reinterpret_cast<decltype(Backend::memsetD2D16)>(hipMemsetD2D16_wrap);
-  b.memsetD2D32 = reinterpret_cast<decltype(Backend::memsetD2D32)>(hipMemsetD2D32_wrap);
-  b.memsetD2D8Async = reinterpret_cast<decltype(Backend::memsetD2D8Async)>(hipMemsetD2D8Async_wrap);
-  b.memsetD2D16Async = reinterpret_cast<decltype(Backend::memsetD2D16Async)>(hipMemsetD2D16Async_wrap);
-  b.memsetD2D32Async = reinterpret_cast<decltype(Backend::memsetD2D32Async)>(hipMemsetD2D32Async_wrap);
-#else
   {
     using hipMemset2DFn = int (*)(void*, size_t, int, size_t, size_t);
     using hipMemsetD16Fn = int (*)(void*, unsigned short, size_t);
@@ -1120,7 +1000,6 @@ inline Backend loadHipBackend() {
       return 0;
     };
   }
-#endif
 
   LOAD(pointerSetAttribute, "hipPointerSetAttribute");
   LOAD(pointerGetAttribute, "hipPointerGetAttribute");
@@ -1182,20 +1061,6 @@ inline Backend loadHipBackend() {
 
 #undef LOAD
 
-#if defined(__HIP__)
-  b.moduleLoadDataEx = reinterpret_cast<decltype(Backend::moduleLoadDataEx)>(
-      hipModuleLoadDataEx_wrap);
-  b.graphAddMemcpyNode = reinterpret_cast<decltype(Backend::graphAddMemcpyNode)>(
-      hipGraphAddMemcpyNode_wrap);
-  b.deviceGetArchName = [](char* name, int maxLen, CUdevice_b device) -> CUresult_b {
-    hipDeviceProp_t prop;
-    hipError_t err = hipGetDeviceProperties(&prop, device);
-    if (err != hipSuccess) return static_cast<CUresult_b>(err);
-    int written = snprintf(name, maxLen, "%s", prop.gcnArchName);
-    if (written < 0 || written >= maxLen) return 1;
-    return 0;
-  };
-#else
   b.moduleLoadDataEx = reinterpret_cast<decltype(Backend::moduleLoadDataEx)>(
       dlsym(b.lib, "hipModuleLoadDataEx"));
   b.graphAddMemcpyNode = reinterpret_cast<decltype(Backend::graphAddMemcpyNode)>(
@@ -1223,7 +1088,6 @@ inline Backend loadHipBackend() {
     ArchNameHelper::hipLib() = b.lib;
     b.deviceGetArchName = ArchNameHelper::getArchName;
   }
-#endif
 
   b.is_cuda = 0;
   return b;

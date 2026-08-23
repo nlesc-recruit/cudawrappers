@@ -20,7 +20,7 @@
 // When CUDA headers are available (and not building for HIP), include
 // <cuda.h> to get the real CUDA types. Otherwise, define manual types
 // compatible with the backend abstraction (for HIP-only or headerless builds).
-#if __has_include(<cuda.h>) && !defined(__HIP__)
+#if __has_include(<cuda.h>)
 #include <cuda.h>
 #if !defined(CU_GRAPH_DEFAULT)
 #define CU_GRAPH_DEFAULT 0
@@ -433,12 +433,13 @@ void memcpyDtoH(void* dst, CUdeviceptr src, size_t size);
 void pointerSetAttribute(const void* value, CUpointer_attribute attribute,
                           CUdeviceptr ptr);
 
-namespace {
+// Backend currently active on this thread. Must have external linkage:
+// in an anonymous namespace each translation unit would get its own copy,
+// making a backend selected in one TU invisible in another.
 inline int& activeBackendIdx() {
   static thread_local int idx = 0;
   return idx;
 }
-} // anonymous namespace
 
 template <typename T>
 class Wrapper {
@@ -483,6 +484,10 @@ class Device : public Wrapper<CUdevice> {
  public:
   explicit Device(unsigned int ordinal);
   explicit Device(CUdevice device);
+
+  int getBackendIdx() const { return _backendIdx; }
+  bool isCuda() const;
+  static bool backendIsCuda(int backendIdx);
 
   int getAttribute(CUdevice_attribute attribute) const;
   template <CUdevice_attribute attribute>
@@ -810,7 +815,7 @@ class Stream : public Wrapper<CUstream> {
 inline void devResourceGenerateDesc(CUdevResourceDesc* phDesc,
                                     CUdevResource* resources,
                                     unsigned int nbResources) {
-  Backend& b = getBackend();
+  Backend& b = getFlavorBackend(true);
   checkCudaCall(b.devResourceGenerateDesc(
       reinterpret_cast<void**>(const_cast<CUdevResourceDesc*>(phDesc)),
       const_cast<CUdevResource*>(resources), nbResources));
@@ -818,7 +823,7 @@ inline void devResourceGenerateDesc(CUdevResourceDesc* phDesc,
 inline void devSmResourceSplitByCount(
     CUdevResource* result, unsigned int* nbGroups, const CUdevResource* input,
     CUdevResource* remaining, unsigned int useFlags, unsigned int minCount) {
-  Backend& b = getBackend();
+  Backend& b = getFlavorBackend(true);
   checkCudaCall(b.devSmResourceSplitByCount(
       result, nbGroups, input, remaining, useFlags, minCount));
 }
@@ -888,6 +893,12 @@ inline int Device::getCount(int backendIdx) {
   checkCudaCall(getBackend(backendIdx).deviceGetCount(&nrDevices));
   return nrDevices;
 }
+
+inline bool Device::backendIsCuda(int backendIdx) {
+  return getBackend(backendIdx).is_cuda != 0;
+}
+
+inline bool Device::isCuda() const { return backendIsCuda(_backendIdx); }
 
 inline int Device::getDeviceOffset(int backendIdx) {
   int offset = 0;

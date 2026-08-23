@@ -68,8 +68,13 @@ if(CUDAWRAPPERS_BACKEND_ALL)
     target_link_libraries(nvrtc_hip INTERFACE ${LINK_nvrtc_hip})
     target_include_directories(
       nvrtc_hip INTERFACE $<BUILD_INTERFACE:${CUDAWRAPPERS_INCLUDE_DIR}>
-                          $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+                           $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
     )
+
+    # Combined convenience target matching the single-backend component name
+    add_library(nvrtc INTERFACE)
+    add_library(${PROJECT_NAME}::nvrtc ALIAS nvrtc)
+    target_link_libraries(nvrtc INTERFACE nvrtc_cuda nvrtc_hip)
   endif()
 
   # cuFFT targets (header-only)
