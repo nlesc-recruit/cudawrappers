@@ -15,7 +15,16 @@
 // ============================================================================
 static int g_testDevice = 0;
 
-static int getTestDevice() { return g_testDevice; }
+static unsigned int getTestDevice() { return static_cast<unsigned int>(g_testDevice); }
+
+static cu::Context* g_ctx = nullptr;
+static cu::Context& getTestContext() {
+  if (!g_ctx) {
+    cu::Device dev(getTestDevice());
+    g_ctx = new cu::Context(0, dev);
+  }
+  return *g_ctx;
+}
 
 int main(int argc, char* argv[]) {
   // Check env var first
@@ -35,7 +44,11 @@ int main(int argc, char* argv[]) {
     }
   }
 
+  cu::init();
+  try { getTestContext().pushCurrent(); } catch (...) {}
+
   int result = Catch::Session().run(newArgc, newArgv);
+  delete g_ctx;
   delete[] newArgv;
   return result;
 }
@@ -46,7 +59,7 @@ int main(int argc, char* argv[]) {
 static int findDevice(cu::Device& dev, const char* desiredArch = nullptr) {
   int count = cu::Device::getCount();
   for (int i = 0; i < count; ++i) {
-    cu::Device d(i);
+    cu::Device d(static_cast<unsigned int>(i));
     if (desiredArch) {
       std::string arch = d.getArch();
       if (arch.find(desiredArch) != std::string::npos) {
@@ -109,6 +122,28 @@ TEST_CASE("Device: getCount", "[device]") {
   cu::init();
   int count = cu::Device::getCount();
   CHECK(count >= 1);
+}
+
+TEST_CASE("Device: debug enumeration", "[device]") {
+  cu::init();
+  int total = cu::Device::getCount();
+  WARN("Total devices: " << total);
+  for (int i = 0; i < total; ++i) {
+    try {
+      cu::Device dev(static_cast<unsigned int>(i));
+      WARN("  Device " << i << ": " << dev.getName() << " [" << dev.getArch() << "]");
+    } catch (const std::exception& e) {
+      WARN("  Device " << i << ": FAILED - " << e.what());
+    }
+  }
+  // Also try the selected test device
+  WARN("Trying getTestDevice()=" << getTestDevice());
+  try {
+    cu::Device dev(getTestDevice());
+    WARN("  getTestDevice device: " << dev.getName() << " [" << dev.getArch() << "]");
+  } catch (const std::exception& e) {
+    WARN("  getTestDevice FAILED: " << e.what());
+  }
 }
 
 TEST_CASE("Device: getName", "[device]") {

@@ -430,6 +430,13 @@ void memcpyDtoH(void* dst, CUdeviceptr src, size_t size);
 void pointerSetAttribute(const void* value, CUpointer_attribute attribute,
                           CUdeviceptr ptr);
 
+namespace {
+inline int& activeBackendIdx() {
+  static thread_local int idx = 0;
+  return idx;
+}
+} // anonymous namespace
+
 template <typename T>
 class Wrapper {
  public:
@@ -466,7 +473,7 @@ class Wrapper {
 
   T _obj{};
   std::shared_ptr<T> manager;
-  int _backendIdx{0};
+  int _backendIdx{activeBackendIdx()};
 };
 
 class Device : public Wrapper<CUdevice> {
@@ -859,16 +866,16 @@ inline const char* getErrorName(CUresult result) {
 }
 
 inline void memcpyHtoD(CUdeviceptr dst, const void* src, size_t size) {
-  checkCudaCall(getBackend(0).memcpyHtoD(dst, src, size));
+  checkCudaCall(getBackend(activeBackendIdx()).memcpyHtoD(dst, src, size));
 }
 
 inline void memcpyDtoH(void* dst, CUdeviceptr src, size_t size) {
-  checkCudaCall(getBackend(0).memcpyDtoH(dst, src, size));
+  checkCudaCall(getBackend(activeBackendIdx()).memcpyDtoH(dst, src, size));
 }
 
 inline void pointerSetAttribute(const void* value, CUpointer_attribute attribute,
                                  CUdeviceptr ptr) {
-  checkCudaCall(getBackend(0).pointerSetAttribute(value, attribute, ptr));
+  checkCudaCall(getBackend(activeBackendIdx()).pointerSetAttribute(value, attribute, ptr));
 }
 
 // --- Device ---
@@ -899,10 +906,11 @@ inline Device::Device(unsigned int ordinal) : _ordinal(ordinal) {
   int globalOffset = 0;
   for (size_t i = 0; i < getBackendCount(); ++i) {
     int count = getCount(i);
-    if (ordinal < globalOffset + count) {
+    if (ordinal < (unsigned)(globalOffset + count)) {
       _backendIdx = static_cast<int>(i);
       int localOrdinal = ordinal - globalOffset;
-      checkCudaCall(getBackend(_backendIdx).deviceGet(&_obj, localOrdinal));
+      int result = getBackend(_backendIdx).deviceGet(&_obj, localOrdinal);
+      checkCudaCall(result);
       return;
     }
     globalOffset += count;
@@ -1017,6 +1025,7 @@ inline Context::Context(int flags, Device& device) : _device(&device) {
   checkCudaCall(
       getBackend(_backendIdx).ctxCreate(ptr(), flags, device));
   int bIdx = _backendIdx;
+  activeBackendIdx() = bIdx;
   manager = std::shared_ptr<CUcontext>(new CUcontext(_obj),
                                         [bIdx](CUcontext* ptr) {
                                           if (*ptr)
@@ -1038,53 +1047,53 @@ inline unsigned Context::getApiVersion() const {
 
 inline CUfunc_cache Context::getCacheConfig() {
   int config{};
-  checkCudaCall(getBackend(0).ctxGetCacheConfig(&config));
+  int bIdx = activeBackendIdx();
+  checkCudaCall(getBackend(bIdx).ctxGetCacheConfig(&config));
   return static_cast<CUfunc_cache>(config);
 }
 
 inline void Context::setCacheConfig(CUfunc_cache config) {
-  checkCudaCall(getBackend(0).ctxSetCacheConfig(config));
+  int bIdx = activeBackendIdx();
+  checkCudaCall(getBackend(bIdx).ctxSetCacheConfig(config));
 }
 
 inline Context Context::getCurrent() {
-  for (size_t i = 0; i < getBackendCount(); ++i) {
-    CUcontext ctx{};
-    int result = getBackend(i).ctxGetCurrent(cu_backend_cast::toVoidPP(ctx));
-    if (result == CUDA_SUCCESS && ctx) {
-      Device dev(0);
-      for (size_t j = 0; j < getBackendCount(); ++j) {
-        int count = Device::getCount(j);
-        for (int ordinal = 0; ordinal < count; ordinal++) {
-          CUdevice current_device;
-          checkCudaCall(getBackend(j).deviceGet(&current_device, ordinal));
-          Device d(current_device);
-          if (d.getBackendIdx() == static_cast<int>(j)) {
-            return Context(ctx, d);
-          }
-        }
-      }
+  int activeIdx = activeBackendIdx();
+  CUcontext ctx{};
+  int result = getBackend(activeIdx).ctxGetCurrent(cu_backend_cast::toVoidPP(ctx));
+  if (result == CUDA_SUCCESS && ctx) {
+    int globalOffset = 0;
+    for (size_t j = 0; j < static_cast<size_t>(activeIdx); ++j) {
+      globalOffset += Device::getCount(j);
     }
+    Device dev(static_cast<unsigned int>(globalOffset));
+    return Context(ctx, dev);
   }
-  return Context(0, *new Device(0));
+  return Context(0, *new Device(static_cast<unsigned int>(0)));
 }
 
 inline void Context::setCurrent() const {
+  activeBackendIdx() = _backendIdx;
   checkCudaCall(getBackend(_backendIdx).ctxSetCurrent(_obj));
 }
 
 inline Context Context::popCurrent() {
-  for (size_t i = 0; i < getBackendCount(); ++i) {
-    CUcontext ctx{};
-    int result = getBackend(i).ctxPopCurrent(cu_backend_cast::toVoidPP(ctx));
-    if (result == CUDA_SUCCESS && ctx) {
-      Device dev(0);
-      return Context(ctx, dev);
+  int activeIdx = activeBackendIdx();
+  CUcontext ctx{};
+  int result = getBackend(activeIdx).ctxPopCurrent(cu_backend_cast::toVoidPP(ctx));
+  if (result == CUDA_SUCCESS && ctx) {
+    int globalOffset = 0;
+    for (size_t j = 0; j < static_cast<size_t>(activeIdx); ++j) {
+      globalOffset += Device::getCount(j);
     }
+    Device dev(static_cast<unsigned int>(globalOffset));
+    return Context(ctx, dev);
   }
-  return Context(0, *new Device(0));
+  return Context(0, *new Device(static_cast<unsigned int>(0)));
 }
 
 inline void Context::pushCurrent() {
+  activeBackendIdx() = _backendIdx;
   checkCudaCall(getBackend(_backendIdx).ctxPushCurrent(_obj));
 }
 
@@ -1099,7 +1108,11 @@ inline void Context::disablePeerAccess(Context& peerContext) {
 inline Device Context::getDevice() {
   CUdevice dev{};
   checkCudaCall(getBackend(_backendIdx).ctxGetDevice(&dev));
-  return Device(dev);
+  int globalOffset = 0;
+  for (size_t i = 0; i < static_cast<size_t>(_backendIdx); ++i) {
+    globalOffset += Device::getCount(i);
+  }
+  return Device(static_cast<unsigned int>(globalOffset + dev));
 }
 
 inline size_t Context::getFreeMemory() const {
@@ -1118,16 +1131,19 @@ inline size_t Context::getTotalMemory() const {
 
 inline size_t Context::getLimit(CUlimit limit) {
   size_t value{};
-  checkCudaCall(getBackend(0).ctxGetLimit(&value, limit));
+  int bIdx = activeBackendIdx();
+  checkCudaCall(getBackend(bIdx).ctxGetLimit(&value, limit));
   return value;
 }
 
 inline void Context::setLimit(CUlimit limit, size_t value) {
-  checkCudaCall(getBackend(0).ctxSetLimit(limit, value));
+  int bIdx = activeBackendIdx();
+  checkCudaCall(getBackend(bIdx).ctxSetLimit(limit, value));
 }
 
 inline void Context::synchronize() {
-  checkCudaCall(getBackend(0).ctxSynchronize());
+  int bIdx = activeBackendIdx();
+  checkCudaCall(getBackend(bIdx).ctxSynchronize());
 }
 
 // --- HostMemory ---

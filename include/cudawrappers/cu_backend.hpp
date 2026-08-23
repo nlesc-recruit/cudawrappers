@@ -637,53 +637,70 @@ inline Backend loadCudaBackend() {
 namespace {
 
 inline int cudaToHipDeviceAttribute(int cudaAttr) {
-  // Values from hipDeviceAttribute_t (rocclr/hip_runtime_api.h)
+  // Correct mapping from CUdevice_attribute (cuda.h) to hipDeviceAttribute_t
+  // CUDA enum values (cuda.h) vs HIP enum values (hip_runtime_api.h) differ
   switch (cudaAttr) {
-    case 1: return 1;   // hipDeviceAttributeMaxThreadsPerBlock = 1
-    case 2: return 2;   // hipDeviceAttributeMaxBlockDimX
-    case 3: return 3;   // hipDeviceAttributeMaxBlockDimY
-    case 4: return 4;   // hipDeviceAttributeMaxBlockDimZ
-    case 5: return 5;   // hipDeviceAttributeMaxGridDimX
-    case 6: return 6;   // hipDeviceAttributeMaxGridDimY
-    case 7: return 7;   // hipDeviceAttributeMaxGridDimZ
-    case 8: return 73;  // hipDeviceAttributeMaxSharedMemoryPerBlock
-    case 9: return 5;   // COMPUTE_MODE → hipDeviceAttributeTotalConstantMemory
-    case 10: return 86; // hipDeviceAttributeWarpSize
-    case 11: return 57; // hipDeviceAttributeMaxPitch
-    case 12: return 70; // hipDeviceAttributeMaxRegistersPerBlock
-    case 13: return 4;  // hipDeviceAttributeClockRate
-    case 14: return 80; // hipDeviceAttributeTextureAlignment
-    case 15: return 17; // hipDeviceAttributeKernelExecTimeout
-    case 16: return 62; // hipDeviceAttributeMultiprocessorCount
-    case 18: return 15; // hipDeviceAttributeIntegrated
-    case 31: return 255;// hipDeviceAttributeEccEnabled
-    case 32: return 1;  // hipDeviceAttributeAsyncEngineCount
-    case 33: return 66; // hipDeviceAttributePciBusId
-    case 34: return 67; // hipDeviceAttributePciDeviceId
-    case 35: return 68; // hipDeviceAttributePciDomainID
-    case 36: return 59; // hipDeviceAttributeMemoryClockRate
-    case 37: return 58; // hipDeviceAttributeMemoryBusWidth
-    case 38: return 18; // hipDeviceAttributeL2CacheSize
-    case 39: return 23; // hipDeviceAttributeManagedMemory
-    case 40: return 8;  // hipDeviceAttributeConcurrentManagedAccess
-    case 42: return 14; // hipDeviceAttributeHostNativeAtomicSupported
-    case 43: return 13; // hipDeviceAttributeGlobalL1CacheSupported
-    case 44: return 19; // hipDeviceAttributeLocalL1CacheSupported
-    case 45: return 71; // hipDeviceAttributeMaxRegistersPerMultiprocessor
-    case 46: return 92; // hipDeviceAttributeSharedMemPerMultiprocessor
-    case 47: return 56; // hipDeviceAttributeMaxThreadsPerMultiProcessor
-    case 48: return 72; // hipDeviceAttributeMaxBlocksPerMultiProcessor
-    case 51: return 51; // hipDeviceAttributeTccDriver
-    case 53: return 3;  // hipDeviceAttributeCanUseHostPointerForRegisteredMem
-    case 54: return 6;  // hipDeviceAttributeIsMultiGpuBoard
-    case 56: return 20; // hipDeviceAttributeDirectManagedMemAccessFromHost
-    case 58: return 63; // hipDeviceAttributePageableMemoryAccess
-    case 59: return 64; // hipDeviceAttributePageableMemoryAccessUsesHostPageTables
-    case 67: return 87; // hipDeviceAttributeMemoryPoolsSupported
-    case 68: return 6;  // hipDeviceAttributeComputePreemptionSupported
-    case 75: return 23; // hipDeviceAttributeComputeCapabilityMajor
-    case 76: return 61; // hipDeviceAttributeComputeCapabilityMinor
-    default: return cudaAttr;  // pass through as-is
+    case 1: return 56;  // MAX_THREADS_PER_BLOCK → hipDeviceAttributeMaxThreadsPerBlock
+    case 2: return 26;  // MAX_BLOCK_DIM_X → hipDeviceAttributeMaxBlockDimX
+    case 3: return 27;  // MAX_BLOCK_DIM_Y → hipDeviceAttributeMaxBlockDimY
+    case 4: return 28;  // MAX_BLOCK_DIM_Z → hipDeviceAttributeMaxBlockDimZ
+    case 5: return 29;  // MAX_GRID_DIM_X → hipDeviceAttributeMaxGridDimX
+    case 6: return 30;  // MAX_GRID_DIM_Y → hipDeviceAttributeMaxGridDimY
+    case 7: return 31;  // MAX_GRID_DIM_Z → hipDeviceAttributeMaxGridDimZ
+    case 8: return 74;  // MAX_SHARED_MEMORY_PER_BLOCK → hipDeviceAttributeMaxSharedMemoryPerBlock
+    case 9: return 83;  // TOTAL_CONSTANT_MEMORY → hipDeviceAttributeTotalConstantMemory
+    case 10: return 87; // WARP_SIZE → hipDeviceAttributeWarpSize
+    case 11: return 58; // MAX_PITCH → hipDeviceAttributeMaxPitch
+    case 12: return 71; // MAX_REGISTERS_PER_BLOCK → hipDeviceAttributeMaxRegistersPerBlock
+    case 13: return 5;  // CLOCK_RATE → hipDeviceAttributeClockRate
+    case 14: return 81; // TEXTURE_ALIGNMENT → hipDeviceAttributeTextureAlignment
+    case 15: return 12; // GPU_OVERLAP (deprecated) → hipDeviceAttributeDeviceOverlap
+    case 16: return 63; // MULTIPROCESSOR_COUNT → hipDeviceAttributeMultiprocessorCount
+    case 17: return 18; // KERNEL_EXEC_TIMEOUT → hipDeviceAttributeKernelExecTimeout
+    case 18: return 16; // INTEGRATED → hipDeviceAttributeIntegrated
+    case 19: return 3;  // CAN_MAP_HOST_MEMORY → hipDeviceAttributeCanMapHostMemory
+    case 20: return 6;  // COMPUTE_MODE → hipDeviceAttributeComputeMode
+    case 30: return 79; // SURFACE_ALIGNMENT → hipDeviceAttributeSurfaceAlignment
+    case 31: return 8;  // CONCURRENT_KERNELS → hipDeviceAttributeConcurrentKernels
+    case 32: return 0;  // ECC_ENABLED → hipDeviceAttributeEccEnabled
+    case 33: return 67; // PCI_BUS_ID → hipDeviceAttributePciBusId
+    case 34: return 68; // PCI_DEVICE_ID → hipDeviceAttributePciDeviceId
+    case 35: return 80; // TCC_DRIVER → hipDeviceAttributeTccDriver
+    case 36: return 60; // MEMORY_CLOCK_RATE → hipDeviceAttributeMemoryClockRate
+    case 37: return 59; // GLOBAL_MEMORY_BUS_WIDTH → hipDeviceAttributeMemoryBusWidth
+    case 38: return 19; // L2_CACHE_SIZE → hipDeviceAttributeL2CacheSize
+    case 39: return 57; // MAX_THREADS_PER_MULTIPROCESSOR → hipDeviceAttributeMaxThreadsPerMultiProcessor
+    case 40: return 2;  // ASYNC_ENGINE_COUNT → hipDeviceAttributeAsyncEngineCount
+    case 41: return 85; // UNIFIED_ADDRESSING → hipDeviceAttributeUnifiedAddressing
+    case 44: return 45; // CAN_TEX2D_GATHER → hipDeviceAttributeMaxTexture2DGather (deprecated)
+    case 50: return 69; // PCI_DOMAIN_ID → hipDeviceAttributePciDomainId
+    case 51: return 82; // TEXTURE_PITCH_ALIGNMENT → hipDeviceAttributeTexturePitchAlignment
+    case 68: return 7;  // COMPUTE_PREEMPTION_SUPPORTED → hipDeviceAttributeComputePreemptionSupported
+    case 75: return 23; // COMPUTE_CAPABILITY_MAJOR → hipDeviceAttributeComputeCapabilityMajor
+    case 76: return 61; // COMPUTE_CAPABILITY_MINOR → hipDeviceAttributeComputeCapabilityMinor
+    case 78: return 78; // STREAM_PRIORITIES_SUPPORTED → hipDeviceAttributeStreamPrioritiesSupported
+    case 81: return 76; // MAX_SHARED_MEMORY_PER_MULTIPROCESSOR → hipDeviceAttributeSharedMemPerMultiprocessor
+    case 82: return 72; // MAX_REGISTERS_PER_MULTIPROCESSOR → hipDeviceAttributeMaxRegistersPerMultiprocessor
+    case 83: return 24; // MANAGED_MEMORY → hipDeviceAttributeManagedMemory
+    case 84: return 17; // MULTI_GPU_BOARD → hipDeviceAttributeIsMultiGpuBoard
+    case 85: return 62; // MULTI_GPU_BOARD_GROUP_ID → hipDeviceAttributeMultiGpuBoardGroupID
+    case 86: return 15; // HOST_NATIVE_ATOMIC_SUPPORTED → hipDeviceAttributeHostNativeAtomicSupported
+    case 87: return 77; // SINGLE_TO_DOUBLE_PRECISION_PERF_RATIO → hipDeviceAttributeSingleToDoublePrecisionPerfRatio
+    case 88: return 65; // PAGEABLE_MEMORY_ACCESS → hipDeviceAttributePageableMemoryAccess
+    case 89: return 9;  // CONCURRENT_MANAGED_ACCESS → hipDeviceAttributeConcurrentManagedAccess
+    case 90: return 7;  // COMPUTE_PREEMPTION_SUPPORTED → hipDeviceAttributeComputePreemptionSupported
+    case 91: return 4;  // CAN_USE_HOST_POINTER_FOR_REGISTERED_MEM → hipDeviceAttributeCanUseHostPointerForRegisteredMem
+    case 95: return 10; // COOPERATIVE_LAUNCH → hipDeviceAttributeCooperativeLaunch
+    case 96: return 11; // COOPERATIVE_MULTI_DEVICE_LAUNCH → hipDeviceAttributeCooperativeMultiDeviceLaunch
+    case 97: return 75; // MAX_SHARED_MEMORY_PER_BLOCK_OPTIN → hipDeviceAttributeSharedMemPerBlockOptin
+    case 99: return 90; // HOST_REGISTER_SUPPORTED → hipDeviceAttributeHostRegisterSupported
+    case 100: return 66; // PAGEABLE_MEMORY_ACCESS_USES_HOST_PAGE_TABLES → hipDeviceAttributePageableMemoryAccessUsesHostPageTables
+    case 101: return 13; // DIRECT_MANAGED_MEM_ACCESS_FROM_HOST → hipDeviceAttributeDirectManagedMemAccessFromHost
+    case 103: return 91; // HANDLE_TYPE_POSIX_FILE_DESCRIPTOR_SUPPORTED → hipDeviceAttributeMemoryPoolSupportedHandleTypes
+    case 106: return 25; // MAX_BLOCKS_PER_MULTIPROCESSOR → hipDeviceAttributeMaxBlocksPerMultiProcessor
+    case 111: return 73; // RESERVED_SHARED_MEMORY_PER_BLOCK → hipDeviceAttributeReservedSharedMemPerBlock
+    case 115: return 88; // MEMORY_POOLS_SUPPORTED → hipDeviceAttributeMemoryPoolsSupported
+    default: return cudaAttr; // pass through as-is for unknown attributes
   }
 }
 
@@ -903,9 +920,6 @@ inline Backend loadHipBackend() {
   LOAD(deviceSetGraphMemAttribute, "hipDeviceSetGraphMemAttribute");
   LOAD(deviceGetExecAffinitySupport, "hipDeviceGetExecAffinitySupport");
 
-  LOAD(ctxCreate, "hipCtxCreate");
-  LOAD(ctxDestroy, "hipCtxDestroy");
-  LOAD(ctxGetApiVersion, "hipCtxGetApiVersion");
   LOAD(ctxGetCacheConfig, "hipCtxGetCacheConfig");
   LOAD(ctxSetCacheConfig, "hipCtxSetCacheConfig");
   LOAD(ctxGetCurrent, "hipCtxGetCurrent");
@@ -915,9 +929,48 @@ inline Backend loadHipBackend() {
   LOAD(ctxEnablePeerAccess, "hipCtxEnablePeerAccess");
   LOAD(ctxDisablePeerAccess, "hipCtxDisablePeerAccess");
   LOAD(ctxGetDevice, "hipCtxGetDevice");
+  LOAD(ctxGetApiVersion, "hipCtxGetApiVersion");
   LOAD(ctxGetLimit, "hipDeviceGetLimit");
   LOAD(ctxSetLimit, "hipDeviceSetLimit");
-  LOAD(ctxSynchronize, "hipCtxSynchronize");
+
+  {
+    using PrimaryCtxRetainFn = int (*)(void**, int);
+    using PrimaryCtxReleaseFn = int (*)(int);
+    using DeviceSynchronizeFn = int (*)();
+    using DeviceGetCacheConfigFn = int (*)(int*);
+    using DeviceSetCacheConfigFn = int (*)(int);
+
+    static PrimaryCtxRetainFn hipPrimaryCtxRetain =
+        reinterpret_cast<PrimaryCtxRetainFn>(dlsym(b.lib, "hipDevicePrimaryCtxRetain"));
+    static PrimaryCtxReleaseFn hipPrimaryCtxRelease =
+        reinterpret_cast<PrimaryCtxReleaseFn>(dlsym(b.lib, "hipDevicePrimaryCtxRelease"));
+    static DeviceSynchronizeFn hipDeviceSynchronize =
+        reinterpret_cast<DeviceSynchronizeFn>(dlsym(b.lib, "hipDeviceSynchronize"));
+    static DeviceGetCacheConfigFn hipDeviceGetCacheConfig =
+        reinterpret_cast<DeviceGetCacheConfigFn>(dlsym(b.lib, "hipDeviceGetCacheConfig"));
+    static DeviceSetCacheConfigFn hipDeviceSetCacheConfig =
+        reinterpret_cast<DeviceSetCacheConfigFn>(dlsym(b.lib, "hipDeviceSetCacheConfig"));
+
+    b.ctxCreate = [](void** ctx, unsigned int /*flags*/, int device) -> CUresult_b {
+      if (!hipPrimaryCtxRetain) return 1;
+      return hipPrimaryCtxRetain(ctx, device);
+    };
+    b.ctxDestroy = [](void* /*ctx*/) -> CUresult_b {
+      return 0;
+    };
+    b.ctxSynchronize = []() -> CUresult_b {
+      if (!hipDeviceSynchronize) return 1;
+      return hipDeviceSynchronize();
+    };
+    b.ctxGetCacheConfig = [](int* config) -> CUresult_b {
+      if (!hipDeviceGetCacheConfig) return 1;
+      return hipDeviceGetCacheConfig(config);
+    };
+    b.ctxSetCacheConfig = [](int config) -> CUresult_b {
+      if (!hipDeviceSetCacheConfig) return 1;
+      return hipDeviceSetCacheConfig(config);
+    };
+  }
 
   LOAD(memAlloc, "hipMalloc");
   LOAD(memAllocManaged, "hipMallocManaged");
@@ -952,6 +1005,81 @@ inline Backend loadHipBackend() {
   b.memsetD2D8Async = reinterpret_cast<decltype(Backend::memsetD2D8Async)>(hipMemsetD2D8Async_wrap);
   b.memsetD2D16Async = reinterpret_cast<decltype(Backend::memsetD2D16Async)>(hipMemsetD2D16Async_wrap);
   b.memsetD2D32Async = reinterpret_cast<decltype(Backend::memsetD2D32Async)>(hipMemsetD2D32Async_wrap);
+#else
+  {
+    using hipMemset2DFn = int (*)(void*, size_t, int, size_t, size_t);
+    using hipMemsetD16Fn = int (*)(void*, unsigned short, size_t);
+    using hipMemsetD32Fn = int (*)(void*, unsigned int, size_t);
+    using hipMemset2DAsyncFn = int (*)(void*, size_t, int, size_t, size_t, void*);
+    using hipMemsetD16AsyncFn = int (*)(void*, unsigned short, size_t, void*);
+    using hipMemsetD32AsyncFn = int (*)(void*, unsigned int, size_t, void*);
+
+    static hipMemset2DFn rawMemset2D =
+        reinterpret_cast<hipMemset2DFn>(dlsym(b.lib, "hipMemset2D"));
+    static hipMemsetD16Fn rawMemsetD16 =
+        reinterpret_cast<hipMemsetD16Fn>(dlsym(b.lib, "hipMemsetD16"));
+    static hipMemsetD32Fn rawMemsetD32 =
+        reinterpret_cast<hipMemsetD32Fn>(dlsym(b.lib, "hipMemsetD32"));
+    static hipMemset2DAsyncFn rawMemset2DAsync =
+        reinterpret_cast<hipMemset2DAsyncFn>(dlsym(b.lib, "hipMemset2DAsync"));
+    static hipMemsetD16AsyncFn rawMemsetD16Async =
+        reinterpret_cast<hipMemsetD16AsyncFn>(dlsym(b.lib, "hipMemsetD16Async"));
+    static hipMemsetD32AsyncFn rawMemsetD32Async =
+        reinterpret_cast<hipMemsetD32AsyncFn>(dlsym(b.lib, "hipMemsetD32Async"));
+
+    b.memsetD2D8 = [](CUdeviceptr_b dst, size_t pitch, unsigned char value,
+                       size_t width, size_t height) -> CUresult_b {
+      if (!rawMemset2D) return 1;
+      return rawMemset2D(reinterpret_cast<void*>(dst), pitch, value, width, height);
+    };
+    b.memsetD2D16 = [](CUdeviceptr_b dst, size_t pitch, unsigned short value,
+                        size_t width, size_t height) -> CUresult_b {
+      for (size_t row = 0; row < height; ++row) {
+        if (!rawMemsetD16) return 1;
+        int err = rawMemsetD16(reinterpret_cast<void*>(dst + row * pitch), value, width);
+        if (err != 0) return err;
+      }
+      return 0;
+    };
+    b.memsetD2D32 = [](CUdeviceptr_b dst, size_t pitch, unsigned int value,
+                        size_t width, size_t height) -> CUresult_b {
+      for (size_t row = 0; row < height; ++row) {
+        if (!rawMemsetD32) return 1;
+        int err = rawMemsetD32(reinterpret_cast<void*>(dst + row * pitch), value, width);
+        if (err != 0) return err;
+      }
+      return 0;
+    };
+    b.memsetD2D8Async = [](CUdeviceptr_b dst, size_t pitch, unsigned char value,
+                            size_t width, size_t height,
+                            CUstream_b stream) -> CUresult_b {
+      if (!rawMemset2DAsync) return 1;
+      return rawMemset2DAsync(reinterpret_cast<void*>(dst), pitch, value, width,
+                              height, reinterpret_cast<void*>(stream));
+    };
+    b.memsetD2D16Async = [](CUdeviceptr_b dst, size_t pitch, unsigned short value,
+                             size_t width, size_t height,
+                             CUstream_b stream) -> CUresult_b {
+      for (size_t row = 0; row < height; ++row) {
+        if (!rawMemsetD16Async) return 1;
+        int err = rawMemsetD16Async(reinterpret_cast<void*>(dst + row * pitch),
+                                    value, width, reinterpret_cast<void*>(stream));
+        if (err != 0) return err;
+      }
+      return 0;
+    };
+    b.memsetD2D32Async = [](CUdeviceptr_b dst, size_t pitch, unsigned int value,
+                             size_t width, size_t height,
+                             CUstream_b stream) -> CUresult_b {
+      for (size_t row = 0; row < height; ++row) {
+        if (!rawMemsetD32Async) return 1;
+        int err = rawMemsetD32Async(reinterpret_cast<void*>(dst + row * pitch),
+                                    value, width, reinterpret_cast<void*>(stream));
+        if (err != 0) return err;
+      }
+      return 0;
+    };
+  }
 #endif
 
   LOAD(pointerSetAttribute, "hipPointerSetAttribute");
