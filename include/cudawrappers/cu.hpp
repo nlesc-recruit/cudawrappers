@@ -284,10 +284,13 @@ struct CUmemLocation {
 
 struct CUmemAllocationProp {
   int type;
+  int allocType;
   int handleTypes;
   CUmemLocation location;
   size_t allocGranularity;
   int flags;
+  size_t bytesize;
+  CUdeviceptr dptr;
 };
 
 struct CUdevResource {

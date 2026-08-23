@@ -710,6 +710,8 @@ inline int cudaToHipDeviceAttribute(int cudaAttr) {
 
 #if defined(__HIP__)
 
+#include <hip/hip_runtime.h>
+
 namespace {
 
 inline int hipModuleLoadDataEx_wrap(CUmodule_b* module, const void* image,
