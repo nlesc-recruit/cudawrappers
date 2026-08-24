@@ -27,9 +27,11 @@
 #include <cudawrappers/config.h>
 #include <cudawrappers/cu.hpp>
 
-namespace {
-std::vector<std::string> tokenize(const std::string &input,
-                                  const std::string &delimiter) {
+namespace nvrtc {
+namespace detail {
+
+inline std::vector<std::string> tokenize(const std::string &input,
+                                         const std::string &delimiter) {
   std::string s = input;
   size_t pos = 0;
   std::vector<std::string> tokens;
@@ -43,7 +45,7 @@ std::vector<std::string> tokenize(const std::string &input,
 }
 
 // Load the NVRTC builtins library, required by libnvrtc on some systems.
-void loadNvrtcBuiltins() {
+inline void loadNvrtcBuiltins() {
   if (!dlopen("libnvrtc-builtins.so", RTLD_LAZY) &&
       !dlopen("libnvrtc-builtins.so.13", RTLD_LAZY) &&
       !dlopen("libnvrtc-builtins.so.12", RTLD_LAZY)) {
@@ -76,7 +78,7 @@ struct RtcApi {
 };
 
 template <typename T>
-static T dlsymOrThrow(void *lib, const char *name) {
+T dlsymOrThrow(void *lib, const char *name) {
   void *sym = dlsym(lib, name);
   if (!sym) throw std::runtime_error(std::string("nvrtc: cannot resolve ") +
                                      name);
@@ -165,7 +167,8 @@ inline const RtcApi &RtcApi::get(bool isHip) {
   static RtcApi api = Instance::make(false);
   return api;
 }
-}  // namespace
+}  // namespace detail
+}  // namespace nvrtc
 
 namespace nvrtc {
 class Error : public std::exception {
@@ -175,7 +178,7 @@ class Error : public std::exception {
 
   const char *what() const noexcept {
     try {
-      const RtcApi &api = RtcApi::get(_isHip);
+      const detail::RtcApi &api = detail::RtcApi::get(_isHip);
       if (api.getErrorString) return api.getErrorString(_result);
     } catch (...) {
     }
@@ -194,11 +197,11 @@ inline void checkNvrtcCall(int result, bool isHip) {
 }
 
 inline std::vector<std::string> cudaIncludePaths() {
-  return tokenize(CUDA_INCLUDE_DIRS, ";");
+  return detail::tokenize(CUDA_INCLUDE_DIRS, ";");
 }
 
 inline std::vector<std::string> hipIncludePaths() {
-  return tokenize(HIP_INCLUDE_DIRS, ";");
+  return detail::tokenize(HIP_INCLUDE_DIRS, ";");
 }
 
 // Deprecated: returns the paths of the compile-time default backend.
@@ -234,7 +237,7 @@ class Program {
   Program(const std::string &src, const std::string &name,
           const std::vector<std::string> &headers,
           const std::vector<std::string> &includeNames, int backendIdx = -1)
-      : api(RtcApi::get(resolveIsHip(backendIdx))) {
+      : api(detail::RtcApi::get(resolveIsHip(backendIdx))) {
     std::vector<const char *> c_headers;
     std::transform(headers.begin(), headers.end(),
                    std::back_inserter(c_headers),
@@ -253,7 +256,7 @@ class Program {
   }
 
   explicit Program(const std::string &filename, int backendIdx = -1)
-      : api(RtcApi::get(resolveIsHip(backendIdx))) {
+      : api(detail::RtcApi::get(resolveIsHip(backendIdx))) {
     std::ifstream ifs(filename);
     if (!ifs.is_open()) {
       throw std::runtime_error("Error opening file '" + filename +
@@ -338,7 +341,7 @@ class Program {
     return !cu::Device::backendIsCuda(backendIdx);
   }
 
-  const RtcApi &api;
+  const detail::RtcApi &api;
   void *program{nullptr};
 };
 }  // namespace nvrtc
