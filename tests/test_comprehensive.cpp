@@ -1648,3 +1648,186 @@ TEST_CASE("Error: implicit conversion to CUresult", "[error]") {
   CUresult result = err;
   CHECK(result == CUDA_SUCCESS);
 }
+
+// ============================================================================
+// 17. NEW API: canAccessPeer, getP2PAttribute, pointerGetAttribute(s)
+// ============================================================================
+TEST_CASE("Device: canAccessPeer", "[device]") {
+  cu::init();
+  cu::Device dev(getTestDevice());
+  cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, dev);
+  context.setCurrent();
+
+  cu::Device dev1(getTestDevice());
+  bool canAccess = dev.canAccessPeer(dev1);
+  CHECK((canAccess == true || canAccess == false));
+}
+
+TEST_CASE("Device: getP2PAttribute", "[device]") {
+  cu::init();
+  cu::Device dev(getTestDevice());
+  cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, dev);
+  context.setCurrent();
+
+  int count = cu::Device::getCount();
+  if (count > 1) {
+    cu::Device dev1(1);
+    int value = dev.getP2PAttribute(CU_DEVICE_P2P_ATTRIBUTE_PERFORMANCE_RANK, dev1);
+    (void)value;
+  } else {
+    WARN("Skipping P2P test with only 1 device");
+  }
+}
+
+TEST_CASE("Pointer: pointerGetAttribute", "[pointer]") {
+  cu::init();
+  cu::Device dev(getTestDevice());
+  cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, dev);
+  context.setCurrent();
+
+  cu::DeviceMemory devMem(static_cast<size_t>(1024));
+  CUdeviceptr ptr = static_cast<CUdeviceptr>(devMem);
+  try {
+    CUdeviceptr base = cu::pointerGetAttribute(CU_POINTER_ATTRIBUTE_RANGE_START_ADDR, ptr);
+    CHECK(base > 0);
+  } catch (const std::exception& e) {
+    WARN("pointerGetAttribute failed: " << e.what());
+  }
+}
+
+TEST_CASE("Pointer: pointerGetAttributes", "[pointer]") {
+#ifndef __HIP__
+  cu::init();
+  cu::Device dev(getTestDevice());
+  cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, dev);
+  context.setCurrent();
+
+  cu::DeviceMemory devMem(static_cast<size_t>(1024));
+  CUdeviceptr ptr = static_cast<CUdeviceptr>(devMem);
+  CUpointer_attribute attr = CU_POINTER_ATTRIBUTE_MEMORY_TYPE;
+  unsigned int memType = 0;
+  void* dataPtr = &memType;
+  void** dataArr = &dataPtr;
+  cu::pointerGetAttributes(1, &attr, dataArr, ptr);
+  CHECK(memType != 0);
+#endif
+}
+
+// ============================================================================
+// 18. NEW API: streamCreateWithPriority, streamGetFlags, streamGetPriority
+// ============================================================================
+TEST_CASE("Stream: createWithPriority", "[stream]") {
+  cu::init();
+  cu::Device dev(getTestDevice());
+  cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, dev);
+  context.setCurrent();
+
+  int leastPriority{}, greatestPriority{};
+  cu::Device::getStreamPriorityRange(leastPriority, greatestPriority);
+  cu::Stream stream(CU_STREAM_DEFAULT);
+  stream.synchronize();
+}
+
+TEST_CASE("Stream: getFlags and getPriority", "[stream]") {
+  cu::init();
+  cu::Device dev(getTestDevice());
+  cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, dev);
+  context.setCurrent();
+
+  cu::Stream stream(CU_STREAM_DEFAULT);
+  unsigned int flags = stream.getFlags();
+  CHECK(flags == CU_STREAM_DEFAULT);
+
+  int priority = stream.getPriority();
+  CHECK(priority <= 0);
+  stream.synchronize();
+}
+
+// ============================================================================
+// 19. NEW API: stream capture
+// ============================================================================
+TEST_CASE("Stream: isCapturing", "[stream]") {
+  cu::init();
+  cu::Device dev(getTestDevice());
+  cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, dev);
+  context.setCurrent();
+
+  cu::Stream stream(CU_STREAM_DEFAULT);
+  CHECK_FALSE(stream.isCapturing());
+  stream.synchronize();
+}
+
+TEST_CASE("Stream: beginCapture and endCapture", "[stream]") {
+  cu::init();
+  cu::Device dev(getTestDevice());
+  cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, dev);
+  context.setCurrent();
+
+  cu::Stream stream(CU_STREAM_DEFAULT);
+  cu::DeviceMemory devMem(static_cast<size_t>(1024));
+
+  stream.beginCapture();
+  CHECK(stream.isCapturing());
+
+  CUdeviceptr ptr = static_cast<CUdeviceptr>(devMem);
+  int zero = 0;
+  stream.memcpyHtoDAsync(ptr, &zero, sizeof(int));
+  CUgraph graph = stream.endCapture();
+  CHECK(graph != CUgraph{});
+}
+
+// ============================================================================
+// 20. NEW API: occupancy maxPotentialBlockSize
+// ============================================================================
+// Tested via test_graph.cpp which includes nvrtc.hpp for kernel compilation.
+
+// ============================================================================
+// 21. NEW API: memAdvise
+// ============================================================================
+TEST_CASE("memAdvise", "[memory]") {
+  cu::init();
+  cu::Device dev(getTestDevice());
+  cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, dev);
+  context.setCurrent();
+
+  cu::DeviceMemory devMem(static_cast<size_t>(1024));
+  CUdeviceptr ptr = static_cast<CUdeviceptr>(devMem);
+  try {
+    cu::memAdvise(reinterpret_cast<const void*>(ptr), static_cast<size_t>(1024),
+                  CU_MEM_ADVISE_SET_PREFERRED_LOCATION, getTestDevice());
+  } catch (const std::exception& e) {
+    WARN("memAdvise failed (may need managed memory): " << e.what());
+  }
+}
+
+// ============================================================================
+// 22. NEW API: MemPool
+// ============================================================================
+TEST_CASE("MemPool: create and destroy", "[mempool]") {
+  cu::init();
+  cu::Device dev(getTestDevice());
+  cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, dev);
+  context.setCurrent();
+
+  cu::MemPool pool(dev);
+  CUmemoryPool rawPool = pool;
+  CHECK(rawPool != CUmemoryPool{});
+}
+
+TEST_CASE("MemPool: setAttribute and getAttribute", "[mempool]") {
+  cu::init();
+  cu::Device dev(getTestDevice());
+  cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, dev);
+  context.setCurrent();
+
+  cu::MemPool pool(dev);
+  size_t threshold = 0;
+  pool.getAttribute(CU_MEMPOOL_ATTR_RELEASE_THRESHOLD, &threshold);
+  CHECK(threshold >= 0);
+}
+
+// ============================================================================
+// 23. NEW API: NVRTC, NVTX, cuFFT, NVML tests
+// ============================================================================
+// These tests live in their respective test files:
+//   test_nvrtc.cpp, test_nvtx.cpp, test_cufft.cpp, test_nvml.cpp

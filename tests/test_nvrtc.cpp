@@ -115,3 +115,14 @@ TEST_CASE("Test nvrtc::findIncludePaths", "[helper]") {
 
   CHECK(non_empty_paths > 0);
 }
+
+TEST_CASE("Test nvrtc::version", "[version]") {
+  auto [major, minor] = nvrtc::version();
+  CHECK(major >= 0);
+  CHECK(minor >= 0);
+}
+
+TEST_CASE("Test nvrtc::getSupportedArchs", "[archs]") {
+  auto archs = nvrtc::getSupportedArchs();
+  CHECK(archs.size() > 0);
+}

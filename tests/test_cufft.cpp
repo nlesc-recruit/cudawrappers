@@ -257,3 +257,14 @@ TEST_CASE("Test erorr messages", "[Error]") {
                     "CUFFT_ALLOC_FAILED");
 #endif
 }
+
+TEST_CASE("Test 3D FFT", "[FFT3D]") {
+  cu::init();
+  cu::Device device(0);
+  cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, device);
+  cu::Stream stream;
+
+  cufft::FFT3D<CUDA_C_32F> fft(16, 16, 16);
+  size_t ws = fft.getSize();
+  CHECK(ws > 0);
+}

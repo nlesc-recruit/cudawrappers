@@ -217,7 +217,7 @@ struct Backend {
 
   CUresult_b (*pointerSetAttribute)(const void*, int, CUdeviceptr_b);
   CUresult_b (*pointerGetAttribute)(void*, int, CUdeviceptr_b);
-  CUresult_b (*pointerGetAttributes)(void*, int, CUdeviceptr_b);
+  CUresult_b (*pointerGetAttributes)(unsigned int, const int*, void**, CUdeviceptr_b);
 
   CUresult_b (*arrayCreate)(void**, void*);
   CUresult_b (*array3DCreate)(void**, void*);
@@ -311,6 +311,30 @@ struct Backend {
   CUresult_b (*devResourceGenerateDesc)(void**, void*, unsigned int);
   CUresult_b (*devSmResourceSplitByCount)(void*, unsigned int*, const void*,
                                            void*, unsigned int, unsigned int);
+
+  CUresult_b (*streamBeginCapture)(CUstream_b, unsigned int);
+  CUresult_b (*streamEndCapture)(CUstream_b, CUgraph_b*);
+  CUresult_b (*streamIsCapturing)(CUstream_b, int*);
+  CUresult_b (*streamBeginCaptureToGraph)(CUstream_b, CUgraph_b,
+                                          const CUgraphNode_b*, size_t,
+                                          unsigned int);
+
+  CUresult_b (*occupancyMaxPotentialBlockSize)(int*, int*, void*, size_t,
+                                                int, int);
+
+  CUresult_b (*memPoolCreate)(void**, const void*);
+  CUresult_b (*memPoolDestroy)(void*);
+  CUresult_b (*memPoolSetAttribute)(void*, int, const void*);
+  CUresult_b (*memPoolGetAttribute)(void*, int, void*);
+  CUresult_b (*memAllocFromPoolAsync)(CUdeviceptr_b*, size_t, void*);
+  CUresult_b (*memPoolExportToShareableHandle)(void*, void**, void*, unsigned long long);
+  CUresult_b (*memPoolImportFromShareableHandle)(void**, void*, void*, unsigned long long);
+  CUresult_b (*memPoolExportPointer)(void*, CUdeviceptr_b);
+  CUresult_b (*memPoolImportPointer)(CUdeviceptr_b*, void**, void*);
+
+  CUresult_b (*memAdvise)(const void*, size_t, int, int);
+
+  CUresult_b (*deviceGetStreamPriorityRange)(int*, int*);
 
   int is_cuda;
 };
@@ -608,6 +632,27 @@ inline Backend loadCudaBackend() {
 
   LOAD(devResourceGenerateDesc, "cuDevResourceGenerateDesc");
   LOAD(devSmResourceSplitByCount, "cuDevSmResourceSplitByCount");
+
+  LOAD(streamBeginCapture, "cuStreamBeginCapture");
+  LOAD(streamEndCapture, "cuStreamEndCapture");
+  LOAD(streamIsCapturing, "cuStreamIsCapturing");
+  LOAD(streamBeginCaptureToGraph, "cuStreamBeginCaptureToGraph");
+
+  LOAD(occupancyMaxPotentialBlockSize, "cuOccupancyMaxPotentialBlockSize");
+
+  LOAD(memPoolCreate, "cuMemPoolCreate");
+  LOAD(memPoolDestroy, "cuMemPoolDestroy");
+  LOAD(memPoolSetAttribute, "cuMemPoolSetAttribute");
+  LOAD(memPoolGetAttribute, "cuMemPoolGetAttribute");
+  LOAD(memAllocFromPoolAsync, "cuMemAllocFromPoolAsync");
+  LOAD(memPoolExportToShareableHandle, "cuMemPoolExportToShareableHandle");
+  LOAD(memPoolImportFromShareableHandle, "cuMemPoolImportFromShareableHandle");
+  LOAD(memPoolExportPointer, "cuMemPoolExportPointer");
+  LOAD(memPoolImportPointer, "cuMemPoolImportPointer");
+
+  LOAD(memAdvise, "cuMemAdvise");
+
+  LOAD(deviceGetStreamPriorityRange, "cuCtxGetStreamPriorityRange");
 
 #undef LOAD
 
@@ -1003,7 +1048,8 @@ inline Backend loadHipBackend() {
 
   LOAD(pointerSetAttribute, "hipPointerSetAttribute");
   LOAD(pointerGetAttribute, "hipPointerGetAttribute");
-  LOAD(pointerGetAttributes, "hipPointerGetAttributes");
+  // pointerGetAttributes: HIP signature differs (hipPointerGetAttributes(hipPointerAttribute_t*, const void*)).
+  // Only loaded for CUDA.
 
   LOAD(arrayCreate, "hipArrayCreate");
   LOAD(array3DCreate, "hipArray3DCreate");
@@ -1058,6 +1104,27 @@ inline Backend loadHipBackend() {
       hipLaunchCooperativeKernelWrapper);
 
   LOAD(getExportTable, "hipGetExportTable");
+
+  LOAD(streamBeginCapture, "hipStreamBeginCapture");
+  LOAD(streamEndCapture, "hipStreamEndCapture");
+  LOAD(streamIsCapturing, "hipStreamIsCapturing");
+  LOAD(streamBeginCaptureToGraph, "hipStreamBeginCaptureToGraph");
+
+  LOAD(occupancyMaxPotentialBlockSize, "hipModuleOccupancyMaxPotentialBlockSize");
+
+  LOAD(memPoolCreate, "hipMemPoolCreate");
+  LOAD(memPoolDestroy, "hipMemPoolDestroy");
+  LOAD(memPoolSetAttribute, "hipMemPoolSetAttribute");
+  LOAD(memPoolGetAttribute, "hipMemPoolGetAttribute");
+  LOAD(memAllocFromPoolAsync, "hipMallocFromPoolAsync");
+  LOAD(memPoolExportToShareableHandle, "hipMemPoolExportToShareableHandle");
+  LOAD(memPoolImportFromShareableHandle, "hipMemPoolImportFromShareableHandle");
+  LOAD(memPoolExportPointer, "hipMemPoolExportPointer");
+  LOAD(memPoolImportPointer, "hipMemPoolImportPointer");
+
+  LOAD(memAdvise, "hipMemAdvise");
+
+  LOAD(deviceGetStreamPriorityRange, "hipDeviceGetStreamPriorityRange");
 
 #undef LOAD
 

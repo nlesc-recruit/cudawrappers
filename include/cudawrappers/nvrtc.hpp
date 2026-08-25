@@ -73,6 +73,9 @@ struct RtcApi {
   int (*addNameExpression)(void *, const char *){nullptr};
   int (*getLoweredName)(const void *, const char *, const char **){nullptr};
   const char *(*getErrorString)(int){nullptr};
+  int (*version)(int *, int *){nullptr};
+  int (*getNumSupportedArchs)(int *){nullptr};
+  int (*getSupportedArchs)(int *){nullptr};
 
   static const RtcApi &get(bool isHip);
 };
@@ -123,6 +126,12 @@ inline const RtcApi &RtcApi::get(bool isHip) {
             dlsymOrThrow<decltype(api.getLoweredName)>(api.lib, "hiprtcGetLoweredName");
         api.getErrorString =
             dlsymOrThrow<decltype(api.getErrorString)>(api.lib, "hiprtcGetErrorString");
+        api.version = reinterpret_cast<decltype(api.version)>(
+            dlsym(api.lib, "hiprtcVersion"));
+        api.getNumSupportedArchs = reinterpret_cast<decltype(api.getNumSupportedArchs)>(
+            dlsym(api.lib, "hiprtcGetNumSupportedArchs"));
+        api.getSupportedArchs = reinterpret_cast<decltype(api.getSupportedArchs)>(
+            dlsym(api.lib, "hiprtcGetSupportedArchs"));
       } else {
         loadNvrtcBuiltins();
         for (const char *name :
@@ -155,6 +164,12 @@ inline const RtcApi &RtcApi::get(bool isHip) {
             dlsymOrThrow<decltype(api.getLoweredName)>(api.lib, "nvrtcGetLoweredName");
         api.getErrorString =
             dlsymOrThrow<decltype(api.getErrorString)>(api.lib, "nvrtcGetErrorString");
+        api.version = reinterpret_cast<decltype(api.version)>(
+            dlsym(api.lib, "nvrtcVersion"));
+        api.getNumSupportedArchs = reinterpret_cast<decltype(api.getNumSupportedArchs)>(
+            dlsym(api.lib, "nvrtcGetNumSupportedArchs"));
+        api.getSupportedArchs = reinterpret_cast<decltype(api.getSupportedArchs)>(
+            dlsym(api.lib, "nvrtcGetSupportedArchs"));
       }
       return api;
     }
@@ -344,6 +359,34 @@ class Program {
   const detail::RtcApi &api;
   void *program{nullptr};
 };
+
+inline std::pair<int, int> version() {
+#if defined(__HIP__)
+  const detail::RtcApi &api = detail::RtcApi::get(true);
+#else
+  const detail::RtcApi &api = detail::RtcApi::get(false);
+#endif
+  int major{}, minor{};
+  if (api.version)
+    checkNvrtcCall(api.version(&major, &minor), api.isHip);
+  return {major, minor};
+}
+
+inline std::vector<int> getSupportedArchs() {
+#if defined(__HIP__)
+  const detail::RtcApi &api = detail::RtcApi::get(true);
+#else
+  const detail::RtcApi &api = detail::RtcApi::get(false);
+#endif
+  if (!api.getNumSupportedArchs || !api.getSupportedArchs)
+    return {};
+  int count{};
+  checkNvrtcCall(api.getNumSupportedArchs(&count), api.isHip);
+  std::vector<int> archs(count);
+  checkNvrtcCall(api.getSupportedArchs(archs.data()), api.isHip);
+  return archs;
+}
+
 }  // namespace nvrtc
 
 #endif

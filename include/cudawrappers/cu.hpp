@@ -166,6 +166,16 @@ enum CUlimit {
   CU_LIMITMallocHeapSize = 2,
 };
 
+constexpr auto CU_LIMIT_PRINTF_FIFO_SIZE = CU_LIMITPrintfFifoSize;
+
+enum CUmemPoolAttr {
+  CU_MEMPOOL_ATTR_REUSE_FOLLOW_EVENT_DEPENDENCIES = 1,
+  CU_MEMPOOL_ATTR_REUSE_ALLOW_OPPORTUNISTIC = 2,
+  CU_MEMPOOL_ATTR_REUSE_ALLOW_INTERNAL_DEPENDENCIES = 3,
+  CU_MEMPOOL_ATTR_BLOCK_OPERATIONS_DELAYED = 4,
+  CU_MEMPOOL_ATTR_RELEASE_THRESHOLD = 5,
+};
+
 enum CUarray_format {
   CU_AD_FORMAT_UNSIGNED_INT8 = 0x01,
   CU_AD_FORMAT_UNSIGNED_INT16 = 0x02,
@@ -231,6 +241,15 @@ enum CUdevice_P2PAttribute {
   CU_DEVICE_P2P_ATTRIBUTE_NATIVE_ATOMIC_SUPPORTED = 2,
   CU_DEVICE_P2P_ATTRIBUTE_ACCESS_ACCESS_SUPPORTED = 3,
   CU_DEVICE_P2P_ATTRIBUTE_CUDA_ARRAY_ACCESS_SUPPORTED = 4,
+};
+
+enum CUmemAdvise {
+  CU_MEM_ADVISE_SET_READ_MOSTLY = 1,
+  CU_MEM_ADVISE_UNSET_READ_MOSTLY = 2,
+  CU_MEM_ADVISE_SET_PREFERRED_LOCATION = 3,
+  CU_MEM_ADVISE_UNSET_PREFERRED_LOCATION = 4,
+  CU_MEM_ADVISE_SET_ACCESSED_BY = 5,
+  CU_MEM_ADVISE_UNSET_ACCESSED_BY = 6,
 };
 
 constexpr unsigned int CU_EVENT_DEFAULT = 0x00;
@@ -432,6 +451,11 @@ void memcpyHtoD(CUdeviceptr dst, const void* src, size_t size);
 void memcpyDtoH(void* dst, CUdeviceptr src, size_t size);
 void pointerSetAttribute(const void* value, CUpointer_attribute attribute,
                           CUdeviceptr ptr);
+void memAdvise(const void* ptr, size_t count, int advice, int device);
+CUdeviceptr pointerGetAttribute(CUpointer_attribute attribute, CUdeviceptr ptr);
+void pointerGetAttributes(unsigned int numAttributes,
+                          const CUpointer_attribute* attributes,
+                          void** data, CUdeviceptr ptr);
 
 // Backend currently active on this thread. Must have external linkage:
 // in an anonymous namespace each translation unit would get its own copy,
@@ -508,6 +532,9 @@ class Device : public Wrapper<CUdevice> {
   void setMemPool(CUmemoryPool pool) const;
   size_t totalMem() const;
   int getOrdinal() const;
+  bool canAccessPeer(Device& peer) const;
+  int getP2PAttribute(CUdevice_P2PAttribute attribute, Device& peerDevice) const;
+  static void getStreamPriorityRange(int& leastPriority, int& greatestPriority);
 
 #if !defined(__HIP__)
   size_t getTexture1DLinearMaxWidth(CUarray_format format,
@@ -542,6 +569,19 @@ class UnmanagedMemory : public HostMemory {
   UnmanagedMemory(void* ptr, size_t size);
 };
 
+class Stream;
+
+class MemPool : public Wrapper<void*> {
+ public:
+  MemPool(Device& device);
+  MemPool(CUmemoryPool pool);
+  ~MemPool();
+  void setAttribute(int attr, const void* value);
+  void getAttribute(int attr, void* value) const;
+  CUdeviceptr allocFromPoolAsync(size_t size, Stream& stream);
+  operator CUmemoryPool() const { return static_cast<CUmemoryPool>(_obj); }
+};
+
 class Array : public Wrapper<CUarray> {
  public:
   Array(unsigned width, CUarray_format format, unsigned numChannels);
@@ -570,6 +610,8 @@ class Function : public Wrapper<CUfunction> {
   void setAttribute(CUfunction_attribute attribute, int value);
   int occupancyMaxActiveBlocksPerMultiprocessor(int blockSize,
                                                 size_t dynamicSMemSize);
+  void occupancyMaxPotentialBlockSize(int& minGridSize, int& blockSize,
+                                       size_t dynamicSMemSize = 0);
   void setCacheConfig(CUfunc_cache config);
 };
 
@@ -806,6 +848,11 @@ class Stream : public Wrapper<CUstream> {
   void record(Event& event);
   void record(Event& event, unsigned int flags);
   void launchHostFunc(CUhostFn fn, void* userData = nullptr);
+  void beginCapture(unsigned int flags = 0);  // CU_STREAM_CAPTURE_MODE_GLOBAL
+  CUgraph endCapture();
+  bool isCapturing() const;
+  unsigned int getFlags() const;
+  int getPriority() const;
 #if !defined(__HIP__)
   void getDevResource(CUdevResource& resource, CUdevResourceType type) const;
 #endif
@@ -884,6 +931,23 @@ inline void memcpyDtoH(void* dst, CUdeviceptr src, size_t size) {
 inline void pointerSetAttribute(const void* value, CUpointer_attribute attribute,
                                  CUdeviceptr ptr) {
   checkCudaCall(getBackend(activeBackendIdx()).pointerSetAttribute(value, attribute, ptr));
+}
+
+inline void memAdvise(const void* ptr, size_t count, int advice, int device) {
+  checkCudaCall(getBackend(activeBackendIdx()).memAdvise(ptr, count, advice, device));
+}
+
+inline CUdeviceptr pointerGetAttribute(CUpointer_attribute attribute, CUdeviceptr ptr) {
+  CUdeviceptr value{};
+  checkCudaCall(getBackend(activeBackendIdx()).pointerGetAttribute(&value, attribute, ptr));
+  return value;
+}
+
+inline void pointerGetAttributes(unsigned int numAttributes,
+                                 const CUpointer_attribute* attributes,
+                                 void** data, CUdeviceptr ptr) {
+  checkCudaCall(getBackend(activeBackendIdx()).pointerGetAttributes(
+      numAttributes, reinterpret_cast<const int*>(attributes), data, ptr));
 }
 
 // --- Device ---
@@ -1031,6 +1095,27 @@ inline size_t Device::totalMem() const {
 }
 
 inline int Device::getOrdinal() const { return _ordinal; }
+
+inline bool Device::canAccessPeer(Device& peer) const {
+  int canAccessPeer{};
+  checkCudaCall(getBackend(_backendIdx).deviceCanAccessPeer(
+      &canAccessPeer, _obj, peer));
+  return canAccessPeer != 0;
+}
+
+inline int Device::getP2PAttribute(CUdevice_P2PAttribute attribute,
+                                    Device& peerDevice) const {
+  int value{};
+  checkCudaCall(getBackend(_backendIdx).deviceGetP2PAttribute(
+      &value, attribute, _obj, static_cast<CUdevice>(peerDevice)));
+  return value;
+}
+
+inline void Device::getStreamPriorityRange(int& leastPriority,
+                                            int& greatestPriority) {
+  checkCudaCall(getBackend(activeBackendIdx()).deviceGetStreamPriorityRange(
+      &leastPriority, &greatestPriority));
+}
 
 // --- Context ---
 
@@ -1189,6 +1274,48 @@ inline size_t HostMemory::size() const { return _size; }
 inline UnmanagedMemory::UnmanagedMemory(void* ptr, size_t size)
     : HostMemory(ptr, size, 0) {}
 
+// --- MemPool ---
+
+inline MemPool::MemPool(Device& device) {
+  _backendIdx = device.getBackendIdx();
+#if defined(__HIP__)
+  int props[8]{};
+  props[0] = 1;  // hipMemPoolCreate: allocType = hipMemAllocationTypePinned
+  props[2] = 1;  // location.type = hipMemLocationTypeDevice
+  props[3] = static_cast<int>(device);  // location.id
+#else
+  CUmemPoolProps props{};
+  props.allocType = CU_MEM_ALLOCATION_TYPE_PINNED;
+  props.location.type = CU_MEM_LOCATION_TYPE_DEVICE;
+  props.location.id = static_cast<int>(device);
+#endif
+  checkCudaCall(getBackend(_backendIdx).memPoolCreate(
+      reinterpret_cast<void**>(&_obj), &props));
+  manager = std::shared_ptr<void*>(new void*(_obj),
+      [this](void** ptr) { getBackend(_backendIdx).memPoolDestroy(*ptr); delete ptr; });
+}
+
+inline MemPool::MemPool(CUmemoryPool pool) {
+  _obj = reinterpret_cast<void*>(pool);
+}
+
+inline MemPool::~MemPool() = default;
+
+inline void MemPool::setAttribute(int attr, const void* value) {
+  checkCudaCall(getBackend(_backendIdx).memPoolSetAttribute(_obj, attr, value));
+}
+
+inline void MemPool::getAttribute(int attr, void* value) const {
+  checkCudaCall(getBackend(_backendIdx).memPoolGetAttribute(_obj, attr, value));
+}
+
+inline CUdeviceptr MemPool::allocFromPoolAsync(size_t size, Stream& stream) {
+  CUdeviceptr ptr{};
+  checkCudaCall(getBackend(_backendIdx).memAllocFromPoolAsync(
+      &ptr, size, reinterpret_cast<void*>(static_cast<CUmemoryPool>(_obj))));
+  return ptr;
+}
+
 // --- Array ---
 
 inline Array::Array(unsigned width, CUarray_format format, unsigned numChannels) {
@@ -1279,6 +1406,18 @@ inline int Function::occupancyMaxActiveBlocksPerMultiprocessor(int blockSize,
   checkCudaCall(getBackend(_backendIdx).occupancyMaxActiveBlocksPerMultiprocessor(
       &numBlocks, _obj, blockSize, dynamicSMemSize));
   return numBlocks;
+}
+
+inline void Function::occupancyMaxPotentialBlockSize(int& minGridSize,
+                                                      int& blockSize,
+                                                      size_t dynamicSMemSize) {
+  if (getBackend(_backendIdx).is_cuda) {
+    checkCudaCall(getBackend(_backendIdx).occupancyMaxPotentialBlockSize(
+        &minGridSize, &blockSize, _obj, 0, dynamicSMemSize, 0));
+  } else {
+    checkCudaCall(getBackend(_backendIdx).occupancyMaxPotentialBlockSize(
+        &minGridSize, &blockSize, _obj, dynamicSMemSize, 0, 0));
+  }
 }
 
 inline void Function::setCacheConfig(CUfunc_cache config) {
@@ -1560,6 +1699,36 @@ inline void Stream::record(Event& event, unsigned int flags) {
 
 inline void Stream::launchHostFunc(CUhostFn fn, void* userData) {
   checkCudaCall(getBackend(_backendIdx).streamLaunchHostFunc(_obj, fn, userData));
+}
+
+inline void Stream::beginCapture(unsigned int flags) {
+  checkCudaCall(getBackend(_backendIdx).streamBeginCapture(_obj, flags));
+}
+
+inline CUgraph Stream::endCapture() {
+  CUgraph graph{};
+  checkCudaCall(getBackend(_backendIdx).streamEndCapture(_obj, reinterpret_cast<void**>(&graph)));
+  return graph;
+}
+
+inline bool Stream::isCapturing() const {
+  int status{};
+  int result = getBackend(_backendIdx).streamIsCapturing(
+      const_cast<CUstream>(_obj), &status);
+  if (result != 0) return false;
+  return status != 0;
+}
+
+inline unsigned int Stream::getFlags() const {
+  unsigned int flags{};
+  checkCudaCall(getBackend(_backendIdx).streamGetFlags(_obj, &flags));
+  return flags;
+}
+
+inline int Stream::getPriority() const {
+  int priority{};
+  checkCudaCall(getBackend(_backendIdx).streamGetPriority(_obj, &priority));
+  return priority;
 }
 
 // --- Graph ---

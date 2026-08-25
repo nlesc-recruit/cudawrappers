@@ -68,6 +68,12 @@ class FFT {
     checkCuFFTCall(cufftSetStream(plan_, stream));
   }
 
+  size_t getSize() const {
+    size_t ws{};
+    checkCuFFTCall(cufftGetSize(plan_, &ws));
+    return ws;
+  }
+
   void execute(cu::DeviceMemory &in, cu::DeviceMemory &out,
                const int direction) const {
     void *in_ptr = reinterpret_cast<void *>(static_cast<CUdeviceptr>(in));
@@ -258,6 +264,24 @@ inline FFT1DC2R<CUDA_C_32F>::FFT1DC2R(const int nx, const int batch,
   checkCuFFTCall(cufftXtMakePlanMany(
       *plan(), rank, n.data(), &inembed, istride, idist, CUDA_C_32F, &ouembed,
       ostride, odist, CUDA_R_32F, batch, &ws, CUDA_C_32F));
+}
+
+/*
+ * FFT3D
+ */
+template <cudaDataType_t T>
+class FFT3D : public FFT {
+ public:
+#if defined(__HIP__)
+  __host__
+#endif
+  FFT3D(const int nx, const int ny, const int nz) = delete;
+};
+
+template <>
+inline FFT3D<CUDA_C_32F>::FFT3D(const int nx, const int ny, const int nz) {
+  checkCuFFTCall(cufftCreate(plan()));
+  checkCuFFTCall(cufftPlan3d(plan(), nx, ny, nz, CUFFT_C2C));
 }
 
 }  // namespace cufft
