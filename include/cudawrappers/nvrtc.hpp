@@ -53,6 +53,25 @@ inline void loadNvrtcBuiltins() {
   }
 }
 
+// Eagerly load the NVRTC library so that dl_iterate_phdr() can find it.
+// With -Wl,--as-needed (the default on modern toolchains), libnvrtc.so is
+// not added to DT_NEEDED when no symbols are referenced directly (all NVRTC
+// calls go through dlopen).  Downstream code that uses dl_iterate_phdr to
+// derive the NVRTC include path from the library location depends on it
+// being loaded.
+#if !defined(__HIP__)
+namespace detail {
+inline const int nvrtcEagerLoadResult = [] {
+  for (const char *name :
+       {"libnvrtc.so", "libnvrtc.so.13", "libnvrtc.so.12",
+        "libnvrtc.so.11"}) {
+    if (dlopen(name, RTLD_LAZY | RTLD_GLOBAL)) break;
+  }
+  return 0;
+}();
+}
+#endif
+
 // Runtime-selected compiler API: either NVIDIA NVRTC or AMD HIPRTC. Both
 // libraries expose identical entry-point shapes, so one set of function
 // pointers serves both backends.
