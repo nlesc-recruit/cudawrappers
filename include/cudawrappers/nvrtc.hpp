@@ -250,8 +250,9 @@ class Program {
   // NVRTC (CUDA) and HIPRTC (HIP) at runtime. A negative value selects the
   // compile-time default backend.
   Program(const std::string &src, const std::string &name,
-          const std::vector<std::string> &headers,
-          const std::vector<std::string> &includeNames, int backendIdx = -1)
+          const std::vector<std::string> &headers = std::vector<std::string>(),
+          const std::vector<std::string> &includeNames = std::vector<std::string>(),
+          int backendIdx = -1)
       : api(detail::RtcApi::get(resolveIsHip(backendIdx))) {
     std::vector<const char *> c_headers;
     std::transform(headers.begin(), headers.end(),

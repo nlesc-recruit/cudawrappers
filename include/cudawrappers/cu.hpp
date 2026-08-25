@@ -21,6 +21,7 @@
 // <cuda.h> to get the real CUDA types. Otherwise, define manual types
 // compatible with the backend abstraction (for HIP-only or headerless builds).
 #if __has_include(<cuda.h>)
+#include <cuda_runtime.h>
 #include <cuda.h>
 #if !defined(CU_GRAPH_DEFAULT)
 #define CU_GRAPH_DEFAULT 0
