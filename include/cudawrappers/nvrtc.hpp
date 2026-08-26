@@ -25,6 +25,7 @@
 #endif
 
 #include <cudawrappers/config.h>
+
 #include <cudawrappers/cu.hpp>
 
 namespace nvrtc {
@@ -63,13 +64,12 @@ inline void loadNvrtcBuiltins() {
 namespace detail {
 inline const int nvrtcEagerLoadResult = [] {
   for (const char *name :
-       {"libnvrtc.so", "libnvrtc.so.13", "libnvrtc.so.12",
-        "libnvrtc.so.11"}) {
+       {"libnvrtc.so", "libnvrtc.so.13", "libnvrtc.so.12", "libnvrtc.so.11"}) {
     if (dlopen(name, RTLD_LAZY | RTLD_GLOBAL)) break;
   }
   return 0;
 }();
-}
+}  // namespace detail
 #endif
 
 // Runtime-selected compiler API: either NVIDIA NVRTC or AMD HIPRTC. Both
@@ -102,8 +102,8 @@ struct RtcApi {
 template <typename T>
 T dlsymOrThrow(void *lib, const char *name) {
   void *sym = dlsym(lib, name);
-  if (!sym) throw std::runtime_error(std::string("nvrtc: cannot resolve ") +
-                                     name);
+  if (!sym)
+    throw std::runtime_error(std::string("nvrtc: cannot resolve ") + name);
   return reinterpret_cast<T>(sym);
 }
 
@@ -115,80 +115,86 @@ inline const RtcApi &RtcApi::get(bool isHip) {
       RtcApi api{};
       api.isHip = hip;
       if (hip) {
-        for (const char *name :
-             {"libhiprtc.so", "libhiprtc.so.7", "libhiprtc.so.6",
-              "libhiprtc.so.5"}) {
+        for (const char *name : {"libhiprtc.so", "libhiprtc.so.7",
+                                 "libhiprtc.so.6", "libhiprtc.so.5"}) {
           api.lib = dlopen(name, RTLD_LAZY | RTLD_GLOBAL);
           if (api.lib) break;
         }
         if (!api.lib)
           throw std::runtime_error("nvrtc: Failed to load libhiprtc.so");
-        api.createProgram =
-            dlsymOrThrow<decltype(api.createProgram)>(api.lib, "hiprtcCreateProgram");
-        api.destroyProgram =
-            dlsymOrThrow<decltype(api.destroyProgram)>(api.lib, "hiprtcDestroyProgram");
-        api.compileProgram =
-            dlsymOrThrow<decltype(api.compileProgram)>(api.lib, "hiprtcCompileProgram");
-        api.getCodeSize =
-            dlsymOrThrow<decltype(api.getCodeSize)>(api.lib, "hiprtcGetCodeSize");
-        api.getCode = dlsymOrThrow<decltype(api.getCode)>(api.lib, "hiprtcGetCode");
-        api.getBinarySize =
-            dlsymOrThrow<decltype(api.getBinarySize)>(api.lib, "hiprtcGetCodeSize");
+        api.createProgram = dlsymOrThrow<decltype(api.createProgram)>(
+            api.lib, "hiprtcCreateProgram");
+        api.destroyProgram = dlsymOrThrow<decltype(api.destroyProgram)>(
+            api.lib, "hiprtcDestroyProgram");
+        api.compileProgram = dlsymOrThrow<decltype(api.compileProgram)>(
+            api.lib, "hiprtcCompileProgram");
+        api.getCodeSize = dlsymOrThrow<decltype(api.getCodeSize)>(
+            api.lib, "hiprtcGetCodeSize");
+        api.getCode =
+            dlsymOrThrow<decltype(api.getCode)>(api.lib, "hiprtcGetCode");
+        api.getBinarySize = dlsymOrThrow<decltype(api.getBinarySize)>(
+            api.lib, "hiprtcGetCodeSize");
         api.getBinary =
             dlsymOrThrow<decltype(api.getBinary)>(api.lib, "hiprtcGetCode");
-        api.getLogSize =
-            dlsymOrThrow<decltype(api.getLogSize)>(api.lib, "hiprtcGetProgramLogSize");
-        api.getLog = dlsymOrThrow<decltype(api.getLog)>(api.lib, "hiprtcGetProgramLog");
-        api.addNameExpression =
-            dlsymOrThrow<decltype(api.addNameExpression)>(api.lib, "hiprtcAddNameExpression");
-        api.getLoweredName =
-            dlsymOrThrow<decltype(api.getLoweredName)>(api.lib, "hiprtcGetLoweredName");
-        api.getErrorString =
-            dlsymOrThrow<decltype(api.getErrorString)>(api.lib, "hiprtcGetErrorString");
+        api.getLogSize = dlsymOrThrow<decltype(api.getLogSize)>(
+            api.lib, "hiprtcGetProgramLogSize");
+        api.getLog =
+            dlsymOrThrow<decltype(api.getLog)>(api.lib, "hiprtcGetProgramLog");
+        api.addNameExpression = dlsymOrThrow<decltype(api.addNameExpression)>(
+            api.lib, "hiprtcAddNameExpression");
+        api.getLoweredName = dlsymOrThrow<decltype(api.getLoweredName)>(
+            api.lib, "hiprtcGetLoweredName");
+        api.getErrorString = dlsymOrThrow<decltype(api.getErrorString)>(
+            api.lib, "hiprtcGetErrorString");
         api.version = reinterpret_cast<decltype(api.version)>(
             dlsym(api.lib, "hiprtcVersion"));
-        api.getNumSupportedArchs = reinterpret_cast<decltype(api.getNumSupportedArchs)>(
-            dlsym(api.lib, "hiprtcGetNumSupportedArchs"));
-        api.getSupportedArchs = reinterpret_cast<decltype(api.getSupportedArchs)>(
-            dlsym(api.lib, "hiprtcGetSupportedArchs"));
+        api.getNumSupportedArchs =
+            reinterpret_cast<decltype(api.getNumSupportedArchs)>(
+                dlsym(api.lib, "hiprtcGetNumSupportedArchs"));
+        api.getSupportedArchs =
+            reinterpret_cast<decltype(api.getSupportedArchs)>(
+                dlsym(api.lib, "hiprtcGetSupportedArchs"));
       } else {
         loadNvrtcBuiltins();
-        for (const char *name :
-             {"libnvrtc.so", "libnvrtc.so.13", "libnvrtc.so.12",
-              "libnvrtc.so.11"}) {
+        for (const char *name : {"libnvrtc.so", "libnvrtc.so.13",
+                                 "libnvrtc.so.12", "libnvrtc.so.11"}) {
           api.lib = dlopen(name, RTLD_LAZY | RTLD_GLOBAL);
           if (api.lib) break;
         }
         if (!api.lib)
           throw std::runtime_error("nvrtc: Failed to load libnvrtc.so");
-        api.createProgram =
-            dlsymOrThrow<decltype(api.createProgram)>(api.lib, "nvrtcCreateProgram");
-        api.destroyProgram =
-            dlsymOrThrow<decltype(api.destroyProgram)>(api.lib, "nvrtcDestroyProgram");
-        api.compileProgram =
-            dlsymOrThrow<decltype(api.compileProgram)>(api.lib, "nvrtcCompileProgram");
+        api.createProgram = dlsymOrThrow<decltype(api.createProgram)>(
+            api.lib, "nvrtcCreateProgram");
+        api.destroyProgram = dlsymOrThrow<decltype(api.destroyProgram)>(
+            api.lib, "nvrtcDestroyProgram");
+        api.compileProgram = dlsymOrThrow<decltype(api.compileProgram)>(
+            api.lib, "nvrtcCompileProgram");
         api.getCodeSize =
             dlsymOrThrow<decltype(api.getCodeSize)>(api.lib, "nvrtcGetPTXSize");
-        api.getCode = dlsymOrThrow<decltype(api.getCode)>(api.lib, "nvrtcGetPTX");
-        api.getBinarySize =
-            dlsymOrThrow<decltype(api.getBinarySize)>(api.lib, "nvrtcGetCUBINSize");
+        api.getCode =
+            dlsymOrThrow<decltype(api.getCode)>(api.lib, "nvrtcGetPTX");
+        api.getBinarySize = dlsymOrThrow<decltype(api.getBinarySize)>(
+            api.lib, "nvrtcGetCUBINSize");
         api.getBinary =
             dlsymOrThrow<decltype(api.getBinary)>(api.lib, "nvrtcGetCUBIN");
-        api.getLogSize =
-            dlsymOrThrow<decltype(api.getLogSize)>(api.lib, "nvrtcGetProgramLogSize");
-        api.getLog = dlsymOrThrow<decltype(api.getLog)>(api.lib, "nvrtcGetProgramLog");
-        api.addNameExpression =
-            dlsymOrThrow<decltype(api.addNameExpression)>(api.lib, "nvrtcAddNameExpression");
-        api.getLoweredName =
-            dlsymOrThrow<decltype(api.getLoweredName)>(api.lib, "nvrtcGetLoweredName");
-        api.getErrorString =
-            dlsymOrThrow<decltype(api.getErrorString)>(api.lib, "nvrtcGetErrorString");
+        api.getLogSize = dlsymOrThrow<decltype(api.getLogSize)>(
+            api.lib, "nvrtcGetProgramLogSize");
+        api.getLog =
+            dlsymOrThrow<decltype(api.getLog)>(api.lib, "nvrtcGetProgramLog");
+        api.addNameExpression = dlsymOrThrow<decltype(api.addNameExpression)>(
+            api.lib, "nvrtcAddNameExpression");
+        api.getLoweredName = dlsymOrThrow<decltype(api.getLoweredName)>(
+            api.lib, "nvrtcGetLoweredName");
+        api.getErrorString = dlsymOrThrow<decltype(api.getErrorString)>(
+            api.lib, "nvrtcGetErrorString");
         api.version = reinterpret_cast<decltype(api.version)>(
             dlsym(api.lib, "nvrtcVersion"));
-        api.getNumSupportedArchs = reinterpret_cast<decltype(api.getNumSupportedArchs)>(
-            dlsym(api.lib, "nvrtcGetNumSupportedArchs"));
-        api.getSupportedArchs = reinterpret_cast<decltype(api.getSupportedArchs)>(
-            dlsym(api.lib, "nvrtcGetSupportedArchs"));
+        api.getNumSupportedArchs =
+            reinterpret_cast<decltype(api.getNumSupportedArchs)>(
+                dlsym(api.lib, "nvrtcGetNumSupportedArchs"));
+        api.getSupportedArchs =
+            reinterpret_cast<decltype(api.getSupportedArchs)>(
+                dlsym(api.lib, "nvrtcGetSupportedArchs"));
       }
       return api;
     }
@@ -268,10 +274,11 @@ class Program {
   // backendIdx: global cudawrappers device/backend index selecting between
   // NVRTC (CUDA) and HIPRTC (HIP) at runtime. A negative value selects the
   // compile-time default backend.
-  Program(const std::string &src, const std::string &name,
-          const std::vector<std::string> &headers = std::vector<std::string>(),
-          const std::vector<std::string> &includeNames = std::vector<std::string>(),
-          int backendIdx = -1)
+  Program(
+      const std::string &src, const std::string &name,
+      const std::vector<std::string> &headers = std::vector<std::string>(),
+      const std::vector<std::string> &includeNames = std::vector<std::string>(),
+      int backendIdx = -1)
       : api(detail::RtcApi::get(resolveIsHip(backendIdx))) {
     std::vector<const char *> c_headers;
     std::transform(headers.begin(), headers.end(),
@@ -298,10 +305,9 @@ class Program {
                                "' in cudawrappers::nvrtc");
     }
     std::string source(std::istreambuf_iterator<char>{ifs}, {});
-    checkNvrtcCall(
-        api.createProgram(&program, source.c_str(), filename.c_str(), 0,
-                          nullptr, nullptr),
-        api.isHip);
+    checkNvrtcCall(api.createProgram(&program, source.c_str(), filename.c_str(),
+                                     0, nullptr, nullptr),
+                   api.isHip);
   }
 
   ~Program() {
@@ -387,8 +393,7 @@ inline std::pair<int, int> version() {
   const detail::RtcApi &api = detail::RtcApi::get(false);
 #endif
   int major{}, minor{};
-  if (api.version)
-    checkNvrtcCall(api.version(&major, &minor), api.isHip);
+  if (api.version) checkNvrtcCall(api.version(&major, &minor), api.isHip);
   return {major, minor};
 }
 
@@ -398,8 +403,7 @@ inline std::vector<int> getSupportedArchs() {
 #else
   const detail::RtcApi &api = detail::RtcApi::get(false);
 #endif
-  if (!api.getNumSupportedArchs || !api.getSupportedArchs)
-    return {};
+  if (!api.getNumSupportedArchs || !api.getSupportedArchs) return {};
   int count{};
   checkNvrtcCall(api.getNumSupportedArchs(&count), api.isHip);
   std::vector<int> archs(count);

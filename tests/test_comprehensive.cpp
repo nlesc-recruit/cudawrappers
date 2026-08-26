@@ -1,21 +1,23 @@
-#include <cudawrappers/cu.hpp>
-
-#include <catch2/catch_test_macros.hpp>
-#include <catch2/catch_session.hpp>
-#include <catch2/matchers/catch_matchers_string.hpp>
 #include <algorithm>
+#include <catch2/catch_session.hpp>
+#include <catch2/catch_test_macros.hpp>
+#include <catch2/matchers/catch_matchers_string.hpp>
 #include <cstdlib>
 #include <cstring>
 #include <numeric>
 #include <string>
 #include <vector>
 
+#include <cudawrappers/cu.hpp>
+
 // ============================================================================
 // Device selection: --device N CLI flag overrides CUDAWRAPPERS_DEVICE env var
 // ============================================================================
 static int g_testDevice = 0;
 
-static unsigned int getTestDevice() { return static_cast<unsigned int>(g_testDevice); }
+static unsigned int getTestDevice() {
+  return static_cast<unsigned int>(g_testDevice);
+}
 
 static cu::Context* g_ctx = nullptr;
 static cu::Context& getTestContext() {
@@ -45,7 +47,10 @@ int main(int argc, char* argv[]) {
   }
 
   cu::init();
-  try { getTestContext().pushCurrent(); } catch (...) {}
+  try {
+    getTestContext().pushCurrent();
+  } catch (...) {
+  }
 
   int result = Catch::Session().run(newArgc, newArgv);
   delete g_ctx;
@@ -83,9 +88,7 @@ static void addOneKernel(void* data) {
 // ============================================================================
 // 1. DRIVER / INIT
 // ============================================================================
-TEST_CASE("Driver: init", "[driver]") {
-  CHECK_NOTHROW(cu::init());
-}
+TEST_CASE("Driver: init", "[driver]") { CHECK_NOTHROW(cu::init()); }
 
 TEST_CASE("Driver: driverGetVersion", "[driver]") {
   cu::init();
@@ -131,7 +134,8 @@ TEST_CASE("Device: debug enumeration", "[device]") {
   for (int i = 0; i < total; ++i) {
     try {
       cu::Device dev(static_cast<unsigned int>(i));
-      WARN("  Device " << i << ": " << dev.getName() << " [" << dev.getArch() << "]");
+      WARN("  Device " << i << ": " << dev.getName() << " [" << dev.getArch()
+                       << "]");
     } catch (const std::exception& e) {
       WARN("  Device " << i << ": FAILED - " << e.what());
     }
@@ -140,7 +144,8 @@ TEST_CASE("Device: debug enumeration", "[device]") {
   WARN("Trying getTestDevice()=" << getTestDevice());
   try {
     cu::Device dev(getTestDevice());
-    WARN("  getTestDevice device: " << dev.getName() << " [" << dev.getArch() << "]");
+    WARN("  getTestDevice device: " << dev.getName() << " [" << dev.getArch()
+                                    << "]");
   } catch (const std::exception& e) {
     WARN("  getTestDevice FAILED: " << e.what());
   }
@@ -246,8 +251,7 @@ TEST_CASE("Device: getAttribute", "[device]") {
   }
 
   SECTION("MAX_REGISTERS_PER_BLOCK") {
-    int val =
-        dev.getAttribute<CU_DEVICE_ATTRIBUTE_MAX_REGISTERS_PER_BLOCK>();
+    int val = dev.getAttribute<CU_DEVICE_ATTRIBUTE_MAX_REGISTERS_PER_BLOCK>();
     CHECK(val > 0);
   }
 
@@ -600,8 +604,7 @@ TEST_CASE("DeviceMemory: memset 1D", "[devicememory][memset]") {
   }
 
   SECTION("memset 16-bit") {
-    CHECK_NOTHROW(
-        devMem.memset(static_cast<unsigned short>(0xABCD), size / 2));
+    CHECK_NOTHROW(devMem.memset(static_cast<unsigned short>(0xABCD), size / 2));
   }
 
   SECTION("memset 32-bit") {
@@ -609,9 +612,7 @@ TEST_CASE("DeviceMemory: memset 1D", "[devicememory][memset]") {
         devMem.memset(static_cast<unsigned int>(0xDEADBEEF), size / 4));
   }
 
-  SECTION("zero") {
-    CHECK_NOTHROW(devMem.zero(size));
-  }
+  SECTION("zero") { CHECK_NOTHROW(devMem.zero(size)); }
 }
 
 TEST_CASE("DeviceMemory: memset 2D", "[devicememory][memset]") {
@@ -628,8 +629,8 @@ TEST_CASE("DeviceMemory: memset 2D", "[devicememory][memset]") {
   cu::DeviceMemory devMem(allocSize);
 
   SECTION("memset2D 8-bit") {
-    CHECK_NOTHROW(
-        devMem.memset2D(static_cast<unsigned char>(0xCD), pitch, width, height));
+    CHECK_NOTHROW(devMem.memset2D(static_cast<unsigned char>(0xCD), pitch,
+                                  width, height));
   }
 
   SECTION("memset2D 16-bit") {
@@ -730,8 +731,7 @@ TEST_CASE("Stream: memcpyHtoDAsync", "[stream][memcpy]") {
     cu::HostMemory host(count * sizeof(int));
     int* hptr = static_cast<int*>(host);
     std::iota(hptr, hptr + count, 0);
-    CHECK_NOTHROW(
-        stream.memcpyHtoDAsync(devMem, host, count * sizeof(int)));
+    CHECK_NOTHROW(stream.memcpyHtoDAsync(devMem, host, count * sizeof(int)));
   }
 
   CHECK_NOTHROW(stream.synchronize());
@@ -763,8 +763,7 @@ TEST_CASE("Stream: memcpyDtoHAsync", "[stream][memcpy]") {
 
   SECTION("To HostMemory") {
     cu::HostMemory host(count * sizeof(int));
-    CHECK_NOTHROW(
-        stream.memcpyDtoHAsync(host, devMem, count * sizeof(int)));
+    CHECK_NOTHROW(stream.memcpyDtoHAsync(host, devMem, count * sizeof(int)));
     stream.synchronize();
     int* hptr = static_cast<int*>(host);
     for (size_t i = 0; i < count; ++i) {
@@ -843,8 +842,8 @@ TEST_CASE("Stream: 2D pitched copies", "[stream][memcpy]") {
   cu::DeviceMemory devMem(allocSize);
 
   SECTION("HtoD2D then DtoH2D") {
-    stream.memcpyHtoD2DAsync(devMem, pitch, hostBuf.data(), pitch, width * elementSize,
-                             height);
+    stream.memcpyHtoD2DAsync(devMem, pitch, hostBuf.data(), pitch,
+                             width * elementSize, height);
     stream.synchronize();
 
     stream.memcpyDtoH2DAsync(hostDst.data(), pitch, devMem, pitch,
@@ -855,10 +854,10 @@ TEST_CASE("Stream: 2D pitched copies", "[stream][memcpy]") {
       for (size_t x = 0; x < width; ++x) {
         int expected;
         std::memcpy(&expected, hostBuf.data() + y * pitch + x * elementSize,
-                     elementSize);
+                    elementSize);
         int actual;
         std::memcpy(&actual, hostDst.data() + y * pitch + x * elementSize,
-                     elementSize);
+                    elementSize);
         CHECK(actual == expected);
       }
     }
@@ -881,18 +880,16 @@ TEST_CASE("Stream: memsetAsync", "[stream][memset]") {
   }
 
   SECTION("16-bit") {
-    CHECK_NOTHROW(stream.memsetAsync(devMem, static_cast<unsigned short>(0xBEEF),
-                                     size / 2));
+    CHECK_NOTHROW(stream.memsetAsync(
+        devMem, static_cast<unsigned short>(0xBEEF), size / 2));
   }
 
   SECTION("32-bit") {
-    CHECK_NOTHROW(stream.memsetAsync(devMem, static_cast<unsigned int>(0xDEADBEEF),
-                                     size / 4));
+    CHECK_NOTHROW(stream.memsetAsync(
+        devMem, static_cast<unsigned int>(0xDEADBEEF), size / 4));
   }
 
-  SECTION("zero") {
-    CHECK_NOTHROW(stream.zero(devMem, size));
-  }
+  SECTION("zero") { CHECK_NOTHROW(stream.zero(devMem, size)); }
 
   CHECK_NOTHROW(stream.memFreeAsync(devMem));
   CHECK_NOTHROW(stream.synchronize());
@@ -917,14 +914,14 @@ TEST_CASE("Stream: memset2DAsync", "[stream][memset]") {
   }
 
   SECTION("16-bit") {
-    CHECK_NOTHROW(stream.memset2DAsync(devMem, static_cast<unsigned short>(0xBEEF),
-                                       pitch, width / 2, height));
+    CHECK_NOTHROW(stream.memset2DAsync(
+        devMem, static_cast<unsigned short>(0xBEEF), pitch, width / 2, height));
   }
 
   SECTION("32-bit") {
-    CHECK_NOTHROW(
-        stream.memset2DAsync(devMem, static_cast<unsigned int>(0xCAFEBABE),
-                             pitch, width / 4, height));
+    CHECK_NOTHROW(stream.memset2DAsync(devMem,
+                                       static_cast<unsigned int>(0xCAFEBABE),
+                                       pitch, width / 4, height));
   }
 
   SECTION("zero2D") {
@@ -1189,8 +1186,8 @@ TEST_CASE("Graph: memcpy node (H2D then D2H)", "[graph]") {
   cu::DeviceMemory devMem(count * sizeof(int));
 
   // Create H2D memcpy node
-  cu::GraphMemCopyToDeviceNodeParams copyH2DParams(
-      devMem, srcData.data(), count, 1, 1, sizeof(int));
+  cu::GraphMemCopyToDeviceNodeParams copyH2DParams(devMem, srcData.data(),
+                                                   count, 1, 1, sizeof(int));
 
   cu::Graph graph(context);
   cu::GraphNode h2dNode;
@@ -1199,8 +1196,8 @@ TEST_CASE("Graph: memcpy node (H2D then D2H)", "[graph]") {
 
   // Create D2H memcpy node
   std::vector<int> dstData(count, 0);
-  cu::GraphMemCopyToHostNodeParams copyD2HParams(
-      dstData.data(), devMem, count, 1, 1, sizeof(int));
+  cu::GraphMemCopyToHostNodeParams copyD2HParams(dstData.data(), devMem, count,
+                                                 1, 1, sizeof(int));
 
   cu::GraphNode d2hNode;
   std::vector<CUgraphNode> deps2 = {h2dNode};
@@ -1230,9 +1227,8 @@ TEST_CASE("Graph: debugDotPrint with flags", "[graph]") {
   std::vector<CUgraphNode> deps;
   graph.addHostNode(node, deps, hostParams);
 
-  CHECK_NOTHROW(
-      graph.debugDotPrint("/tmp/graph_debug.dot",
-                          CU_GRAPH_DEBUG_DOT_FLAGS_VERBOSE));
+  CHECK_NOTHROW(graph.debugDotPrint("/tmp/graph_debug.dot",
+                                    CU_GRAPH_DEBUG_DOT_FLAGS_VERBOSE));
 }
 
 // ============================================================================
@@ -1282,14 +1278,15 @@ TEST_CASE("Pointer: setAttribute", "[pointer]") {
 
   unsigned int syncFlag = 1;
   // Set SYNC_MEMOPS on device memory
-  CHECK_NOTHROW(cu::pointerSetAttribute(&syncFlag, CU_POINTER_ATTRIBUTE_SYNC_MEMOPS,
-                                        devMem));
+  CHECK_NOTHROW(cu::pointerSetAttribute(
+      &syncFlag, CU_POINTER_ATTRIBUTE_SYNC_MEMOPS, devMem));
 }
 
 // ============================================================================
 // 13. FULL PIPELINE: alloc -> copy -> kernel -> copy -> verify
 // ============================================================================
-TEST_CASE("Pipeline: host -> device -> kernel -> device -> host", "[pipeline]") {
+TEST_CASE("Pipeline: host -> device -> kernel -> device -> host",
+          "[pipeline]") {
   cu::init();
   cu::Device dev(getTestDevice());
   cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, dev);
@@ -1436,8 +1433,7 @@ TEST_CASE("Pipeline: 2D copy round trip", "[pipeline]") {
       int expected, actual;
       std::memcpy(&expected, srcBuf.data() + y * pitch + x * elemSize,
                   elemSize);
-      std::memcpy(&actual, dstBuf.data() + y * pitch + x * elemSize,
-                  elemSize);
+      std::memcpy(&actual, dstBuf.data() + y * pitch + x * elemSize, elemSize);
       CHECK(actual == expected);
     }
   }
@@ -1493,7 +1489,7 @@ TEST_CASE("Multi-backend: enumerate all devices", "[device]") {
     try {
       cu::Device dev(i);
       INFO("Device " << i << ": " << dev.getName() << " [" << dev.getArch()
-                      << "]");
+                     << "]");
       CHECK_FALSE(dev.getName().empty());
       CHECK_FALSE(dev.getArch().empty());
       CHECK(dev.totalMem() > 0);
@@ -1672,7 +1668,8 @@ TEST_CASE("Device: getP2PAttribute", "[device]") {
   int count = cu::Device::getCount();
   if (count > 1) {
     cu::Device dev1(1);
-    int value = dev.getP2PAttribute(CU_DEVICE_P2P_ATTRIBUTE_PERFORMANCE_RANK, dev1);
+    int value =
+        dev.getP2PAttribute(CU_DEVICE_P2P_ATTRIBUTE_PERFORMANCE_RANK, dev1);
     (void)value;
   } else {
     WARN("Skipping P2P test with only 1 device");
@@ -1688,7 +1685,8 @@ TEST_CASE("Pointer: pointerGetAttribute", "[pointer]") {
   cu::DeviceMemory devMem(static_cast<size_t>(1024));
   CUdeviceptr ptr = static_cast<CUdeviceptr>(devMem);
   try {
-    CUdeviceptr base = cu::pointerGetAttribute(CU_POINTER_ATTRIBUTE_RANGE_START_ADDR, ptr);
+    CUdeviceptr base =
+        cu::pointerGetAttribute(CU_POINTER_ATTRIBUTE_RANGE_START_ADDR, ptr);
     CHECK(base > 0);
   } catch (const std::exception& e) {
     WARN("pointerGetAttribute failed: " << e.what());

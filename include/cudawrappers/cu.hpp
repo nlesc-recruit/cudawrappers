@@ -1,12 +1,11 @@
 #if !defined CU_WRAPPER_H
 #define CU_WRAPPER_H
 
-#include "cudawrappers/cu_backend.hpp"
+#include <dlfcn.h>
 
 #include <array>
 #include <cstddef>
 #include <cstring>
-#include <dlfcn.h>
 #include <exception>
 #include <iomanip>
 #include <map>
@@ -17,11 +16,14 @@
 #include <utility>
 #include <vector>
 
+#include "cudawrappers/cu_backend.hpp"
+
 // When CUDA headers are available (and not building for HIP), include
 // <cuda.h> to get the real CUDA types. Otherwise, define manual types
 // compatible with the backend abstraction (for HIP-only or headerless builds).
 #if __has_include(<cuda.h>)
 #include <cuda_runtime.h>
+
 #include <cuda.h>
 #if !defined(CU_GRAPH_DEFAULT)
 #define CU_GRAPH_DEFAULT 0
@@ -451,12 +453,12 @@ const char* getErrorName(CUresult result);
 void memcpyHtoD(CUdeviceptr dst, const void* src, size_t size);
 void memcpyDtoH(void* dst, CUdeviceptr src, size_t size);
 void pointerSetAttribute(const void* value, CUpointer_attribute attribute,
-                          CUdeviceptr ptr);
+                         CUdeviceptr ptr);
 void memAdvise(const void* ptr, size_t count, int advice, int device);
 CUdeviceptr pointerGetAttribute(CUpointer_attribute attribute, CUdeviceptr ptr);
 void pointerGetAttributes(unsigned int numAttributes,
-                          const CUpointer_attribute* attributes,
-                          void** data, CUdeviceptr ptr);
+                          const CUpointer_attribute* attributes, void** data,
+                          CUdeviceptr ptr);
 
 // Backend currently active on this thread. Must have external linkage:
 // in an anonymous namespace each translation unit would get its own copy,
@@ -493,9 +495,13 @@ class Wrapper {
  protected:
   Wrapper() = default;
   Wrapper(const Wrapper<T>& other)
-      : _obj(other._obj), manager(other.manager), _backendIdx(other._backendIdx) {}
+      : _obj(other._obj),
+        manager(other.manager),
+        _backendIdx(other._backendIdx) {}
   Wrapper(Wrapper<T>&& other)
-      : _obj(other._obj), manager(std::move(other.manager)), _backendIdx(other._backendIdx) {
+      : _obj(other._obj),
+        manager(std::move(other.manager)),
+        _backendIdx(other._backendIdx) {
     other._obj = 0;
   }
   explicit Wrapper(T& obj) : _obj(obj) {}
@@ -534,7 +540,8 @@ class Device : public Wrapper<CUdevice> {
   size_t totalMem() const;
   int getOrdinal() const;
   bool canAccessPeer(Device& peer) const;
-  int getP2PAttribute(CUdevice_P2PAttribute attribute, Device& peerDevice) const;
+  int getP2PAttribute(CUdevice_P2PAttribute attribute,
+                      Device& peerDevice) const;
   static void getStreamPriorityRange(int& leastPriority, int& greatestPriority);
 
 #if !defined(__HIP__)
@@ -612,7 +619,7 @@ class Function : public Wrapper<CUfunction> {
   int occupancyMaxActiveBlocksPerMultiprocessor(int blockSize,
                                                 size_t dynamicSMemSize);
   void occupancyMaxPotentialBlockSize(int& minGridSize, int& blockSize,
-                                       size_t dynamicSMemSize = 0);
+                                      size_t dynamicSMemSize = 0);
   void setCacheConfig(CUfunc_cache config);
 };
 
@@ -632,8 +639,7 @@ class Event : public Wrapper<CUevent> {
 
 class DeviceMemory : public Wrapper<CUdeviceptr> {
  public:
-  explicit DeviceMemory(size_t size,
-                        CUmemorytype type = CU_MEMORYTYPE_DEVICE,
+  explicit DeviceMemory(size_t size, CUmemorytype type = CU_MEMORYTYPE_DEVICE,
                         unsigned int flags = 0);
   explicit DeviceMemory(CUdeviceptr ptr);
   explicit DeviceMemory(CUdeviceptr ptr, size_t size);
@@ -685,8 +691,7 @@ class GraphHostNodeParams : public Wrapper<CUDA_HOST_NODE_PARAMS> {
   const void* parameter() const { return &_obj; }
 };
 
-class GraphDevMemAllocNodeParams
-    : public Wrapper<CUDA_MEM_ALLOC_NODE_PARAMS> {
+class GraphDevMemAllocNodeParams : public Wrapper<CUDA_MEM_ALLOC_NODE_PARAMS> {
  public:
   GraphDevMemAllocNodeParams(const Device& dev, size_t size);
   const CUdeviceptr& getDevPtr() const;
@@ -792,8 +797,8 @@ class Graph : public Wrapper<CUgraph> {
   void addMemCpyNode(GraphNode& node,
                      const std::vector<CUgraphNode>& dependencies,
                      GraphMemCopyToHostNodeParams& params);
-  void debugDotPrint(std::string path,
-                     CUgraphDebugDot_flags flags = CU_GRAPH_DEBUG_DOT_FLAGS_VERBOSE);
+  void debugDotPrint(std::string path, CUgraphDebugDot_flags flags =
+                                           CU_GRAPH_DEBUG_DOT_FLAGS_VERBOSE);
   CUgraphExec instantiateWithFlags(unsigned int flags = CU_GRAPH_DEFAULT);
 
  private:
@@ -804,8 +809,7 @@ class GraphExec : public Wrapper<CUgraphExec> {
  public:
   explicit GraphExec(CUgraphExec& graphExec);
   explicit GraphExec(GraphExec& graphExec) = default;
-  explicit GraphExec(const Graph& graph,
-                     unsigned int flags = CU_GRAPH_DEFAULT);
+  explicit GraphExec(const Graph& graph, unsigned int flags = CU_GRAPH_DEFAULT);
 };
 
 class Stream : public Wrapper<CUstream> {
@@ -872,8 +876,8 @@ inline void devSmResourceSplitByCount(
     CUdevResource* result, unsigned int* nbGroups, const CUdevResource* input,
     CUdevResource* remaining, unsigned int useFlags, unsigned int minCount) {
   Backend& b = getFlavorBackend(true);
-  checkCudaCall(b.devSmResourceSplitByCount(
-      result, nbGroups, input, remaining, useFlags, minCount));
+  checkCudaCall(b.devSmResourceSplitByCount(result, nbGroups, input, remaining,
+                                            useFlags, minCount));
 }
 #endif
 
@@ -929,26 +933,33 @@ inline void memcpyDtoH(void* dst, CUdeviceptr src, size_t size) {
   checkCudaCall(getBackend(activeBackendIdx()).memcpyDtoH(dst, src, size));
 }
 
-inline void pointerSetAttribute(const void* value, CUpointer_attribute attribute,
-                                 CUdeviceptr ptr) {
-  checkCudaCall(getBackend(activeBackendIdx()).pointerSetAttribute(value, attribute, ptr));
+inline void pointerSetAttribute(const void* value,
+                                CUpointer_attribute attribute,
+                                CUdeviceptr ptr) {
+  checkCudaCall(getBackend(activeBackendIdx())
+                    .pointerSetAttribute(value, attribute, ptr));
 }
 
 inline void memAdvise(const void* ptr, size_t count, int advice, int device) {
-  checkCudaCall(getBackend(activeBackendIdx()).memAdvise(ptr, count, advice, device));
+  checkCudaCall(
+      getBackend(activeBackendIdx()).memAdvise(ptr, count, advice, device));
 }
 
-inline CUdeviceptr pointerGetAttribute(CUpointer_attribute attribute, CUdeviceptr ptr) {
+inline CUdeviceptr pointerGetAttribute(CUpointer_attribute attribute,
+                                       CUdeviceptr ptr) {
   CUdeviceptr value{};
-  checkCudaCall(getBackend(activeBackendIdx()).pointerGetAttribute(&value, attribute, ptr));
+  checkCudaCall(getBackend(activeBackendIdx())
+                    .pointerGetAttribute(&value, attribute, ptr));
   return value;
 }
 
 inline void pointerGetAttributes(unsigned int numAttributes,
                                  const CUpointer_attribute* attributes,
                                  void** data, CUdeviceptr ptr) {
-  checkCudaCall(getBackend(activeBackendIdx()).pointerGetAttributes(
-      numAttributes, reinterpret_cast<const int*>(attributes), data, ptr));
+  checkCudaCall(getBackend(activeBackendIdx())
+                    .pointerGetAttributes(
+                        numAttributes, reinterpret_cast<const int*>(attributes),
+                        data, ptr));
 }
 
 // --- Device ---
@@ -997,7 +1008,8 @@ inline Device::Device(unsigned int ordinal) : _ordinal(ordinal) {
   throw std::runtime_error("Device ordinal out of range");
 }
 
-inline Device::Device(CUdevice device) : Wrapper<CUdevice>(device), _ordinal(-1) {
+inline Device::Device(CUdevice device)
+    : Wrapper<CUdevice>(device), _ordinal(-1) {
   for (size_t i = 0; i < getBackendCount(); ++i) {
     int count = getCount(i);
     for (int ordinal = 0; ordinal < count; ordinal++) {
@@ -1029,8 +1041,8 @@ inline std::string Device::getName() const {
 
 inline std::string Device::getUuid() const {
   CUuuid uuid;
-  checkCudaCall(getBackend(_backendIdx).deviceGetUuid(
-      reinterpret_cast<CUuuid_b*>(&uuid), _obj));
+  checkCudaCall(getBackend(_backendIdx)
+                    .deviceGetUuid(reinterpret_cast<CUuuid_b*>(&uuid), _obj));
   std::stringstream result;
   result << "GPU";
   for (int i = 0; i < 16; ++i) {
@@ -1044,7 +1056,8 @@ inline std::string Device::getUuid() const {
 inline std::string Device::getArch() const {
   const size_t max_arch_length{64};
   std::array<char, max_arch_length> arch{};
-  int r = getBackend(_backendIdx).deviceGetArchName(arch.data(), arch.size(), _obj);
+  int r =
+      getBackend(_backendIdx).deviceGetArchName(arch.data(), arch.size(), _obj);
   checkCudaCall(r);
   return {arch.data()};
 }
@@ -1069,24 +1082,25 @@ inline Device Device::getByPCIBusId(const std::string& pciBusId) {
 inline std::string Device::getPCIBusId() const {
   const size_t pciBusIdLength{64};
   std::array<char, pciBusIdLength> pciBusId{};
-  checkCudaCall(
-      getBackend(_backendIdx).deviceGetPCIBusId(pciBusId.data(), pciBusId.size(), _obj));
+  checkCudaCall(getBackend(_backendIdx)
+                    .deviceGetPCIBusId(pciBusId.data(), pciBusId.size(), _obj));
   return std::string(pciBusId.data());
 }
 
 inline void Device::getDefaultMemPool(CUmemoryPool& pool) const {
-  checkCudaCall(getBackend(_backendIdx).deviceGetDefaultMemPool(
-      cu_backend_cast::toVoidPP(pool), _obj));
+  checkCudaCall(
+      getBackend(_backendIdx)
+          .deviceGetDefaultMemPool(cu_backend_cast::toVoidPP(pool), _obj));
 }
 
 inline void Device::getMemPool(CUmemoryPool& pool) const {
-  checkCudaCall(getBackend(_backendIdx).deviceGetMemPool(
-      cu_backend_cast::toVoidPP(pool), _obj));
+  checkCudaCall(getBackend(_backendIdx)
+                    .deviceGetMemPool(cu_backend_cast::toVoidPP(pool), _obj));
 }
 
 inline void Device::setMemPool(CUmemoryPool pool) const {
-  checkCudaCall(getBackend(_backendIdx).deviceSetMemPool(
-      _obj, cu_backend_cast::toVoidP(pool)));
+  checkCudaCall(getBackend(_backendIdx)
+                    .deviceSetMemPool(_obj, cu_backend_cast::toVoidP(pool)));
 }
 
 inline size_t Device::totalMem() const {
@@ -1099,39 +1113,39 @@ inline int Device::getOrdinal() const { return _ordinal; }
 
 inline bool Device::canAccessPeer(Device& peer) const {
   int canAccessPeer{};
-  checkCudaCall(getBackend(_backendIdx).deviceCanAccessPeer(
-      &canAccessPeer, _obj, peer));
+  checkCudaCall(
+      getBackend(_backendIdx).deviceCanAccessPeer(&canAccessPeer, _obj, peer));
   return canAccessPeer != 0;
 }
 
 inline int Device::getP2PAttribute(CUdevice_P2PAttribute attribute,
-                                    Device& peerDevice) const {
+                                   Device& peerDevice) const {
   int value{};
-  checkCudaCall(getBackend(_backendIdx).deviceGetP2PAttribute(
-      &value, attribute, _obj, static_cast<CUdevice>(peerDevice)));
+  checkCudaCall(getBackend(_backendIdx)
+                    .deviceGetP2PAttribute(&value, attribute, _obj,
+                                           static_cast<CUdevice>(peerDevice)));
   return value;
 }
 
 inline void Device::getStreamPriorityRange(int& leastPriority,
-                                            int& greatestPriority) {
-  checkCudaCall(getBackend(activeBackendIdx()).deviceGetStreamPriorityRange(
-      &leastPriority, &greatestPriority));
+                                           int& greatestPriority) {
+  checkCudaCall(
+      getBackend(activeBackendIdx())
+          .deviceGetStreamPriorityRange(&leastPriority, &greatestPriority));
 }
 
 // --- Context ---
 
 inline Context::Context(int flags, Device& device) : _device(&device) {
   _backendIdx = device.getBackendIdx();
-  checkCudaCall(
-      getBackend(_backendIdx).ctxCreate(ptr(), flags, device));
+  checkCudaCall(getBackend(_backendIdx).ctxCreate(ptr(), flags, device));
   int bIdx = _backendIdx;
   activeBackendIdx() = bIdx;
-  manager = std::shared_ptr<CUcontext>(new CUcontext(_obj),
-                                        [bIdx](CUcontext* ptr) {
-                                          if (*ptr)
-                                            getBackend(bIdx).ctxDestroy(*ptr);
-                                          delete ptr;
-                                        });
+  manager =
+      std::shared_ptr<CUcontext>(new CUcontext(_obj), [bIdx](CUcontext* ptr) {
+        if (*ptr) getBackend(bIdx).ctxDestroy(*ptr);
+        delete ptr;
+      });
 }
 
 inline Context::Context(CUcontext context, Device& device)
@@ -1160,7 +1174,8 @@ inline void Context::setCacheConfig(CUfunc_cache config) {
 inline Context Context::getCurrent() {
   int activeIdx = activeBackendIdx();
   CUcontext ctx{};
-  int result = getBackend(activeIdx).ctxGetCurrent(cu_backend_cast::toVoidPP(ctx));
+  int result =
+      getBackend(activeIdx).ctxGetCurrent(cu_backend_cast::toVoidPP(ctx));
   if (result == CUDA_SUCCESS && ctx) {
     int globalOffset = 0;
     for (size_t j = 0; j < static_cast<size_t>(activeIdx); ++j) {
@@ -1180,7 +1195,8 @@ inline void Context::setCurrent() const {
 inline Context Context::popCurrent() {
   int activeIdx = activeBackendIdx();
   CUcontext ctx{};
-  int result = getBackend(activeIdx).ctxPopCurrent(cu_backend_cast::toVoidPP(ctx));
+  int result =
+      getBackend(activeIdx).ctxPopCurrent(cu_backend_cast::toVoidPP(ctx));
   if (result == CUDA_SUCCESS && ctx) {
     int globalOffset = 0;
     for (size_t j = 0; j < static_cast<size_t>(activeIdx); ++j) {
@@ -1197,8 +1213,10 @@ inline void Context::pushCurrent() {
   checkCudaCall(getBackend(_backendIdx).ctxPushCurrent(_obj));
 }
 
-inline void Context::enablePeerAccess(Context& peerContext, unsigned int flags) {
-  checkCudaCall(getBackend(_backendIdx).ctxEnablePeerAccess(peerContext._obj, flags));
+inline void Context::enablePeerAccess(Context& peerContext,
+                                      unsigned int flags) {
+  checkCudaCall(
+      getBackend(_backendIdx).ctxEnablePeerAccess(peerContext._obj, flags));
 }
 
 inline void Context::disablePeerAccess(Context& peerContext) {
@@ -1290,10 +1308,12 @@ inline MemPool::MemPool(Device& device) {
   props.location.type = CU_MEM_LOCATION_TYPE_DEVICE;
   props.location.id = static_cast<int>(device);
 #endif
-  checkCudaCall(getBackend(_backendIdx).memPoolCreate(
-      reinterpret_cast<void**>(&_obj), &props));
-  manager = std::shared_ptr<void*>(new void*(_obj),
-      [this](void** ptr) { getBackend(_backendIdx).memPoolDestroy(*ptr); delete ptr; });
+  checkCudaCall(getBackend(_backendIdx)
+                    .memPoolCreate(reinterpret_cast<void**>(&_obj), &props));
+  manager = std::shared_ptr<void*>(new void*(_obj), [this](void** ptr) {
+    getBackend(_backendIdx).memPoolDestroy(*ptr);
+    delete ptr;
+  });
 }
 
 inline MemPool::MemPool(CUmemoryPool pool) {
@@ -1312,14 +1332,18 @@ inline void MemPool::getAttribute(int attr, void* value) const {
 
 inline CUdeviceptr MemPool::allocFromPoolAsync(size_t size, Stream& stream) {
   CUdeviceptr ptr{};
-  checkCudaCall(getBackend(_backendIdx).memAllocFromPoolAsync(
-      &ptr, size, reinterpret_cast<void*>(static_cast<CUmemoryPool>(_obj))));
+  checkCudaCall(
+      getBackend(_backendIdx)
+          .memAllocFromPoolAsync(
+              &ptr, size,
+              reinterpret_cast<void*>(static_cast<CUmemoryPool>(_obj))));
   return ptr;
 }
 
 // --- Array ---
 
-inline Array::Array(unsigned width, CUarray_format format, unsigned numChannels) {
+inline Array::Array(unsigned width, CUarray_format format,
+                    unsigned numChannels) {
   CUDA_ARRAY_DESCRIPTOR desc{};
   desc.Width = width;
   desc.Height = 0;
@@ -1329,7 +1353,7 @@ inline Array::Array(unsigned width, CUarray_format format, unsigned numChannels)
 }
 
 inline Array::Array(unsigned width, unsigned height, CUarray_format format,
-             unsigned numChannels) {
+                    unsigned numChannels) {
   CUDA_ARRAY_DESCRIPTOR desc{};
   desc.Width = width;
   desc.Height = height;
@@ -1339,7 +1363,7 @@ inline Array::Array(unsigned width, unsigned height, CUarray_format format,
 }
 
 inline Array::Array(unsigned width, unsigned height, unsigned depth,
-             CUarray_format format, unsigned numChannels) {
+                    CUarray_format format, unsigned numChannels) {
   CUDA_ARRAY3D_DESCRIPTOR desc{};
   desc.Width = width;
   desc.Height = height;
@@ -1368,9 +1392,10 @@ inline Module::Module(const void* image, Module::optionmap_t& options) {
     optionKeys.push_back(key);
     optionValues.push_back(value);
   }
-  checkCudaCall(getBackend(_backendIdx).moduleLoadDataEx(
-      ptr(), image, optionKeys.size(),
-      reinterpret_cast<int*>(optionKeys.data()), optionValues.data()));
+  checkCudaCall(getBackend(_backendIdx)
+                    .moduleLoadDataEx(ptr(), image, optionKeys.size(),
+                                      reinterpret_cast<int*>(optionKeys.data()),
+                                      optionValues.data()));
 }
 
 inline Module::Module(CUmodule& module) : Wrapper<CUmodule>(module) {}
@@ -1378,46 +1403,54 @@ inline Module::Module(CUmodule& module) : Wrapper<CUmodule>(module) {}
 inline CUdeviceptr Module::getGlobal(const char* name) const {
   CUdeviceptr ptr{};
   size_t bytes{};
-  checkCudaCall(getBackend(_backendIdx).moduleGetGlobal(&ptr, &bytes, _obj, name));
+  checkCudaCall(
+      getBackend(_backendIdx).moduleGetGlobal(&ptr, &bytes, _obj, name));
   return ptr;
 }
 
 // --- Function ---
 
 inline Function::Function(const Module& module, const char* name) {
-  checkCudaCall(
-      getBackend(_backendIdx).moduleGetFunction(ptr(), module, name));
+  checkCudaCall(getBackend(_backendIdx).moduleGetFunction(ptr(), module, name));
 }
 
-inline Function::Function(CUfunction& function) : Wrapper<CUfunction>(function) {}
+inline Function::Function(CUfunction& function)
+    : Wrapper<CUfunction>(function) {}
 
 inline int Function::getAttribute(CUfunction_attribute attribute) const {
   int value{};
-  checkCudaCall(getBackend(_backendIdx).funcGetAttribute(&value, attribute, _obj));
+  checkCudaCall(
+      getBackend(_backendIdx).funcGetAttribute(&value, attribute, _obj));
   return value;
 }
 
 inline void Function::setAttribute(CUfunction_attribute attribute, int value) {
-  checkCudaCall(getBackend(_backendIdx).funcSetAttribute(_obj, attribute, value));
+  checkCudaCall(
+      getBackend(_backendIdx).funcSetAttribute(_obj, attribute, value));
 }
 
-inline int Function::occupancyMaxActiveBlocksPerMultiprocessor(int blockSize,
-                                                        size_t dynamicSMemSize) {
+inline int Function::occupancyMaxActiveBlocksPerMultiprocessor(
+    int blockSize, size_t dynamicSMemSize) {
   int numBlocks{};
-  checkCudaCall(getBackend(_backendIdx).occupancyMaxActiveBlocksPerMultiprocessor(
-      &numBlocks, _obj, blockSize, dynamicSMemSize));
+  checkCudaCall(getBackend(_backendIdx)
+                    .occupancyMaxActiveBlocksPerMultiprocessor(
+                        &numBlocks, _obj, blockSize, dynamicSMemSize));
   return numBlocks;
 }
 
 inline void Function::occupancyMaxPotentialBlockSize(int& minGridSize,
-                                                      int& blockSize,
-                                                      size_t dynamicSMemSize) {
+                                                     int& blockSize,
+                                                     size_t dynamicSMemSize) {
   if (getBackend(_backendIdx).is_cuda) {
-    checkCudaCall(getBackend(_backendIdx).occupancyMaxPotentialBlockSize(
-        &minGridSize, &blockSize, _obj, 0, dynamicSMemSize, 0));
+    checkCudaCall(getBackend(_backendIdx)
+                      .occupancyMaxPotentialBlockSize(&minGridSize, &blockSize,
+                                                      _obj, 0, dynamicSMemSize,
+                                                      0));
   } else {
-    checkCudaCall(getBackend(_backendIdx).occupancyMaxPotentialBlockSize(
-        &minGridSize, &blockSize, _obj, dynamicSMemSize, 0, 0));
+    checkCudaCall(getBackend(_backendIdx)
+                      .occupancyMaxPotentialBlockSize(&minGridSize, &blockSize,
+                                                      _obj, dynamicSMemSize, 0,
+                                                      0));
   }
 }
 
@@ -1440,7 +1473,8 @@ inline Event::Event(CUevent& event) : Wrapper<CUevent>(event) {}
 
 inline float Event::elapsedTime(const Event& start) const {
   float ms{};
-  checkCudaCall(getBackend(_backendIdx).eventElapsedTime(&ms, start._obj, _obj));
+  checkCudaCall(
+      getBackend(_backendIdx).eventElapsedTime(&ms, start._obj, _obj));
   return ms;
 }
 
@@ -1461,12 +1495,14 @@ inline void Event::record(Stream& stream) {
 }
 
 inline void Event::record(Stream& stream, unsigned int flags) {
-  checkCudaCall(getBackend(_backendIdx).eventRecordWithFlags(_obj, stream, flags));
+  checkCudaCall(
+      getBackend(_backendIdx).eventRecordWithFlags(_obj, stream, flags));
 }
 
 // --- DeviceMemory ---
 
-inline DeviceMemory::DeviceMemory(size_t size, CUmemorytype type, unsigned int flags) {
+inline DeviceMemory::DeviceMemory(size_t size, CUmemorytype type,
+                                  unsigned int flags) {
   _size = size;
   if (type == CU_MEMORYTYPE_DEVICE) {
     if (flags != 0) {
@@ -1495,10 +1531,11 @@ inline DeviceMemory::DeviceMemory(const HostMemory& hostMemory) {
 }
 
 inline DeviceMemory::DeviceMemory(const DeviceMemory& other, size_t offset,
-                           size_t size)
+                                  size_t size)
     : _size(size) {
   if (offset + size > other._size) {
-    throw std::runtime_error("DeviceMemory: offset + size exceeds allocation size");
+    throw std::runtime_error(
+        "DeviceMemory: offset + size exceeds allocation size");
   }
   _obj = other._obj + offset;
 }
@@ -1515,19 +1552,22 @@ inline void DeviceMemory::memset(unsigned int value, size_t size) {
   checkCudaCall(getBackend(_backendIdx).memsetD32(_obj, value, size));
 }
 
-inline void DeviceMemory::memset2D(unsigned char value, size_t pitch, size_t width,
-                             size_t height) {
-  checkCudaCall(getBackend(_backendIdx).memsetD2D8(_obj, pitch, value, width, height));
+inline void DeviceMemory::memset2D(unsigned char value, size_t pitch,
+                                   size_t width, size_t height) {
+  checkCudaCall(
+      getBackend(_backendIdx).memsetD2D8(_obj, pitch, value, width, height));
 }
 
-inline void DeviceMemory::memset2D(unsigned short value, size_t pitch, size_t width,
-                             size_t height) {
-  checkCudaCall(getBackend(_backendIdx).memsetD2D16(_obj, pitch, value, width, height));
+inline void DeviceMemory::memset2D(unsigned short value, size_t pitch,
+                                   size_t width, size_t height) {
+  checkCudaCall(
+      getBackend(_backendIdx).memsetD2D16(_obj, pitch, value, width, height));
 }
 
-inline void DeviceMemory::memset2D(unsigned int value, size_t pitch, size_t width,
-                             size_t height) {
-  checkCudaCall(getBackend(_backendIdx).memsetD2D32(_obj, pitch, value, width, height));
+inline void DeviceMemory::memset2D(unsigned int value, size_t pitch,
+                                   size_t width, size_t height) {
+  checkCudaCall(
+      getBackend(_backendIdx).memsetD2D32(_obj, pitch, value, width, height));
 }
 
 inline void DeviceMemory::zero(size_t size) {
@@ -1543,10 +1583,11 @@ inline size_t DeviceMemory::size() const { return _size; }
 inline Stream::Stream(unsigned int flags) {
   checkCudaCall(getBackend(_backendIdx).streamCreate(ptr(), flags));
   int bIdx = _backendIdx;
-  manager = std::shared_ptr<CUstream>(new CUstream(_obj), [bIdx](CUstream* ptr) {
-    if (*ptr) getBackend(bIdx).streamDestroy(*ptr);
-    delete ptr;
-  });
+  manager =
+      std::shared_ptr<CUstream>(new CUstream(_obj), [bIdx](CUstream* ptr) {
+        if (*ptr) getBackend(bIdx).streamDestroy(*ptr);
+        delete ptr;
+      });
 }
 
 inline Stream::Stream(CUstream stream) { _obj = stream; }
@@ -1555,12 +1596,11 @@ inline Stream::Stream(CUstream stream, bool takeOwnership) {
   _obj = stream;
   if (takeOwnership) {
     int bIdx = _backendIdx;
-    manager = std::shared_ptr<CUstream>(new CUstream(_obj),
-                                         [bIdx](CUstream* ptr) {
-                                           if (*ptr)
-                                             getBackend(bIdx).streamDestroy(*ptr);
-                                           delete ptr;
-                                         });
+    manager =
+        std::shared_ptr<CUstream>(new CUstream(_obj), [bIdx](CUstream* ptr) {
+          if (*ptr) getBackend(bIdx).streamDestroy(*ptr);
+          delete ptr;
+        });
   }
 }
 
@@ -1575,21 +1615,26 @@ inline void Stream::memFreeAsync(DeviceMemory& devMem) {
   devMem = DeviceMemory(CUdeviceptr{});
 }
 
-inline void Stream::memcpyHtoHAsync(void* dstPtr, const void* srcPtr, size_t size) {
-  checkCudaCall(getBackend(_backendIdx).memcpyAsync(
-      reinterpret_cast<CUdeviceptr>(dstPtr),
-      reinterpret_cast<const void*>(srcPtr), size, _obj));
+inline void Stream::memcpyHtoHAsync(void* dstPtr, const void* srcPtr,
+                                    size_t size) {
+  checkCudaCall(getBackend(_backendIdx)
+                    .memcpyAsync(reinterpret_cast<CUdeviceptr>(dstPtr),
+                                 reinterpret_cast<const void*>(srcPtr), size,
+                                 _obj));
 }
 
-inline void Stream::memcpyHtoDAsync(DeviceMemory& dst, const void* src, size_t size) {
+inline void Stream::memcpyHtoDAsync(DeviceMemory& dst, const void* src,
+                                    size_t size) {
   checkCudaCall(getBackend(_backendIdx).memcpyHtoDAsync(dst, src, size, _obj));
 }
 
-inline void Stream::memcpyHtoDAsync(CUdeviceptr dst, const void* src, size_t size) {
+inline void Stream::memcpyHtoDAsync(CUdeviceptr dst, const void* src,
+                                    size_t size) {
   checkCudaCall(getBackend(_backendIdx).memcpyHtoDAsync(dst, src, size, _obj));
 }
 
-inline void Stream::memcpyDtoHAsync(void* dst, const DeviceMemory& src, size_t size) {
+inline void Stream::memcpyDtoHAsync(void* dst, const DeviceMemory& src,
+                                    size_t size) {
   checkCudaCall(getBackend(_backendIdx).memcpyDtoHAsync(dst, src, size, _obj));
 }
 
@@ -1597,61 +1642,71 @@ inline void Stream::memcpyDtoHAsync(void* dst, CUdeviceptr src, size_t size) {
   checkCudaCall(getBackend(_backendIdx).memcpyDtoHAsync(dst, src, size, _obj));
 }
 
-inline void Stream::memcpyHtoD2DAsync(DeviceMemory& dst, size_t dpitch, const void* src,
-                               size_t spitch, size_t width, size_t height) {
-  checkCudaCall(getBackend(_backendIdx).memcpy2DAsync(dst, dpitch, src, spitch, width, height,
-                                           1, _obj));
+inline void Stream::memcpyHtoD2DAsync(DeviceMemory& dst, size_t dpitch,
+                                      const void* src, size_t spitch,
+                                      size_t width, size_t height) {
+  checkCudaCall(
+      getBackend(_backendIdx)
+          .memcpy2DAsync(dst, dpitch, src, spitch, width, height, 1, _obj));
 }
 
-inline void Stream::memcpyDtoH2DAsync(void* dst, size_t dpitch, const DeviceMemory& src,
-                               size_t spitch, size_t width, size_t height) {
-  checkCudaCall(getBackend(_backendIdx).memcpy2DAsync(dst, dpitch, src, spitch, width, height,
-                                           2, _obj));
+inline void Stream::memcpyDtoH2DAsync(void* dst, size_t dpitch,
+                                      const DeviceMemory& src, size_t spitch,
+                                      size_t width, size_t height) {
+  checkCudaCall(
+      getBackend(_backendIdx)
+          .memcpy2DAsync(dst, dpitch, src, spitch, width, height, 2, _obj));
 }
 
 inline void Stream::memcpyDtoDAsync(DeviceMemory& dst, const DeviceMemory& src,
-                             size_t size) {
+                                    size_t size) {
   checkCudaCall(getBackend(_backendIdx).memcpyAsync(dst, src, size, _obj));
 }
 
 inline void Stream::memPrefetchAsync(DeviceMemory& devMem, size_t size) {
-  checkCudaCall(getBackend(_backendIdx).memPrefetchAsync(devMem, size, -1, _obj));
+  checkCudaCall(
+      getBackend(_backendIdx).memPrefetchAsync(devMem, size, -1, _obj));
 }
 
 inline void Stream::memPrefetchAsync(DeviceMemory& devMem, size_t size,
-                               Device& device) {
-  checkCudaCall(getBackend(_backendIdx).memPrefetchAsync(devMem, size, device, _obj));
+                                     Device& device) {
+  checkCudaCall(
+      getBackend(_backendIdx).memPrefetchAsync(devMem, size, device, _obj));
 }
 
-inline void Stream::memsetAsync(DeviceMemory& dst, unsigned char value, size_t count) {
+inline void Stream::memsetAsync(DeviceMemory& dst, unsigned char value,
+                                size_t count) {
   checkCudaCall(getBackend(_backendIdx).memsetD8Async(dst, value, count, _obj));
 }
 
 inline void Stream::memsetAsync(DeviceMemory& dst, unsigned short value,
-                         size_t count) {
-  checkCudaCall(getBackend(_backendIdx).memsetD16Async(dst, value, count, _obj));
+                                size_t count) {
+  checkCudaCall(
+      getBackend(_backendIdx).memsetD16Async(dst, value, count, _obj));
 }
 
-inline void Stream::memsetAsync(DeviceMemory& dst, unsigned int value, size_t count) {
-  checkCudaCall(getBackend(_backendIdx).memsetD32Async(dst, value, count, _obj));
+inline void Stream::memsetAsync(DeviceMemory& dst, unsigned int value,
+                                size_t count) {
+  checkCudaCall(
+      getBackend(_backendIdx).memsetD32Async(dst, value, count, _obj));
 }
 
 inline void Stream::memset2DAsync(DeviceMemory& dst, unsigned char value,
-                            size_t pitch, size_t width, size_t height) {
-  checkCudaCall(
-      getBackend(_backendIdx).memsetD2D8Async(dst, pitch, value, width, height, _obj));
+                                  size_t pitch, size_t width, size_t height) {
+  checkCudaCall(getBackend(_backendIdx)
+                    .memsetD2D8Async(dst, pitch, value, width, height, _obj));
 }
 
 inline void Stream::memset2DAsync(DeviceMemory& dst, unsigned short value,
-                            size_t pitch, size_t width, size_t height) {
-  checkCudaCall(
-      getBackend(_backendIdx).memsetD2D16Async(dst, pitch, value, width, height, _obj));
+                                  size_t pitch, size_t width, size_t height) {
+  checkCudaCall(getBackend(_backendIdx)
+                    .memsetD2D16Async(dst, pitch, value, width, height, _obj));
 }
 
 inline void Stream::memset2DAsync(DeviceMemory& dst, unsigned int value,
-                            size_t pitch, size_t width, size_t height) {
-  checkCudaCall(
-      getBackend(_backendIdx).memsetD2D32Async(dst, pitch, value, width, height, _obj));
+                                  size_t pitch, size_t width, size_t height) {
+  checkCudaCall(getBackend(_backendIdx)
+                    .memsetD2D32Async(dst, pitch, value, width, height, _obj));
 }
 
 inline void Stream::zero(DeviceMemory& dst, size_t size) {
@@ -1659,18 +1714,21 @@ inline void Stream::zero(DeviceMemory& dst, size_t size) {
 }
 
 inline void Stream::zero2D(DeviceMemory& dst, size_t pitch, size_t width,
-                     size_t height) {
-  checkCudaCall(
-      getBackend(_backendIdx).memsetD2D8Async(dst, pitch, 0, width, height, _obj));
+                           size_t height) {
+  checkCudaCall(getBackend(_backendIdx)
+                    .memsetD2D8Async(dst, pitch, 0, width, height, _obj));
 }
 
-inline void Stream::launchKernel(Function& function, unsigned gridX, unsigned gridY,
-                          unsigned gridZ, unsigned blockX, unsigned blockY,
-                          unsigned blockZ, unsigned sharedMemBytes,
-                          const std::vector<const void*>& parameters) {
-  checkCudaCall(getBackend(_backendIdx).launchKernel(
-      function, gridX, gridY, gridZ, blockX, blockY, blockZ, sharedMemBytes,
-      _obj, const_cast<void**>(parameters.data()), nullptr));
+inline void Stream::launchKernel(Function& function, unsigned gridX,
+                                 unsigned gridY, unsigned gridZ,
+                                 unsigned blockX, unsigned blockY,
+                                 unsigned blockZ, unsigned sharedMemBytes,
+                                 const std::vector<const void*>& parameters) {
+  checkCudaCall(getBackend(_backendIdx)
+                    .launchKernel(function, gridX, gridY, gridZ, blockX, blockY,
+                                  blockZ, sharedMemBytes, _obj,
+                                  const_cast<void**>(parameters.data()),
+                                  nullptr));
 }
 
 inline void Stream::graphLaunch(GraphExec& graphExec) {
@@ -1699,7 +1757,8 @@ inline void Stream::record(Event& event, unsigned int flags) {
 }
 
 inline void Stream::launchHostFunc(CUhostFn fn, void* userData) {
-  checkCudaCall(getBackend(_backendIdx).streamLaunchHostFunc(_obj, fn, userData));
+  checkCudaCall(
+      getBackend(_backendIdx).streamLaunchHostFunc(_obj, fn, userData));
 }
 
 inline void Stream::beginCapture(unsigned int flags) {
@@ -1708,14 +1767,15 @@ inline void Stream::beginCapture(unsigned int flags) {
 
 inline CUgraph Stream::endCapture() {
   CUgraph graph{};
-  checkCudaCall(getBackend(_backendIdx).streamEndCapture(_obj, reinterpret_cast<void**>(&graph)));
+  checkCudaCall(getBackend(_backendIdx)
+                    .streamEndCapture(_obj, reinterpret_cast<void**>(&graph)));
   return graph;
 }
 
 inline bool Stream::isCapturing() const {
   int status{};
-  int result = getBackend(_backendIdx).streamIsCapturing(
-      const_cast<CUstream>(_obj), &status);
+  int result = getBackend(_backendIdx)
+                   .streamIsCapturing(const_cast<CUstream>(_obj), &status);
   if (result != 0) return false;
   return status != 0;
 }
@@ -1734,7 +1794,8 @@ inline int Stream::getPriority() const {
 
 // --- Graph ---
 
-inline Graph::Graph(Context& context, CUgraph& graph) : Wrapper<CUgraph>(graph), _context(&context) {
+inline Graph::Graph(Context& context, CUgraph& graph)
+    : Wrapper<CUgraph>(graph), _context(&context) {
   _backendIdx = context.getBackendIdx();
 }
 
@@ -1749,68 +1810,94 @@ inline Graph::Graph(Context& context, unsigned int flags) : _context(&context) {
 }
 
 inline void Graph::addKernelNode(GraphNode& node,
-                           const std::vector<CUgraphNode>& dependencies,
-                           GraphKernelNodeParams& params) {
-  checkCudaCall(getBackend(_backendIdx).graphAddKernelNode(
-      reinterpret_cast<void**>(node.getNode()), cu_backend_cast::toVoidP(_obj),
-      reinterpret_cast<void* const*>(dependencies.data()), dependencies.size(),
-      reinterpret_cast<const CUDA_KERNEL_NODE_PARAMS_b*>(params.parameter())));
+                                 const std::vector<CUgraphNode>& dependencies,
+                                 GraphKernelNodeParams& params) {
+  checkCudaCall(getBackend(_backendIdx)
+                    .graphAddKernelNode(
+                        reinterpret_cast<void**>(node.getNode()),
+                        cu_backend_cast::toVoidP(_obj),
+                        reinterpret_cast<void* const*>(dependencies.data()),
+                        dependencies.size(),
+                        reinterpret_cast<const CUDA_KERNEL_NODE_PARAMS_b*>(
+                            params.parameter())));
 }
 
 inline void Graph::addHostNode(GraphNode& node,
-                         const std::vector<CUgraphNode>& dependencies,
-                         GraphHostNodeParams& params) {
-  checkCudaCall(getBackend(_backendIdx).graphAddHostNode(
-      reinterpret_cast<void**>(node.getNode()), cu_backend_cast::toVoidP(_obj),
-      reinterpret_cast<void* const*>(dependencies.data()), dependencies.size(),
-      reinterpret_cast<const CUDA_HOST_NODE_PARAMS_b*>(params.parameter())));
+                               const std::vector<CUgraphNode>& dependencies,
+                               GraphHostNodeParams& params) {
+  checkCudaCall(
+      getBackend(_backendIdx)
+          .graphAddHostNode(reinterpret_cast<void**>(node.getNode()),
+                            cu_backend_cast::toVoidP(_obj),
+                            reinterpret_cast<void* const*>(dependencies.data()),
+                            dependencies.size(),
+                            reinterpret_cast<const CUDA_HOST_NODE_PARAMS_b*>(
+                                params.parameter())));
 }
 
-inline void Graph::addDevMemFreeNode(GraphNode& node,
-                               const std::vector<CUgraphNode>& dependencies,
-                               const CUdeviceptr& devPtr) {
-  checkCudaCall(getBackend(_backendIdx).graphAddMemFreeNode(
-      reinterpret_cast<void**>(node.getNode()), cu_backend_cast::toVoidP(_obj),
-      reinterpret_cast<void* const*>(dependencies.data()), dependencies.size(), devPtr));
+inline void Graph::addDevMemFreeNode(
+    GraphNode& node, const std::vector<CUgraphNode>& dependencies,
+    const CUdeviceptr& devPtr) {
+  checkCudaCall(getBackend(_backendIdx)
+                    .graphAddMemFreeNode(
+                        reinterpret_cast<void**>(node.getNode()),
+                        cu_backend_cast::toVoidP(_obj),
+                        reinterpret_cast<void* const*>(dependencies.data()),
+                        dependencies.size(), devPtr));
 }
 
 inline void Graph::addMemAllocNode(GraphNode& node,
-                             const std::vector<CUgraphNode>& dependencies,
-                             GraphDevMemAllocNodeParams& params) {
-  checkCudaCall(getBackend(_backendIdx).graphAddMemAllocNode(
-      reinterpret_cast<void**>(node.getNode()), cu_backend_cast::toVoidP(_obj),
-      reinterpret_cast<void* const*>(dependencies.data()), dependencies.size(),
-      reinterpret_cast<CUDA_MEM_ALLOC_NODE_PARAMS_b*>(const_cast<void*>(params.parameter()))));
+                                   const std::vector<CUgraphNode>& dependencies,
+                                   GraphDevMemAllocNodeParams& params) {
+  checkCudaCall(getBackend(_backendIdx)
+                    .graphAddMemAllocNode(
+                        reinterpret_cast<void**>(node.getNode()),
+                        cu_backend_cast::toVoidP(_obj),
+                        reinterpret_cast<void* const*>(dependencies.data()),
+                        dependencies.size(),
+                        reinterpret_cast<CUDA_MEM_ALLOC_NODE_PARAMS_b*>(
+                            const_cast<void*>(params.parameter()))));
 }
 
 inline void Graph::addMemCpyNode(GraphNode& node,
-                           const std::vector<CUgraphNode>& dependencies,
-                           GraphMemCopyToDeviceNodeParams& params) {
-  checkCudaCall(getBackend(_backendIdx).graphAddMemcpyNode(
-      reinterpret_cast<void**>(node.getNode()), cu_backend_cast::toVoidP(_obj),
-      reinterpret_cast<void* const*>(dependencies.data()), dependencies.size(),
-      reinterpret_cast<const CUDA_MEMCPY3D_b*>(params.parameter()),
-      cu_backend_cast::toVoidP(static_cast<CUcontext>(*_context))));
+                                 const std::vector<CUgraphNode>& dependencies,
+                                 GraphMemCopyToDeviceNodeParams& params) {
+  checkCudaCall(
+      getBackend(_backendIdx)
+          .graphAddMemcpyNode(
+              reinterpret_cast<void**>(node.getNode()),
+              cu_backend_cast::toVoidP(_obj),
+              reinterpret_cast<void* const*>(dependencies.data()),
+              dependencies.size(),
+              reinterpret_cast<const CUDA_MEMCPY3D_b*>(params.parameter()),
+              cu_backend_cast::toVoidP(static_cast<CUcontext>(*_context))));
 }
 
 inline void Graph::addMemCpyNode(GraphNode& node,
-                           const std::vector<CUgraphNode>& dependencies,
-                           GraphMemCopyToHostNodeParams& params) {
-  checkCudaCall(getBackend(_backendIdx).graphAddMemcpyNode(
-      reinterpret_cast<void**>(node.getNode()), cu_backend_cast::toVoidP(_obj),
-      reinterpret_cast<void* const*>(dependencies.data()), dependencies.size(),
-      reinterpret_cast<const CUDA_MEMCPY3D_b*>(params.parameter()),
-      cu_backend_cast::toVoidP(static_cast<CUcontext>(*_context))));
+                                 const std::vector<CUgraphNode>& dependencies,
+                                 GraphMemCopyToHostNodeParams& params) {
+  checkCudaCall(
+      getBackend(_backendIdx)
+          .graphAddMemcpyNode(
+              reinterpret_cast<void**>(node.getNode()),
+              cu_backend_cast::toVoidP(_obj),
+              reinterpret_cast<void* const*>(dependencies.data()),
+              dependencies.size(),
+              reinterpret_cast<const CUDA_MEMCPY3D_b*>(params.parameter()),
+              cu_backend_cast::toVoidP(static_cast<CUcontext>(*_context))));
 }
 
-inline void Graph::debugDotPrint(std::string path, CUgraphDebugDot_flags flags) {
-  checkCudaCall(getBackend(_backendIdx).graphDebugDotPrint(_obj, path.c_str(), flags));
+inline void Graph::debugDotPrint(std::string path,
+                                 CUgraphDebugDot_flags flags) {
+  checkCudaCall(
+      getBackend(_backendIdx).graphDebugDotPrint(_obj, path.c_str(), flags));
 }
 
 inline CUgraphExec Graph::instantiateWithFlags(unsigned int flags) {
   CUgraphExec exec{};
-  checkCudaCall(
-      getBackend(_backendIdx).graphInstantiate(reinterpret_cast<CUgraphExec_b*>(&exec), _obj, flags));
+  checkCudaCall(getBackend(_backendIdx)
+                    .graphInstantiate(reinterpret_cast<CUgraphExec_b*>(&exec),
+                                      _obj, flags));
   return exec;
 }
 
@@ -1819,7 +1906,9 @@ inline CUgraphExec Graph::instantiateWithFlags(unsigned int flags) {
 inline GraphExec::GraphExec(CUgraphExec& graphExec) { _obj = graphExec; }
 inline GraphExec::GraphExec(const Graph& graph, unsigned int flags) {
   CUgraphExec exec{};
-  checkCudaCall(getBackend(_backendIdx).graphInstantiate(reinterpret_cast<CUgraphExec_b*>(&exec), graph, flags));
+  checkCudaCall(getBackend(_backendIdx)
+                    .graphInstantiate(reinterpret_cast<CUgraphExec_b*>(&exec),
+                                      graph, flags));
   _obj = exec;
 }
 
@@ -1857,7 +1946,7 @@ inline GraphHostNodeParams::GraphHostNodeParams(void (*fn)(void*), void* data) {
 // --- GraphDevMemAllocNodeParams ---
 
 inline GraphDevMemAllocNodeParams::GraphDevMemAllocNodeParams(const Device& dev,
-                                                        size_t size) {
+                                                              size_t size) {
   memset(&_obj, 0, sizeof(_obj));
   _obj.poolProps.location.type = CU_MEM_LOCATION_TYPE_DEVICE;
   _obj.poolProps.location.id = static_cast<int>(dev);
@@ -1920,19 +2009,20 @@ inline GraphMemCopyToHostNodeParams::GraphMemCopyToHostNodeParams(
 #if !defined(__HIP__)
 
 inline size_t Device::getTexture1DLinearMaxWidth(CUarray_format format,
-                                                   unsigned numChannels) const {
+                                                 unsigned numChannels) const {
   size_t maxWidth{};
   Backend& b = getBackend(_backendIdx);
-  checkCudaCall(b.deviceGetTexture1DLinearMaxWidth(&maxWidth,
-                static_cast<int>(format), numChannels, static_cast<CUdevice_b>(_obj)));
+  checkCudaCall(b.deviceGetTexture1DLinearMaxWidth(
+      &maxWidth, static_cast<int>(format), numChannels,
+      static_cast<CUdevice_b>(_obj)));
   return maxWidth;
 }
 
 inline void Device::getExecAffinitySupport(int& pi,
-                                             CUexecAffinityType type) const {
+                                           CUexecAffinityType type) const {
   Backend& b = getBackend(_backendIdx);
   checkCudaCall(b.deviceGetExecAffinitySupport(&pi, static_cast<int>(type),
-                static_cast<CUdevice_b>(_obj)));
+                                               static_cast<CUdevice_b>(_obj)));
 }
 
 inline void Device::getProperties(CUdevprop& prop) const {
@@ -1957,14 +2047,14 @@ inline void Device::getProperties(CUdevprop& prop) const {
 }
 
 inline void Device::getDevResource(CUdevResource& resource,
-                                     CUdevResourceType type) const {
+                                   CUdevResourceType type) const {
   Backend& b = getBackend(_backendIdx);
-  checkCudaCall(b.deviceGetDevResource(static_cast<CUdevice_b>(_obj),
-               &resource, static_cast<int>(type)));
+  checkCudaCall(b.deviceGetDevResource(static_cast<CUdevice_b>(_obj), &resource,
+                                       static_cast<int>(type)));
 }
 
 inline void Context::getDevResource(CUdevResource& resource,
-                                      CUdevResourceType type) const {
+                                    CUdevResourceType type) const {
   Backend& b = getBackend(_backendIdx);
   checkCudaCall(b.ctxGetDevResource(_obj, &resource, static_cast<int>(type)));
 }
@@ -1972,40 +2062,42 @@ inline void Context::getDevResource(CUdevResource& resource,
 inline Context Context::fromGreenCtx(GreenContext& greenContext) {
   CUcontext context{};
   Backend& b = getBackend(greenContext.getBackendIdx());
-  checkCudaCall(b.ctxFromGreenCtx(cu_backend_cast::toVoidPP(context), greenContext));
+  checkCudaCall(
+      b.ctxFromGreenCtx(cu_backend_cast::toVoidPP(context), greenContext));
   return Context(context, greenContext.getDevice());
 }
 
 // --- GreenContext ---
 
 inline GreenContext::GreenContext(CUdevResourceDesc desc, Device& device,
-                                   unsigned int flags)
+                                  unsigned int flags)
     : _device(device) {
   _backendIdx = device.getBackendIdx();
   Backend& b = getBackend(_backendIdx);
-  checkCudaCall(b.greenCtxCreate(ptr(),
-               const_cast<void*>(static_cast<const void*>(desc)),
-               static_cast<CUdevice_b>(device), flags));
+  checkCudaCall(
+      b.greenCtxCreate(ptr(), const_cast<void*>(static_cast<const void*>(desc)),
+                       static_cast<CUdevice_b>(device), flags));
   int bIdx = _backendIdx;
-  manager = std::shared_ptr<CUgreenCtx>(new CUgreenCtx(_obj),
-      [bIdx](CUgreenCtx* ptr) {
+  manager = std::shared_ptr<CUgreenCtx>(
+      new CUgreenCtx(_obj), [bIdx](CUgreenCtx* ptr) {
         if (*ptr) getBackend(bIdx).greenCtxDestroy(*ptr);
         delete ptr;
       });
 }
 
 inline void GreenContext::getDevResource(CUdevResource& resource,
-                                           CUdevResourceType type) const {
+                                         CUdevResourceType type) const {
   Backend& b = getBackend(_backendIdx);
-  checkCudaCall(b.greenCtxGetDevResource(_obj, &resource,
-               static_cast<int>(type)));
+  checkCudaCall(
+      b.greenCtxGetDevResource(_obj, &resource, static_cast<int>(type)));
 }
 
 inline Stream GreenContext::createStream(unsigned int flags,
-                                           int priority) const {
+                                         int priority) const {
   CUstream stream;
   Backend& b = getBackend(_backendIdx);
-  checkCudaCall(b.greenCtxStreamCreate(cu_backend_cast::toVoidPP(stream), _obj, flags, priority));
+  checkCudaCall(b.greenCtxStreamCreate(cu_backend_cast::toVoidPP(stream), _obj,
+                                       flags, priority));
   return Stream(stream, true);
 }
 
@@ -2023,10 +2115,10 @@ inline Device& GreenContext::getDevice() { return _device; }
 inline const Device& GreenContext::getDevice() const { return _device; }
 
 inline void Stream::getDevResource(CUdevResource& resource,
-                                     CUdevResourceType type) const {
+                                   CUdevResourceType type) const {
   Backend& b = getBackend(_backendIdx);
-  checkCudaCall(b.streamGetDevResource(_obj, &resource,
-               static_cast<int>(type)));
+  checkCudaCall(
+      b.streamGetDevResource(_obj, &resource, static_cast<int>(type)));
 }
 
 #endif  // !defined(__HIP__)

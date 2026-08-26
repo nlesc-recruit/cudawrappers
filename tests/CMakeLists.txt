@@ -11,7 +11,8 @@ list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/contrib)
 include(Catch)
 
 set(COMPONENTS ${CUDAWRAPPERS_MANDATORY_COMPONENTS} vector_add graph
-               comprehensive)
+               comprehensive
+)
 foreach(component ${CUDAWRAPPERS_COMPONENTS})
   list(FIND COMPONENTS ${component} _found)
   if(_found EQUAL -1)
@@ -77,9 +78,7 @@ if(CUDAWRAPPERS_BACKEND_ALL)
   target_link_libraries(${cuda_helpers_obj} PRIVATE CUDA::cuda_driver)
 
   set(hip_helpers_obj test_multi_backend_hip_helpers)
-  set(hip_helpers_wrapper
-      "${CMAKE_CURRENT_BINARY_DIR}/hip_helpers_wrapper.cpp"
-  )
+  set(hip_helpers_wrapper "${CMAKE_CURRENT_BINARY_DIR}/hip_helpers_wrapper.cpp")
   file(WRITE "${hip_helpers_wrapper}"
        "#include \"${CMAKE_CURRENT_SOURCE_DIR}/hip_helpers.cpp\"\n"
   )
@@ -92,8 +91,8 @@ if(CUDAWRAPPERS_BACKEND_ALL)
     test_multi_backend PRIVATE "${CMAKE_SOURCE_DIR}/include"
   )
   target_link_libraries(
-    test_multi_backend
-    PUBLIC Catch2::Catch2WithMain ${cuda_helpers_obj} ${hip_helpers_obj} gcov
+    test_multi_backend PUBLIC Catch2::Catch2WithMain ${cuda_helpers_obj}
+                              ${hip_helpers_obj} gcov
   )
   catch_discover_tests(test_multi_backend)
 
@@ -101,7 +100,7 @@ else()
   # --- Single-backend mode: existing behavior ---
 
   set(LINK_LIBRARIES Catch2::Catch2WithMain cudawrappers::cu
-                      cudawrappers::nvrtc
+                     cudawrappers::nvrtc
   )
 
   foreach(component ${COMPONENTS})

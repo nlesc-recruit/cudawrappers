@@ -18,8 +18,8 @@ TEST_CASE("Test list all GPUs", "[device]") {
     std::cout << "Device " << i << ":" << std::endl;
     std::cout << "  Name:         " << device.getName() << std::endl;
     std::cout << "  Arch:         " << device.getArch() << std::endl;
-    std::cout << "  Total memory: "
-              << (device.totalMem() / (1024 * 1024)) << " MiB" << std::endl;
+    std::cout << "  Total memory: " << (device.totalMem() / (1024 * 1024))
+              << " MiB" << std::endl;
 
     int major;
     int minor;

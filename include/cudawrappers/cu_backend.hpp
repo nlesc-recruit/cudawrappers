@@ -1,10 +1,11 @@
 #if !defined CU_BACKEND_H
 #define CU_BACKEND_H
 
+#include <dlfcn.h>
+
 #include <cstddef>
 #include <cstdio>
 #include <cstring>
-#include <dlfcn.h>
 #include <unordered_map>
 #include <vector>
 
@@ -146,7 +147,7 @@ struct Backend {
   CUresult_b (*deviceGetP2PAttribute)(int*, int, CUdevice_b, CUdevice_b);
   CUresult_b (*deviceCanAccessPeer)(int*, CUdevice_b, CUdevice_b);
   CUresult_b (*deviceGetTexture1DLinearMaxWidth)(size_t*, int, unsigned int,
-                                                   CUdevice_b);
+                                                 CUdevice_b);
   CUresult_b (*deviceGraphMemTrim)(CUdevice_b);
   CUresult_b (*deviceGetGraphMemAttribute)(CUdevice_b, int, void*);
   CUresult_b (*deviceSetGraphMemAttribute)(CUdevice_b, int, void*);
@@ -187,37 +188,35 @@ struct Backend {
   CUresult_b (*memcpyHtoD)(CUdeviceptr_b, const void*, size_t);
   CUresult_b (*memcpyDtoH)(void*, CUdeviceptr_b, size_t);
   CUresult_b (*memcpyAsync)(CUdeviceptr_b, const void*, size_t, CUstream_b);
-  CUresult_b (*memcpyHtoDAsync)(CUdeviceptr_b, const void*, size_t,
-                                 CUstream_b);
+  CUresult_b (*memcpyHtoDAsync)(CUdeviceptr_b, const void*, size_t, CUstream_b);
   CUresult_b (*memcpyDtoHAsync)(void*, CUdeviceptr_b, size_t, CUstream_b);
   CUresult_b (*memcpy2DAsync)(void*, size_t, const void*, size_t, size_t,
-                               size_t, int, CUstream_b);
+                              size_t, int, CUstream_b);
 
   CUresult_b (*memsetD8)(CUdeviceptr_b, unsigned char, size_t);
   CUresult_b (*memsetD16)(CUdeviceptr_b, unsigned short, size_t);
   CUresult_b (*memsetD32)(CUdeviceptr_b, unsigned int, size_t);
   CUresult_b (*memsetD2D8)(CUdeviceptr_b, size_t, unsigned char, size_t,
-                            size_t);
+                           size_t);
   CUresult_b (*memsetD2D16)(CUdeviceptr_b, size_t, unsigned short, size_t,
-                             size_t);
+                            size_t);
   CUresult_b (*memsetD2D32)(CUdeviceptr_b, size_t, unsigned int, size_t,
-                             size_t);
-  CUresult_b (*memsetD8Async)(CUdeviceptr_b, unsigned char, size_t,
-                               CUstream_b);
+                            size_t);
+  CUresult_b (*memsetD8Async)(CUdeviceptr_b, unsigned char, size_t, CUstream_b);
   CUresult_b (*memsetD16Async)(CUdeviceptr_b, unsigned short, size_t,
-                                CUstream_b);
-  CUresult_b (*memsetD32Async)(CUdeviceptr_b, unsigned int, size_t,
-                                CUstream_b);
+                               CUstream_b);
+  CUresult_b (*memsetD32Async)(CUdeviceptr_b, unsigned int, size_t, CUstream_b);
   CUresult_b (*memsetD2D8Async)(CUdeviceptr_b, size_t, unsigned char, size_t,
-                                 size_t, CUstream_b);
+                                size_t, CUstream_b);
   CUresult_b (*memsetD2D16Async)(CUdeviceptr_b, size_t, unsigned short, size_t,
-                                  size_t, CUstream_b);
+                                 size_t, CUstream_b);
   CUresult_b (*memsetD2D32Async)(CUdeviceptr_b, size_t, unsigned int, size_t,
-                                  size_t, CUstream_b);
+                                 size_t, CUstream_b);
 
   CUresult_b (*pointerSetAttribute)(const void*, int, CUdeviceptr_b);
   CUresult_b (*pointerGetAttribute)(void*, int, CUdeviceptr_b);
-  CUresult_b (*pointerGetAttributes)(unsigned int, const int*, void**, CUdeviceptr_b);
+  CUresult_b (*pointerGetAttributes)(unsigned int, const int*, void**,
+                                     CUdeviceptr_b);
 
   CUresult_b (*arrayCreate)(void**, void*);
   CUresult_b (*array3DCreate)(void**, void*);
@@ -232,13 +231,13 @@ struct Backend {
   CUresult_b (*streamGetFlags)(CUstream_b, unsigned int*);
   CUresult_b (*streamGetPriority)(CUstream_b, int*);
   CUresult_b (*streamAddCallback)(CUstream_b, CUstreamCallback_b, void*,
-                                   unsigned int);
+                                  unsigned int);
   CUresult_b (*streamLaunchHostFunc)(CUstream_b, CUhostFn_b, void*);
   CUresult_b (*streamRecordEvent)(CUstream_b, CUevent_b);
   CUresult_b (*streamWaitValue32)(CUstream_b, CUdeviceptr_b, unsigned int,
-                                   unsigned int);
+                                  unsigned int);
   CUresult_b (*streamWriteValue32)(CUstream_b, CUdeviceptr_b, unsigned int,
-                                    unsigned int);
+                                   unsigned int);
   CUresult_b (*streamBatchMemOp)(CUstream_b, unsigned int, void*, unsigned int);
   CUresult_b (*streamGetDevResource)(CUstream_b, void*, int);
   CUresult_b (*streamGetGreenCtx)(CUstream_b, void**);
@@ -253,18 +252,18 @@ struct Backend {
 
   CUresult_b (*moduleLoad)(CUmodule_b*, const char*);
   CUresult_b (*moduleLoadData)(CUmodule_b*, const void*);
-  CUresult_b (*moduleLoadDataEx)(CUmodule_b*, const void*, unsigned int,
-                                  int*, void**);
+  CUresult_b (*moduleLoadDataEx)(CUmodule_b*, const void*, unsigned int, int*,
+                                 void**);
   CUresult_b (*moduleUnload)(CUmodule_b);
   CUresult_b (*moduleGetFunction)(CUfunction_b*, CUmodule_b, const char*);
   CUresult_b (*moduleGetGlobal)(CUdeviceptr_b*, size_t*, CUmodule_b,
-                                 const char*);
+                                const char*);
 
   CUresult_b (*funcGetAttribute)(int*, int, CUfunction_b);
   CUresult_b (*funcSetAttribute)(const void*, int, int);
   CUresult_b (*funcSetCacheConfig)(const void*, int);
   CUresult_b (*occupancyMaxActiveBlocksPerMultiprocessor)(int*, CUfunction_b,
-                                                           int, size_t);
+                                                          int, size_t);
 
   CUresult_b (*graphCreate)(CUgraph_b*, unsigned int);
   CUresult_b (*graphDestroy)(CUgraph_b);
@@ -274,29 +273,29 @@ struct Backend {
   CUresult_b (*graphDebugDotPrint)(CUgraph_b, const char*, unsigned int);
 
   CUresult_b (*graphAddKernelNode)(CUgraphNode_b*, CUgraph_b,
-                                    const CUgraphNode_b*, size_t,
-                                    const CUDA_KERNEL_NODE_PARAMS_b*);
+                                   const CUgraphNode_b*, size_t,
+                                   const CUDA_KERNEL_NODE_PARAMS_b*);
   CUresult_b (*graphAddHostNode)(CUgraphNode_b*, CUgraph_b,
-                                  const CUgraphNode_b*, size_t,
-                                  const CUDA_HOST_NODE_PARAMS_b*);
+                                 const CUgraphNode_b*, size_t,
+                                 const CUDA_HOST_NODE_PARAMS_b*);
   CUresult_b (*graphAddMemFreeNode)(CUgraphNode_b*, CUgraph_b,
-                                     const CUgraphNode_b*, size_t,
-                                     CUdeviceptr_b);
-  CUresult_b (*graphAddMemAllocNode)(CUgraphNode_b*, CUgraph_b,
-                                      const CUgraphNode_b*, size_t,
-                                      CUDA_MEM_ALLOC_NODE_PARAMS_b*);
-  CUresult_b (*graphAddMemcpyNode)(CUgraphNode_b*, CUgraph_b,
                                     const CUgraphNode_b*, size_t,
-                                    const CUDA_MEMCPY3D_b*, CUcontext_b);
+                                    CUdeviceptr_b);
+  CUresult_b (*graphAddMemAllocNode)(CUgraphNode_b*, CUgraph_b,
+                                     const CUgraphNode_b*, size_t,
+                                     CUDA_MEM_ALLOC_NODE_PARAMS_b*);
+  CUresult_b (*graphAddMemcpyNode)(CUgraphNode_b*, CUgraph_b,
+                                   const CUgraphNode_b*, size_t,
+                                   const CUDA_MEMCPY3D_b*, CUcontext_b);
 
   CUresult_b (*launchKernel)(void*, unsigned int, unsigned int, unsigned int,
-                              unsigned int, unsigned int, unsigned int,
-                              unsigned int, CUstream_b, void**, void**);
+                             unsigned int, unsigned int, unsigned int,
+                             unsigned int, CUstream_b, void**, void**);
   CUresult_b (*launchCooperativeKernel)(void*, unsigned int, unsigned int,
-                                         unsigned int, unsigned int,
-                                         unsigned int, unsigned int,
-                                         unsigned int, unsigned int,
-                                         CUstream_b, void**);
+                                        unsigned int, unsigned int,
+                                        unsigned int, unsigned int,
+                                        unsigned int, unsigned int, CUstream_b,
+                                        void**);
 
   CUresult_b (*getExportTable)(void*, const CUuuid_b*);
 
@@ -310,7 +309,7 @@ struct Backend {
 
   CUresult_b (*devResourceGenerateDesc)(void**, void*, unsigned int);
   CUresult_b (*devSmResourceSplitByCount)(void*, unsigned int*, const void*,
-                                           void*, unsigned int, unsigned int);
+                                          void*, unsigned int, unsigned int);
 
   CUresult_b (*streamBeginCapture)(CUstream_b, unsigned int);
   CUresult_b (*streamEndCapture)(CUstream_b, CUgraph_b*);
@@ -319,16 +318,18 @@ struct Backend {
                                           const CUgraphNode_b*, size_t,
                                           unsigned int);
 
-  CUresult_b (*occupancyMaxPotentialBlockSize)(int*, int*, void*, size_t,
-                                                int, int);
+  CUresult_b (*occupancyMaxPotentialBlockSize)(int*, int*, void*, size_t, int,
+                                               int);
 
   CUresult_b (*memPoolCreate)(void**, const void*);
   CUresult_b (*memPoolDestroy)(void*);
   CUresult_b (*memPoolSetAttribute)(void*, int, const void*);
   CUresult_b (*memPoolGetAttribute)(void*, int, void*);
   CUresult_b (*memAllocFromPoolAsync)(CUdeviceptr_b*, size_t, void*);
-  CUresult_b (*memPoolExportToShareableHandle)(void*, void**, void*, unsigned long long);
-  CUresult_b (*memPoolImportFromShareableHandle)(void**, void*, void*, unsigned long long);
+  CUresult_b (*memPoolExportToShareableHandle)(void*, void**, void*,
+                                               unsigned long long);
+  CUresult_b (*memPoolImportFromShareableHandle)(void**, void*, void*,
+                                                 unsigned long long);
   CUresult_b (*memPoolExportPointer)(void*, CUdeviceptr_b);
   CUresult_b (*memPoolImportPointer)(CUdeviceptr_b*, void**, void*);
 
@@ -420,8 +421,8 @@ struct CUDA_MEMCPY2D_compat {
 };
 
 inline int cudaMemcpy2DAsyncWrapper(void* dst, size_t dpitch, const void* src,
-                                     size_t spitch, size_t width, size_t height,
-                                     int kind, void* stream) {
+                                    size_t spitch, size_t width, size_t height,
+                                    int kind, void* stream) {
   Backend& b = getFlavorBackend(true);
   if (!b.lib) return 1;
   CUDA_MEMCPY2D_compat copyParams = {};
@@ -547,8 +548,8 @@ inline Backend loadCudaBackend() {
   LOAD(memcpyAsync, "cuMemcpyAsync");
   LOAD(memcpyHtoDAsync, "cuMemcpyHtoDAsync_v2");
   LOAD(memcpyDtoHAsync, "cuMemcpyDtoHAsync_v2");
-  b.memcpy2DAsync =
-      reinterpret_cast<decltype(Backend::memcpy2DAsync)>(cudaMemcpy2DAsyncWrapper);
+  b.memcpy2DAsync = reinterpret_cast<decltype(Backend::memcpy2DAsync)>(
+      cudaMemcpy2DAsyncWrapper);
 
   LOAD(memsetD8, "cuMemsetD8_v2");
   LOAD(memsetD16, "cuMemsetD16_v2");
@@ -658,8 +659,7 @@ inline Backend loadCudaBackend() {
 
   {
     struct ArchNameHelper {
-      static CUresult_b getArchName(char* name, int maxLen,
-                                     CUdevice_b device) {
+      static CUresult_b getArchName(char* name, int maxLen, CUdevice_b device) {
         Backend& bb = getFlavorBackend(true);
         auto getAttr = reinterpret_cast<CUresult_b (*)(int*, int, CUdevice_b)>(
             dlsym(bb.lib, "cuDeviceGetAttribute"));
@@ -698,67 +698,158 @@ inline int cudaToHipDeviceAttribute(int cudaAttr) {
   // Correct mapping from CUdevice_attribute (cuda.h) to hipDeviceAttribute_t
   // CUDA enum values (cuda.h) vs HIP enum values (hip_runtime_api.h) differ
   switch (cudaAttr) {
-    case 1: return 56;  // MAX_THREADS_PER_BLOCK → hipDeviceAttributeMaxThreadsPerBlock
-    case 2: return 26;  // MAX_BLOCK_DIM_X → hipDeviceAttributeMaxBlockDimX
-    case 3: return 27;  // MAX_BLOCK_DIM_Y → hipDeviceAttributeMaxBlockDimY
-    case 4: return 28;  // MAX_BLOCK_DIM_Z → hipDeviceAttributeMaxBlockDimZ
-    case 5: return 29;  // MAX_GRID_DIM_X → hipDeviceAttributeMaxGridDimX
-    case 6: return 30;  // MAX_GRID_DIM_Y → hipDeviceAttributeMaxGridDimY
-    case 7: return 31;  // MAX_GRID_DIM_Z → hipDeviceAttributeMaxGridDimZ
-    case 8: return 74;  // MAX_SHARED_MEMORY_PER_BLOCK → hipDeviceAttributeMaxSharedMemoryPerBlock
-    case 9: return 83;  // TOTAL_CONSTANT_MEMORY → hipDeviceAttributeTotalConstantMemory
-    case 10: return 87; // WARP_SIZE → hipDeviceAttributeWarpSize
-    case 11: return 58; // MAX_PITCH → hipDeviceAttributeMaxPitch
-    case 12: return 71; // MAX_REGISTERS_PER_BLOCK → hipDeviceAttributeMaxRegistersPerBlock
-    case 13: return 5;  // CLOCK_RATE → hipDeviceAttributeClockRate
-    case 14: return 81; // TEXTURE_ALIGNMENT → hipDeviceAttributeTextureAlignment
-    case 15: return 12; // GPU_OVERLAP (deprecated) → hipDeviceAttributeDeviceOverlap
-    case 16: return 63; // MULTIPROCESSOR_COUNT → hipDeviceAttributeMultiprocessorCount
-    case 17: return 18; // KERNEL_EXEC_TIMEOUT → hipDeviceAttributeKernelExecTimeout
-    case 18: return 16; // INTEGRATED → hipDeviceAttributeIntegrated
-    case 19: return 3;  // CAN_MAP_HOST_MEMORY → hipDeviceAttributeCanMapHostMemory
-    case 20: return 6;  // COMPUTE_MODE → hipDeviceAttributeComputeMode
-    case 30: return 79; // SURFACE_ALIGNMENT → hipDeviceAttributeSurfaceAlignment
-    case 31: return 8;  // CONCURRENT_KERNELS → hipDeviceAttributeConcurrentKernels
-    case 32: return 0;  // ECC_ENABLED → hipDeviceAttributeEccEnabled
-    case 33: return 67; // PCI_BUS_ID → hipDeviceAttributePciBusId
-    case 34: return 68; // PCI_DEVICE_ID → hipDeviceAttributePciDeviceId
-    case 35: return 80; // TCC_DRIVER → hipDeviceAttributeTccDriver
-    case 36: return 60; // MEMORY_CLOCK_RATE → hipDeviceAttributeMemoryClockRate
-    case 37: return 59; // GLOBAL_MEMORY_BUS_WIDTH → hipDeviceAttributeMemoryBusWidth
-    case 38: return 19; // L2_CACHE_SIZE → hipDeviceAttributeL2CacheSize
-    case 39: return 57; // MAX_THREADS_PER_MULTIPROCESSOR → hipDeviceAttributeMaxThreadsPerMultiProcessor
-    case 40: return 2;  // ASYNC_ENGINE_COUNT → hipDeviceAttributeAsyncEngineCount
-    case 41: return 85; // UNIFIED_ADDRESSING → hipDeviceAttributeUnifiedAddressing
-    case 44: return 45; // CAN_TEX2D_GATHER → hipDeviceAttributeMaxTexture2DGather (deprecated)
-    case 50: return 69; // PCI_DOMAIN_ID → hipDeviceAttributePciDomainId
-    case 51: return 82; // TEXTURE_PITCH_ALIGNMENT → hipDeviceAttributeTexturePitchAlignment
-    case 68: return 7;  // COMPUTE_PREEMPTION_SUPPORTED → hipDeviceAttributeComputePreemptionSupported
-    case 75: return 23; // COMPUTE_CAPABILITY_MAJOR → hipDeviceAttributeComputeCapabilityMajor
-    case 76: return 61; // COMPUTE_CAPABILITY_MINOR → hipDeviceAttributeComputeCapabilityMinor
-    case 78: return 78; // STREAM_PRIORITIES_SUPPORTED → hipDeviceAttributeStreamPrioritiesSupported
-    case 81: return 76; // MAX_SHARED_MEMORY_PER_MULTIPROCESSOR → hipDeviceAttributeSharedMemPerMultiprocessor
-    case 82: return 72; // MAX_REGISTERS_PER_MULTIPROCESSOR → hipDeviceAttributeMaxRegistersPerMultiprocessor
-    case 83: return 24; // MANAGED_MEMORY → hipDeviceAttributeManagedMemory
-    case 84: return 17; // MULTI_GPU_BOARD → hipDeviceAttributeIsMultiGpuBoard
-    case 85: return 62; // MULTI_GPU_BOARD_GROUP_ID → hipDeviceAttributeMultiGpuBoardGroupID
-    case 86: return 15; // HOST_NATIVE_ATOMIC_SUPPORTED → hipDeviceAttributeHostNativeAtomicSupported
-    case 87: return 77; // SINGLE_TO_DOUBLE_PRECISION_PERF_RATIO → hipDeviceAttributeSingleToDoublePrecisionPerfRatio
-    case 88: return 65; // PAGEABLE_MEMORY_ACCESS → hipDeviceAttributePageableMemoryAccess
-    case 89: return 9;  // CONCURRENT_MANAGED_ACCESS → hipDeviceAttributeConcurrentManagedAccess
-    case 90: return 7;  // COMPUTE_PREEMPTION_SUPPORTED → hipDeviceAttributeComputePreemptionSupported
-    case 91: return 4;  // CAN_USE_HOST_POINTER_FOR_REGISTERED_MEM → hipDeviceAttributeCanUseHostPointerForRegisteredMem
-    case 95: return 10; // COOPERATIVE_LAUNCH → hipDeviceAttributeCooperativeLaunch
-    case 96: return 11; // COOPERATIVE_MULTI_DEVICE_LAUNCH → hipDeviceAttributeCooperativeMultiDeviceLaunch
-    case 97: return 75; // MAX_SHARED_MEMORY_PER_BLOCK_OPTIN → hipDeviceAttributeSharedMemPerBlockOptin
-    case 99: return 90; // HOST_REGISTER_SUPPORTED → hipDeviceAttributeHostRegisterSupported
-    case 100: return 66; // PAGEABLE_MEMORY_ACCESS_USES_HOST_PAGE_TABLES → hipDeviceAttributePageableMemoryAccessUsesHostPageTables
-    case 101: return 13; // DIRECT_MANAGED_MEM_ACCESS_FROM_HOST → hipDeviceAttributeDirectManagedMemAccessFromHost
-    case 103: return 91; // HANDLE_TYPE_POSIX_FILE_DESCRIPTOR_SUPPORTED → hipDeviceAttributeMemoryPoolSupportedHandleTypes
-    case 106: return 25; // MAX_BLOCKS_PER_MULTIPROCESSOR → hipDeviceAttributeMaxBlocksPerMultiProcessor
-    case 111: return 73; // RESERVED_SHARED_MEMORY_PER_BLOCK → hipDeviceAttributeReservedSharedMemPerBlock
-    case 115: return 88; // MEMORY_POOLS_SUPPORTED → hipDeviceAttributeMemoryPoolsSupported
-    default: return cudaAttr; // pass through as-is for unknown attributes
+    case 1:
+      return 56;  // MAX_THREADS_PER_BLOCK →
+                  // hipDeviceAttributeMaxThreadsPerBlock
+    case 2:
+      return 26;  // MAX_BLOCK_DIM_X → hipDeviceAttributeMaxBlockDimX
+    case 3:
+      return 27;  // MAX_BLOCK_DIM_Y → hipDeviceAttributeMaxBlockDimY
+    case 4:
+      return 28;  // MAX_BLOCK_DIM_Z → hipDeviceAttributeMaxBlockDimZ
+    case 5:
+      return 29;  // MAX_GRID_DIM_X → hipDeviceAttributeMaxGridDimX
+    case 6:
+      return 30;  // MAX_GRID_DIM_Y → hipDeviceAttributeMaxGridDimY
+    case 7:
+      return 31;  // MAX_GRID_DIM_Z → hipDeviceAttributeMaxGridDimZ
+    case 8:
+      return 74;  // MAX_SHARED_MEMORY_PER_BLOCK →
+                  // hipDeviceAttributeMaxSharedMemoryPerBlock
+    case 9:
+      return 83;  // TOTAL_CONSTANT_MEMORY →
+                  // hipDeviceAttributeTotalConstantMemory
+    case 10:
+      return 87;  // WARP_SIZE → hipDeviceAttributeWarpSize
+    case 11:
+      return 58;  // MAX_PITCH → hipDeviceAttributeMaxPitch
+    case 12:
+      return 71;  // MAX_REGISTERS_PER_BLOCK →
+                  // hipDeviceAttributeMaxRegistersPerBlock
+    case 13:
+      return 5;  // CLOCK_RATE → hipDeviceAttributeClockRate
+    case 14:
+      return 81;  // TEXTURE_ALIGNMENT → hipDeviceAttributeTextureAlignment
+    case 15:
+      return 12;  // GPU_OVERLAP (deprecated) → hipDeviceAttributeDeviceOverlap
+    case 16:
+      return 63;  // MULTIPROCESSOR_COUNT →
+                  // hipDeviceAttributeMultiprocessorCount
+    case 17:
+      return 18;  // KERNEL_EXEC_TIMEOUT → hipDeviceAttributeKernelExecTimeout
+    case 18:
+      return 16;  // INTEGRATED → hipDeviceAttributeIntegrated
+    case 19:
+      return 3;  // CAN_MAP_HOST_MEMORY → hipDeviceAttributeCanMapHostMemory
+    case 20:
+      return 6;  // COMPUTE_MODE → hipDeviceAttributeComputeMode
+    case 30:
+      return 79;  // SURFACE_ALIGNMENT → hipDeviceAttributeSurfaceAlignment
+    case 31:
+      return 8;  // CONCURRENT_KERNELS → hipDeviceAttributeConcurrentKernels
+    case 32:
+      return 0;  // ECC_ENABLED → hipDeviceAttributeEccEnabled
+    case 33:
+      return 67;  // PCI_BUS_ID → hipDeviceAttributePciBusId
+    case 34:
+      return 68;  // PCI_DEVICE_ID → hipDeviceAttributePciDeviceId
+    case 35:
+      return 80;  // TCC_DRIVER → hipDeviceAttributeTccDriver
+    case 36:
+      return 60;  // MEMORY_CLOCK_RATE → hipDeviceAttributeMemoryClockRate
+    case 37:
+      return 59;  // GLOBAL_MEMORY_BUS_WIDTH → hipDeviceAttributeMemoryBusWidth
+    case 38:
+      return 19;  // L2_CACHE_SIZE → hipDeviceAttributeL2CacheSize
+    case 39:
+      return 57;  // MAX_THREADS_PER_MULTIPROCESSOR →
+                  // hipDeviceAttributeMaxThreadsPerMultiProcessor
+    case 40:
+      return 2;  // ASYNC_ENGINE_COUNT → hipDeviceAttributeAsyncEngineCount
+    case 41:
+      return 85;  // UNIFIED_ADDRESSING → hipDeviceAttributeUnifiedAddressing
+    case 44:
+      return 45;  // CAN_TEX2D_GATHER → hipDeviceAttributeMaxTexture2DGather
+                  // (deprecated)
+    case 50:
+      return 69;  // PCI_DOMAIN_ID → hipDeviceAttributePciDomainId
+    case 51:
+      return 82;  // TEXTURE_PITCH_ALIGNMENT →
+                  // hipDeviceAttributeTexturePitchAlignment
+    case 68:
+      return 7;  // COMPUTE_PREEMPTION_SUPPORTED →
+                 // hipDeviceAttributeComputePreemptionSupported
+    case 75:
+      return 23;  // COMPUTE_CAPABILITY_MAJOR →
+                  // hipDeviceAttributeComputeCapabilityMajor
+    case 76:
+      return 61;  // COMPUTE_CAPABILITY_MINOR →
+                  // hipDeviceAttributeComputeCapabilityMinor
+    case 78:
+      return 78;  // STREAM_PRIORITIES_SUPPORTED →
+                  // hipDeviceAttributeStreamPrioritiesSupported
+    case 81:
+      return 76;  // MAX_SHARED_MEMORY_PER_MULTIPROCESSOR →
+                  // hipDeviceAttributeSharedMemPerMultiprocessor
+    case 82:
+      return 72;  // MAX_REGISTERS_PER_MULTIPROCESSOR →
+                  // hipDeviceAttributeMaxRegistersPerMultiprocessor
+    case 83:
+      return 24;  // MANAGED_MEMORY → hipDeviceAttributeManagedMemory
+    case 84:
+      return 17;  // MULTI_GPU_BOARD → hipDeviceAttributeIsMultiGpuBoard
+    case 85:
+      return 62;  // MULTI_GPU_BOARD_GROUP_ID →
+                  // hipDeviceAttributeMultiGpuBoardGroupID
+    case 86:
+      return 15;  // HOST_NATIVE_ATOMIC_SUPPORTED →
+                  // hipDeviceAttributeHostNativeAtomicSupported
+    case 87:
+      return 77;  // SINGLE_TO_DOUBLE_PRECISION_PERF_RATIO →
+                  // hipDeviceAttributeSingleToDoublePrecisionPerfRatio
+    case 88:
+      return 65;  // PAGEABLE_MEMORY_ACCESS →
+                  // hipDeviceAttributePageableMemoryAccess
+    case 89:
+      return 9;  // CONCURRENT_MANAGED_ACCESS →
+                 // hipDeviceAttributeConcurrentManagedAccess
+    case 90:
+      return 7;  // COMPUTE_PREEMPTION_SUPPORTED →
+                 // hipDeviceAttributeComputePreemptionSupported
+    case 91:
+      return 4;  // CAN_USE_HOST_POINTER_FOR_REGISTERED_MEM →
+                 // hipDeviceAttributeCanUseHostPointerForRegisteredMem
+    case 95:
+      return 10;  // COOPERATIVE_LAUNCH → hipDeviceAttributeCooperativeLaunch
+    case 96:
+      return 11;  // COOPERATIVE_MULTI_DEVICE_LAUNCH →
+                  // hipDeviceAttributeCooperativeMultiDeviceLaunch
+    case 97:
+      return 75;  // MAX_SHARED_MEMORY_PER_BLOCK_OPTIN →
+                  // hipDeviceAttributeSharedMemPerBlockOptin
+    case 99:
+      return 90;  // HOST_REGISTER_SUPPORTED →
+                  // hipDeviceAttributeHostRegisterSupported
+    case 100:
+      return 66;  // PAGEABLE_MEMORY_ACCESS_USES_HOST_PAGE_TABLES →
+                  // hipDeviceAttributePageableMemoryAccessUsesHostPageTables
+    case 101:
+      return 13;  // DIRECT_MANAGED_MEM_ACCESS_FROM_HOST →
+                  // hipDeviceAttributeDirectManagedMemAccessFromHost
+    case 103:
+      return 91;  // HANDLE_TYPE_POSIX_FILE_DESCRIPTOR_SUPPORTED →
+                  // hipDeviceAttributeMemoryPoolSupportedHandleTypes
+    case 106:
+      return 25;  // MAX_BLOCKS_PER_MULTIPROCESSOR →
+                  // hipDeviceAttributeMaxBlocksPerMultiProcessor
+    case 111:
+      return 73;  // RESERVED_SHARED_MEMORY_PER_BLOCK →
+                  // hipDeviceAttributeReservedSharedMemPerBlock
+    case 115:
+      return 88;  // MEMORY_POOLS_SUPPORTED →
+                  // hipDeviceAttributeMemoryPoolsSupported
+    default:
+      return cudaAttr;  // pass through as-is for unknown attributes
   }
 }
 
@@ -797,11 +888,11 @@ inline int hipLaunchCooperativeKernelWrapper(
     void** kernelParams, void** /* extra */) {
   Backend& b = getFlavorBackend(false);
   if (!b.lib) return 1;
-  using Fn = int (*)(void*, unsigned int, unsigned int, unsigned int,
-                     unsigned int, unsigned int, unsigned int, unsigned int,
-                     void*, void**);
-  static Fn fn = reinterpret_cast<Fn>(
-      dlsym(b.lib, "hipModuleLaunchCooperativeKernel"));
+  using Fn =
+      int (*)(void*, unsigned int, unsigned int, unsigned int, unsigned int,
+              unsigned int, unsigned int, unsigned int, void*, void**);
+  static Fn fn =
+      reinterpret_cast<Fn>(dlsym(b.lib, "hipModuleLaunchCooperativeKernel"));
   if (!fn) return 1;
   return fn(f, gridDimX, gridDimY, gridDimZ, blockDimX, blockDimY, blockDimZ,
             sharedMemBytes, stream, kernelParams);
@@ -878,15 +969,20 @@ inline Backend loadHipBackend() {
     using DeviceSetDeviceFn = int (*)(int);
 
     static PrimaryCtxRetainFn hipPrimaryCtxRetain =
-        reinterpret_cast<PrimaryCtxRetainFn>(dlsym(b.lib, "hipDevicePrimaryCtxRetain"));
+        reinterpret_cast<PrimaryCtxRetainFn>(
+            dlsym(b.lib, "hipDevicePrimaryCtxRetain"));
     static PrimaryCtxReleaseFn hipPrimaryCtxRelease =
-        reinterpret_cast<PrimaryCtxReleaseFn>(dlsym(b.lib, "hipDevicePrimaryCtxRelease"));
+        reinterpret_cast<PrimaryCtxReleaseFn>(
+            dlsym(b.lib, "hipDevicePrimaryCtxRelease"));
     static DeviceSynchronizeFn hipDeviceSynchronize =
-        reinterpret_cast<DeviceSynchronizeFn>(dlsym(b.lib, "hipDeviceSynchronize"));
+        reinterpret_cast<DeviceSynchronizeFn>(
+            dlsym(b.lib, "hipDeviceSynchronize"));
     static DeviceGetCacheConfigFn hipDeviceGetCacheConfig =
-        reinterpret_cast<DeviceGetCacheConfigFn>(dlsym(b.lib, "hipDeviceGetCacheConfig"));
+        reinterpret_cast<DeviceGetCacheConfigFn>(
+            dlsym(b.lib, "hipDeviceGetCacheConfig"));
     static DeviceSetCacheConfigFn hipDeviceSetCacheConfig =
-        reinterpret_cast<DeviceSetCacheConfigFn>(dlsym(b.lib, "hipDeviceSetCacheConfig"));
+        reinterpret_cast<DeviceSetCacheConfigFn>(
+            dlsym(b.lib, "hipDeviceSetCacheConfig"));
     static DeviceSetDeviceFn hipSetDeviceFn =
         reinterpret_cast<DeviceSetDeviceFn>(dlsym(b.lib, "hipSetDevice"));
 
@@ -903,7 +999,8 @@ inline Backend loadHipBackend() {
     };
     static PrimaryCtxDevices primaryCtxDevices;
 
-    b.ctxCreate = [](void** ctx, unsigned int /*flags*/, int device) -> CUresult_b {
+    b.ctxCreate = [](void** ctx, unsigned int /*flags*/,
+                     int device) -> CUresult_b {
       if (!hipPrimaryCtxRetain) return 1;
       CUresult_b result = hipPrimaryCtxRetain(ctx, device);
       if (result == 0 && ctx && *ctx) {
@@ -926,8 +1023,8 @@ inline Backend loadHipBackend() {
       }
       // Unknown context: fall back to the legacy HIP API.
       using CtxSetCurrentFn = int (*)(void*);
-      static CtxSetCurrentFn fn =
-          reinterpret_cast<CtxSetCurrentFn>(dlsym(getFlavorBackend(false).lib, "hipCtxSetCurrent"));
+      static CtxSetCurrentFn fn = reinterpret_cast<CtxSetCurrentFn>(
+          dlsym(getFlavorBackend(false).lib, "hipCtxSetCurrent"));
       if (!fn) return 1;
       return fn(ctx);
     };
@@ -975,7 +1072,8 @@ inline Backend loadHipBackend() {
     using hipMemset2DFn = int (*)(void*, size_t, int, size_t, size_t);
     using hipMemsetD16Fn = int (*)(void*, unsigned short, size_t);
     using hipMemsetD32Fn = int (*)(void*, unsigned int, size_t);
-    using hipMemset2DAsyncFn = int (*)(void*, size_t, int, size_t, size_t, void*);
+    using hipMemset2DAsyncFn =
+        int (*)(void*, size_t, int, size_t, size_t, void*);
     using hipMemsetD16AsyncFn = int (*)(void*, unsigned short, size_t, void*);
     using hipMemsetD32AsyncFn = int (*)(void*, unsigned int, size_t, void*);
 
@@ -988,58 +1086,65 @@ inline Backend loadHipBackend() {
     static hipMemset2DAsyncFn rawMemset2DAsync =
         reinterpret_cast<hipMemset2DAsyncFn>(dlsym(b.lib, "hipMemset2DAsync"));
     static hipMemsetD16AsyncFn rawMemsetD16Async =
-        reinterpret_cast<hipMemsetD16AsyncFn>(dlsym(b.lib, "hipMemsetD16Async"));
+        reinterpret_cast<hipMemsetD16AsyncFn>(
+            dlsym(b.lib, "hipMemsetD16Async"));
     static hipMemsetD32AsyncFn rawMemsetD32Async =
-        reinterpret_cast<hipMemsetD32AsyncFn>(dlsym(b.lib, "hipMemsetD32Async"));
+        reinterpret_cast<hipMemsetD32AsyncFn>(
+            dlsym(b.lib, "hipMemsetD32Async"));
 
     b.memsetD2D8 = [](CUdeviceptr_b dst, size_t pitch, unsigned char value,
-                       size_t width, size_t height) -> CUresult_b {
+                      size_t width, size_t height) -> CUresult_b {
       if (!rawMemset2D) return 1;
-      return rawMemset2D(reinterpret_cast<void*>(dst), pitch, value, width, height);
+      return rawMemset2D(reinterpret_cast<void*>(dst), pitch, value, width,
+                         height);
     };
     b.memsetD2D16 = [](CUdeviceptr_b dst, size_t pitch, unsigned short value,
-                        size_t width, size_t height) -> CUresult_b {
+                       size_t width, size_t height) -> CUresult_b {
       for (size_t row = 0; row < height; ++row) {
         if (!rawMemsetD16) return 1;
-        int err = rawMemsetD16(reinterpret_cast<void*>(dst + row * pitch), value, width);
+        int err = rawMemsetD16(reinterpret_cast<void*>(dst + row * pitch),
+                               value, width);
         if (err != 0) return err;
       }
       return 0;
     };
     b.memsetD2D32 = [](CUdeviceptr_b dst, size_t pitch, unsigned int value,
-                        size_t width, size_t height) -> CUresult_b {
+                       size_t width, size_t height) -> CUresult_b {
       for (size_t row = 0; row < height; ++row) {
         if (!rawMemsetD32) return 1;
-        int err = rawMemsetD32(reinterpret_cast<void*>(dst + row * pitch), value, width);
+        int err = rawMemsetD32(reinterpret_cast<void*>(dst + row * pitch),
+                               value, width);
         if (err != 0) return err;
       }
       return 0;
     };
     b.memsetD2D8Async = [](CUdeviceptr_b dst, size_t pitch, unsigned char value,
-                            size_t width, size_t height,
-                            CUstream_b stream) -> CUresult_b {
+                           size_t width, size_t height,
+                           CUstream_b stream) -> CUresult_b {
       if (!rawMemset2DAsync) return 1;
       return rawMemset2DAsync(reinterpret_cast<void*>(dst), pitch, value, width,
                               height, reinterpret_cast<void*>(stream));
     };
-    b.memsetD2D16Async = [](CUdeviceptr_b dst, size_t pitch, unsigned short value,
-                             size_t width, size_t height,
-                             CUstream_b stream) -> CUresult_b {
+    b.memsetD2D16Async = [](CUdeviceptr_b dst, size_t pitch,
+                            unsigned short value, size_t width, size_t height,
+                            CUstream_b stream) -> CUresult_b {
       for (size_t row = 0; row < height; ++row) {
         if (!rawMemsetD16Async) return 1;
-        int err = rawMemsetD16Async(reinterpret_cast<void*>(dst + row * pitch),
-                                    value, width, reinterpret_cast<void*>(stream));
+        int err =
+            rawMemsetD16Async(reinterpret_cast<void*>(dst + row * pitch), value,
+                              width, reinterpret_cast<void*>(stream));
         if (err != 0) return err;
       }
       return 0;
     };
     b.memsetD2D32Async = [](CUdeviceptr_b dst, size_t pitch, unsigned int value,
-                             size_t width, size_t height,
-                             CUstream_b stream) -> CUresult_b {
+                            size_t width, size_t height,
+                            CUstream_b stream) -> CUresult_b {
       for (size_t row = 0; row < height; ++row) {
         if (!rawMemsetD32Async) return 1;
-        int err = rawMemsetD32Async(reinterpret_cast<void*>(dst + row * pitch),
-                                    value, width, reinterpret_cast<void*>(stream));
+        int err =
+            rawMemsetD32Async(reinterpret_cast<void*>(dst + row * pitch), value,
+                              width, reinterpret_cast<void*>(stream));
         if (err != 0) return err;
       }
       return 0;
@@ -1048,8 +1153,9 @@ inline Backend loadHipBackend() {
 
   LOAD(pointerSetAttribute, "hipPointerSetAttribute");
   LOAD(pointerGetAttribute, "hipPointerGetAttribute");
-  // pointerGetAttributes: HIP signature differs (hipPointerGetAttributes(hipPointerAttribute_t*, const void*)).
-  // Only loaded for CUDA.
+  // pointerGetAttributes: HIP signature differs
+  // (hipPointerGetAttributes(hipPointerAttribute_t*, const void*)). Only loaded
+  // for CUDA.
 
   LOAD(arrayCreate, "hipArrayCreate");
   LOAD(array3DCreate, "hipArray3DCreate");
@@ -1060,8 +1166,8 @@ inline Backend loadHipBackend() {
   LOAD(streamDestroy, "hipStreamDestroy");
   LOAD(streamSynchronize, "hipStreamSynchronize");
   LOAD(streamQuery, "hipStreamQuery");
-  b.streamWaitEvent =
-      reinterpret_cast<decltype(Backend::streamWaitEvent)>(hipStreamWaitEventWrapper);
+  b.streamWaitEvent = reinterpret_cast<decltype(Backend::streamWaitEvent)>(
+      hipStreamWaitEventWrapper);
   LOAD(streamGetFlags, "hipStreamGetFlags");
   LOAD(streamGetPriority, "hipStreamGetPriority");
   LOAD(streamAddCallback, "hipStreamAddCallback");
@@ -1074,7 +1180,8 @@ inline Backend loadHipBackend() {
   LOAD(eventSynchronize, "hipEventSynchronize");
   LOAD(eventElapsedTime, "hipEventElapsedTime");
   LOAD(eventQuery, "hipEventQuery");
-  b.streamRecordEvent = reinterpret_cast<decltype(Backend::streamRecordEvent)>(hipEventRecordWrapper);
+  b.streamRecordEvent = reinterpret_cast<decltype(Backend::streamRecordEvent)>(
+      hipEventRecordWrapper);
 
   LOAD(moduleLoad, "hipModuleLoad");
   LOAD(moduleLoadData, "hipModuleLoadData");
@@ -1100,8 +1207,9 @@ inline Backend loadHipBackend() {
   LOAD(graphAddMemAllocNode, "hipGraphAddMemAllocNode");
 
   LOAD(launchKernel, "hipModuleLaunchKernel");
-  b.launchCooperativeKernel = reinterpret_cast<decltype(Backend::launchCooperativeKernel)>(
-      hipLaunchCooperativeKernelWrapper);
+  b.launchCooperativeKernel =
+      reinterpret_cast<decltype(Backend::launchCooperativeKernel)>(
+          hipLaunchCooperativeKernelWrapper);
 
   LOAD(getExportTable, "hipGetExportTable");
 
@@ -1110,7 +1218,8 @@ inline Backend loadHipBackend() {
   LOAD(streamIsCapturing, "hipStreamIsCapturing");
   LOAD(streamBeginCaptureToGraph, "hipStreamBeginCaptureToGraph");
 
-  LOAD(occupancyMaxPotentialBlockSize, "hipModuleOccupancyMaxPotentialBlockSize");
+  LOAD(occupancyMaxPotentialBlockSize,
+       "hipModuleOccupancyMaxPotentialBlockSize");
 
   LOAD(memPoolCreate, "hipMemPoolCreate");
   LOAD(memPoolDestroy, "hipMemPoolDestroy");
@@ -1130,12 +1239,12 @@ inline Backend loadHipBackend() {
 
   b.moduleLoadDataEx = reinterpret_cast<decltype(Backend::moduleLoadDataEx)>(
       dlsym(b.lib, "hipModuleLoadDataEx"));
-  b.graphAddMemcpyNode = reinterpret_cast<decltype(Backend::graphAddMemcpyNode)>(
-      dlsym(b.lib, "hipGraphAddMemcpyNode"));
+  b.graphAddMemcpyNode =
+      reinterpret_cast<decltype(Backend::graphAddMemcpyNode)>(
+          dlsym(b.lib, "hipGraphAddMemcpyNode"));
   {
     struct ArchNameHelper {
-      static CUresult_b getArchName(char* name, int maxLen,
-                                     CUdevice_b device) {
+      static CUresult_b getArchName(char* name, int maxLen, CUdevice_b device) {
         auto getProps = reinterpret_cast<int (*)(void*, int)>(
             dlsym(hipLib(), "hipGetDevicePropertiesR0600"));
         if (!getProps) return 1;

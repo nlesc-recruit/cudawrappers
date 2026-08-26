@@ -34,8 +34,8 @@ set(CUDAWRAPPERS_BACKEND
     ${CUDAWRAPPERS_BACKEND}
     CACHE STRING "Backend API(s) to use in cudawrappers (semicolon-separated)"
 )
-set_property(CACHE CUDAWRAPPERS_BACKEND PROPERTY STRINGS "CUDA" "HIP"
-                                                  "CUDA;HIP"
+set_property(
+  CACHE CUDAWRAPPERS_BACKEND PROPERTY STRINGS "CUDA" "HIP" "CUDA;HIP"
 )
 
 # Parse the backend list into per-backend flags

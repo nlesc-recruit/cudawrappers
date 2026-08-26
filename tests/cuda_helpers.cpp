@@ -1,8 +1,8 @@
-#include <cuda.h>
-
 #include <array>
 #include <cstdio>
 #include <string>
+
+#include <cuda.h>
 
 int cudaInit() {
   CUresult result = cuInit(0);

@@ -1,5 +1,4 @@
 #include <catch2/catch_test_macros.hpp>
-
 #include <cstdio>
 #include <iostream>
 
@@ -18,7 +17,7 @@ TEST_CASE("Test multi-backend GPU listing", "[multi_backend]") {
     int result = cudaInit();
     if (result != 0) {
       WARN("CUDA initialization failed (code " << result
-                                                << "), skipping CUDA devices");
+                                               << "), skipping CUDA devices");
       return;
     }
 
@@ -33,7 +32,7 @@ TEST_CASE("Test multi-backend GPU listing", "[multi_backend]") {
     int result = hipInitWrapper();
     if (result != 0) {
       WARN("HIP initialization failed (code " << result
-                                               << "), skipping HIP devices");
+                                              << "), skipping HIP devices");
       return;
     }
 

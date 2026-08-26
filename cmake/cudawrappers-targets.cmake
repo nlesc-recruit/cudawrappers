@@ -23,8 +23,7 @@ if(CUDAWRAPPERS_BACKEND_ALL)
     cu INTERFACE CUDA::cuda_driver hip::host ${CMAKE_DL_LIBS}
   )
   set_target_properties(
-    cu PROPERTIES PUBLIC_HEADER
-                   ${CUDAWRAPPERS_INCLUDE_DIR}/cudawrappers/cu.hpp
+    cu PROPERTIES PUBLIC_HEADER ${CUDAWRAPPERS_INCLUDE_DIR}/cudawrappers/cu.hpp
   )
 
   # HIP-only: macros target
@@ -68,7 +67,7 @@ if(CUDAWRAPPERS_BACKEND_ALL)
     target_link_libraries(nvrtc_hip INTERFACE ${LINK_nvrtc_hip})
     target_include_directories(
       nvrtc_hip INTERFACE $<BUILD_INTERFACE:${CUDAWRAPPERS_INCLUDE_DIR}>
-                           $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+                          $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
     )
 
     # Combined convenience target matching the single-backend component name
