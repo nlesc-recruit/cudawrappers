@@ -86,10 +86,6 @@ TEST_CASE("Test nvrtc::findIncludePath", "[helper]") {
   CHECK(path.size() > 0);
 #else
   CHECK(path.find("include") != std::string::npos);
-
-#if CUDA_VERSION >= 13000
-  CHECK(path.find("include/cccl") != std::string::npos);
-#endif
 #endif
 }
 

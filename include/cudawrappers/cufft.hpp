@@ -281,7 +281,8 @@ class FFT3D : public FFT {
 template <>
 inline FFT3D<CUDA_C_32F>::FFT3D(const int nx, const int ny, const int nz) {
   checkCuFFTCall(cufftCreate(plan()));
-  checkCuFFTCall(cufftPlan3d(plan(), nx, ny, nz, CUFFT_C2C));
+  size_t ws = 0;
+  checkCuFFTCall(cufftMakePlan3d(*plan(), nx, ny, nz, CUFFT_C2C, &ws));
 }
 
 }  // namespace cufft

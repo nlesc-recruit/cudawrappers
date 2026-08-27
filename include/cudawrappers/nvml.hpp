@@ -80,13 +80,13 @@ class Device {
   }
 
   static std::string getDriverVersion() {
-    char version[NVML_SYSTEM_DRIVER_V100_BUFFER_SIZE]{};
+    char version[NVML_SYSTEM_DRIVER_VERSION_BUFFER_SIZE]{};
     checkNvmlCall(nvmlSystemGetDriverVersion(version, sizeof(version)));
     return version;
   }
 
   static std::string getNvmlVersion() {
-    char version[NVML_SYSTEM_NVML_V100_BUFFER_SIZE]{};
+    char version[NVML_SYSTEM_NVML_VERSION_BUFFER_SIZE]{};
     checkNvmlCall(nvmlSystemGetNVMLVersion(version, sizeof(version)));
     return version;
   }

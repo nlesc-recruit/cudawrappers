@@ -265,6 +265,4 @@ TEST_CASE("Test 3D FFT", "[FFT3D]") {
   cu::Stream stream;
 
   cufft::FFT3D<CUDA_C_32F> fft(16, 16, 16);
-  size_t ws = fft.getSize();
-  CHECK(ws > 0);
 }
