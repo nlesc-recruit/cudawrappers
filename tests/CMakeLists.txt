@@ -22,20 +22,20 @@ if(CUDAWRAPPERS_BACKEND_ALL)
   # --- Dual-backend mode: unified cu library, single test per component ---
 
   foreach(component ${COMPONENTS})
-    set(test_name test_${component})
-    add_executable(${test_name} test_${component}.cpp)
+    set(TEST_NAME test_${component})
+    add_executable(${TEST_NAME} test_${component}.cpp)
     target_include_directories(
-      ${test_name} PRIVATE "${CMAKE_SOURCE_DIR}/include"
+      ${TEST_NAME} PRIVATE "${CMAKE_SOURCE_DIR}/include"
     )
-    set(link_libs Catch2::Catch2 cudawrappers::cu)
+    set(LINK_LIBS Catch2::Catch2 cudawrappers::cu)
     if(NOT CUDAWRAPPERS_BACKEND_HIP)
-      list(APPEND link_libs gcov)
+      list(APPEND LINK_LIBS gcov)
     endif()
     if(${component} STREQUAL "comprehensive")
-      target_link_libraries(${test_name} PUBLIC ${link_libs})
+      target_link_libraries(${TEST_NAME} PUBLIC ${LINK_LIBS})
     else()
       target_link_libraries(
-        ${test_name} PUBLIC Catch2::Catch2WithMain ${link_libs}
+        ${TEST_NAME} PUBLIC Catch2::Catch2WithMain ${LINK_LIBS}
       )
     endif()
     catch_discover_tests(${test_name})
@@ -73,28 +73,28 @@ if(CUDAWRAPPERS_BACKEND_ALL)
   endif()
 
   # Multi-backend test: single binary that lists GPUs from both CUDA and HIP
-  set(cuda_helpers_obj test_multi_backend_cuda_helpers)
-  add_library(${cuda_helpers_obj} OBJECT cuda_helpers.cpp)
-  target_link_libraries(${cuda_helpers_obj} PRIVATE CUDA::cuda_driver)
+  set(CUDA_HELPERS_OBJ test_multi_backend_cuda_helpers)
+  add_library(${CUDA_HELPERS_OBJ} OBJECT cuda_helpers.cpp)
+  target_link_libraries(${CUDA_HELPERS_OBJ} PRIVATE CUDA::cuda_driver)
 
-  set(hip_helpers_obj test_multi_backend_hip_helpers)
-  set(hip_helpers_wrapper "${CMAKE_CURRENT_BINARY_DIR}/hip_helpers_wrapper.cpp")
-  file(WRITE "${hip_helpers_wrapper}"
+  set(HIP_HELPERS_OBJ test_multi_backend_hip_helpers)
+  set(HIP_HELPERS_WRAPPER "${CMAKE_CURRENT_BINARY_DIR}/hip_helpers_wrapper.cpp")
+  file(WRITE "${HIP_HELPERS_WRAPPER}"
        "#include \"${CMAKE_CURRENT_SOURCE_DIR}/hip_helpers.cpp\"\n"
   )
-  set_source_files_properties("${hip_helpers_wrapper}" PROPERTIES LANGUAGE HIP)
-  add_library(${hip_helpers_obj} OBJECT "${hip_helpers_wrapper}")
-  target_link_libraries(${hip_helpers_obj} PRIVATE hip::host)
+  set_source_files_properties("${HIP_HELPERS_WRAPPER}" PROPERTIES LANGUAGE HIP)
+  add_library(${HIP_HELPERS_OBJ} OBJECT "${HIP_HELPERS_WRAPPER}")
+  target_link_libraries(${HIP_HELPERS_OBJ} PRIVATE hip::host)
 
   add_executable(test_multi_backend test_multi_backend.cpp)
   target_include_directories(
     test_multi_backend PRIVATE "${CMAKE_SOURCE_DIR}/include"
   )
-  set(link_libs Catch2::Catch2WithMain ${cuda_helpers_obj} ${hip_helpers_obj})
+  set(LINK_LIBS Catch2::Catch2WithMain ${CUDA_HELPERS_OBJ} ${HIP_HELPERS_OBJ})
   if(NOT CUDAWRAPPERS_BACKEND_HIP)
-    list(APPEND link_libs gcov)
+    list(APPEND LINK_LIBS gcov)
   endif()
-  target_link_libraries(test_multi_backend PUBLIC ${link_libs})
+  target_link_libraries(test_multi_backend PUBLIC ${LINK_LIBS})
   catch_discover_tests(test_multi_backend)
 
 else()

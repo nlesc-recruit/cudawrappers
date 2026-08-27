@@ -43,16 +43,18 @@ set(CUDAWRAPPERS_BACKEND_CUDA False)
 set(CUDAWRAPPERS_BACKEND_HIP False)
 set(_valid_backends CUDA HIP)
 
-foreach(_backend ${CUDAWRAPPERS_BACKEND})
-  string(STRIP "${_backend}" _backend)
-  if("${_backend}" STREQUAL "CUDA")
+foreach(backend ${CUDAWRAPPERS_BACKEND})
+  string(STRIP "${backend}" backend)
+  if("${backend}" STREQUAL "CUDA")
     set(CUDAWRAPPERS_BACKEND_CUDA True)
-  elseif("${_backend}" STREQUAL "HIP")
+  elseif("${backend}" STREQUAL "HIP")
     set(CUDAWRAPPERS_BACKEND_HIP True)
   else()
+    set(_valid_backends "CUDA HIP")
     message(
       FATAL_ERROR
-        "Invalid value '${_backend}' in CUDAWRAPPERS_BACKEND: ${CUDAWRAPPERS_BACKEND}. Valid values are: CUDA HIP"
+        "Invalid value '${backend}' in CUDAWRAPPERS_BACKEND: "
+        "${CUDAWRAPPERS_BACKEND}. Valid values are: ${_valid_backends}"
     )
   endif()
 endforeach()
