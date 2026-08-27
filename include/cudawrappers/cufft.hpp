@@ -5,6 +5,7 @@
 #include <hip/hip_fp16.h>
 #include <hipfft/hipfft.h>
 #include <hipfft/hipfftXt.h>
+typedef hipComplex cufftComplex;
 #else
 #include <cuda_fp16.h>
 #include <cufft.h>
@@ -17,6 +18,7 @@ typedef hipDataType cudaDataType_t;
 typedef hipfftResult cufftResult;
 typedef hipfftResult_t cufftResult_t;
 typedef hipfftHandle cufftHandle;
+typedef hipFloatComplex cuFloatComplex;
 #define CUFFT_SUCCESS HIPFFT_SUCCESS
 #define CUFFT_C2C HIPFFT_C2C
 #define CUFFT_R2C HIPFFT_R2C
@@ -24,6 +26,8 @@ typedef hipfftHandle cufftHandle;
 #define CUFFT_Z2Z HIPFFT_Z2Z
 #define CUFFT_D2Z HIPFFT_D2Z
 #define CUFFT_Z2D HIPFFT_Z2D
+#define CUFFT_FORWARD HIPFFT_FORWARD
+#define CUFFT_INVERSE HIPFFT_BACKWARD
 #define cufftDestroy hipfftDestroy
 #define cufftSetStream hipfftSetStream
 #define cufftGetSize hipfftGetSize
@@ -33,10 +37,11 @@ typedef hipfftHandle cufftHandle;
 #define cufftPlan2d hipfftPlan2d
 #define cufftPlanMany hipfftPlanMany
 #define cufftXtMakePlanMany hipfftXtMakePlanMany
-#define CUDA_C_32F HIPFFT_C_32F
-#define CUDA_C_16F HIPFFT_C_16F
-#define CUDA_R_32F HIPFFT_R_32F
-#define CUDA_R_16F HIPFFT_R_16F
+#define cufftMakePlan3d hipfftMakePlan3d
+#define CUDA_C_32F HIP_C_32F
+#define CUDA_C_16F HIP_C_16F
+#define CUDA_R_32F HIP_R_32F
+#define CUDA_R_16F HIP_R_16F
 #endif
 
 #include <array>
