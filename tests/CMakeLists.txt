@@ -31,14 +31,10 @@ if(CUDAWRAPPERS_BACKEND_ALL)
     if(NOT CUDAWRAPPERS_BACKEND_HIP)
       list(APPEND LINK_LIBS gcov)
     endif()
-    if(${component} STREQUAL "comprehensive")
-      target_link_libraries(${TEST_NAME} PUBLIC ${LINK_LIBS})
-    else()
-      target_link_libraries(
-        ${TEST_NAME} PUBLIC Catch2::Catch2WithMain ${LINK_LIBS}
-      )
-    endif()
-    catch_discover_tests(${test_name})
+    target_link_libraries(
+      ${TEST_NAME} PUBLIC Catch2::Catch2WithMain ${LINK_LIBS}
+    )
+    catch_discover_tests(${TEST_NAME})
   endforeach()
 
   # NVML (CUDA-only, skip for now in unified mode)
@@ -120,14 +116,16 @@ else()
     target_link_libraries(test_nvml PUBLIC cudawrappers::nvml)
   endif()
 
-  target_include_directories(
-    test_nvrtc PRIVATE "${CMAKE_SOURCE_DIR}/include"
-                       "${CMAKE_CURRENT_SOURCE_DIR}/kernels"
-  )
+  if(CUDAWRAPPERS_BUILD_NVRTC)
+    target_include_directories(
+      test_nvrtc PRIVATE "${CMAKE_SOURCE_DIR}/include"
+                         "${CMAKE_CURRENT_SOURCE_DIR}/kernels"
+    )
 
-  target_embed_source(test_nvrtc kernels/vector_add_kernel.cu)
-  target_embed_source(test_nvrtc kernels/single_include_kernel.cu)
-  target_embed_source(test_nvrtc kernels/recursive_include_kernel.cu)
+    target_embed_source(test_nvrtc kernels/vector_add_kernel.cu)
+    target_embed_source(test_nvrtc kernels/single_include_kernel.cu)
+    target_embed_source(test_nvrtc kernels/recursive_include_kernel.cu)
+  endif()
 
   if(CUDAWRAPPERS_BUILD_CUFFT)
     target_link_libraries(test_cufft PUBLIC cudawrappers::cufft)
