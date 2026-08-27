@@ -27,13 +27,15 @@ if(CUDAWRAPPERS_BACKEND_ALL)
     target_include_directories(
       ${test_name} PRIVATE "${CMAKE_SOURCE_DIR}/include"
     )
+    set(link_libs Catch2::Catch2 cudawrappers::cu)
+    if(NOT CUDAWRAPPERS_BACKEND_HIP)
+      list(APPEND link_libs gcov)
+    endif()
     if(${component} STREQUAL "comprehensive")
-      target_link_libraries(
-        ${test_name} PUBLIC Catch2::Catch2 cudawrappers::cu gcov
-      )
+      target_link_libraries(${test_name} PUBLIC ${link_libs})
     else()
       target_link_libraries(
-        ${test_name} PUBLIC Catch2::Catch2WithMain cudawrappers::cu gcov
+        ${test_name} PUBLIC Catch2::Catch2WithMain ${link_libs}
       )
     endif()
     catch_discover_tests(${test_name})
@@ -88,10 +90,11 @@ if(CUDAWRAPPERS_BACKEND_ALL)
   target_include_directories(
     test_multi_backend PRIVATE "${CMAKE_SOURCE_DIR}/include"
   )
-  target_link_libraries(
-    test_multi_backend PUBLIC Catch2::Catch2WithMain ${cuda_helpers_obj}
-                              ${hip_helpers_obj} gcov
-  )
+  set(link_libs Catch2::Catch2WithMain ${cuda_helpers_obj} ${hip_helpers_obj})
+  if(NOT CUDAWRAPPERS_BACKEND_HIP)
+    list(APPEND link_libs gcov)
+  endif()
+  target_link_libraries(test_multi_backend PUBLIC ${link_libs})
   catch_discover_tests(test_multi_backend)
 
 else()

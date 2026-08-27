@@ -21,7 +21,7 @@
 // When CUDA headers are available (and not building for HIP), include
 // <cuda.h> to get the real CUDA types. Otherwise, define manual types
 // compatible with the backend abstraction (for HIP-only or headerless builds).
-#if __has_include(<cuda.h>)
+#if !defined(__HIP__) && __has_include(<cuda.h>)
 #include <cuda_runtime.h>
 
 #include <cuda.h>
@@ -54,6 +54,10 @@ typedef void* CUarray;
 typedef void* CUgreenCtx;
 struct CUdevResource;
 typedef const CUdevResource* CUdevResourceDesc;
+
+#if defined(__HIP__)
+#include <hip/hip_runtime.h>
+#endif
 
 struct CUuuid {
   char bytes[16];
@@ -860,6 +864,10 @@ class Stream : public Wrapper<CUstream> {
   int getPriority() const;
 #if !defined(__HIP__)
   void getDevResource(CUdevResource& resource, CUdevResourceType type) const;
+#endif
+
+#if defined(__HIP__)
+  inline operator hipStream_t() const { return static_cast<hipStream_t>(_obj); }
 #endif
 };
 

@@ -396,7 +396,7 @@ inline Backend& getBackend() {
 
 // --- CUDA backend (loaded entirely via dlsym, no CUDA headers needed) ---
 
-#if __has_include(<cuda.h>)
+#if !defined(__HIP__) && __has_include(<cuda.h>)
 
 namespace {
 
@@ -688,7 +688,7 @@ inline Backend loadCudaBackend() {
   return b;
 }
 
-#endif  // __has_include(<cuda.h>)
+#endif  // __has_include(<cuda.h>) && !defined(__HIP__)
 
 // --- CUDA-to-HIP attribute mapping ---
 

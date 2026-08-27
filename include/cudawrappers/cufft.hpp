@@ -11,6 +11,34 @@
 #include <cufftXt.h>
 #endif
 
+// HIP compatibility layer
+#if defined(__HIP__)
+typedef hipDataType cudaDataType_t;
+typedef hipfftResult cufftResult;
+typedef hipfftResult_t cufftResult_t;
+typedef hipfftHandle cufftHandle;
+#define CUFFT_SUCCESS HIPFFT_SUCCESS
+#define CUFFT_C2C HIPFFT_C2C
+#define CUFFT_R2C HIPFFT_R2C
+#define CUFFT_C2R HIPFFT_C2R
+#define CUFFT_Z2Z HIPFFT_Z2Z
+#define CUFFT_D2Z HIPFFT_D2Z
+#define CUFFT_Z2D HIPFFT_Z2D
+#define cufftDestroy hipfftDestroy
+#define cufftSetStream hipfftSetStream
+#define cufftGetSize hipfftGetSize
+#define cufftXtExec hipfftXtExec
+#define cufftCreate hipfftCreate
+#define cufftPlan1d hipfftPlan1d
+#define cufftPlan2d hipfftPlan2d
+#define cufftPlanMany hipfftPlanMany
+#define cufftXtMakePlanMany hipfftXtMakePlanMany
+#define CUDA_C_32F HIPFFT_C_32F
+#define CUDA_C_16F HIPFFT_C_16F
+#define CUDA_R_32F HIPFFT_R_32F
+#define CUDA_R_16F HIPFFT_R_16F
+#endif
+
 #include <array>
 #include <exception>
 #include <magic_enum/magic_enum.hpp>

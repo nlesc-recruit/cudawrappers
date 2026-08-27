@@ -161,9 +161,12 @@ if(CUDAWRAPPERS_BUILD_TESTING)
   include(CTest)
   enable_testing()
 
-  # Set up coverage collection
-  add_compile_options(--coverage -g -O0)
-  add_link_options("--coverage")
+  # Set up coverage collection (disabled for HIP as ROCm toolchain may lack
+  # coverage runtime)
+  if(NOT CUDAWRAPPERS_BACKEND_HIP)
+    add_compile_options(--coverage -g -O0)
+    add_link_options("--coverage")
+  endif()
   add_subdirectory(tests)
 endif()
 
