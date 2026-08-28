@@ -925,7 +925,7 @@ inline Backend loadHipBackend() {
     using hipGetAttrFn = int (*)(int*, int, int);
     static hipGetAttrFn rawGetAttr =
         reinterpret_cast<hipGetAttrFn>(dlsym(b.lib, "hipDeviceGetAttribute"));
-    b.deviceGetAttribute = [](int* pi, int attr, int device) -> CUresult_b {
+    b.deviceGetAttribute = [](int* pi, int attr, int device) {
       if (!rawGetAttr) return 1;
       return rawGetAttr(pi, cudaToHipDeviceAttribute(attr), device);
     };
@@ -999,8 +999,7 @@ inline Backend loadHipBackend() {
     };
     static PrimaryCtxDevices primaryCtxDevices;
 
-    b.ctxCreate = [](void** ctx, unsigned int /*flags*/,
-                     int device) -> CUresult_b {
+    b.ctxCreate = [](void** ctx, unsigned int /*flags*/, int device) {
       if (!hipPrimaryCtxRetain) return 1;
       CUresult_b result = hipPrimaryCtxRetain(ctx, device);
       if (result == 0 && ctx && *ctx) {
@@ -1010,11 +1009,11 @@ inline Backend loadHipBackend() {
       }
       return result;
     };
-    b.ctxDestroy = [](void* ctx) -> CUresult_b {
+    b.ctxDestroy = [](void* ctx) {
       if (ctx) primaryCtxDevices.get().erase(ctx);
       return 0;
     };
-    b.ctxSetCurrent = [](void* ctx) -> CUresult_b {
+    b.ctxSetCurrent = [](void* ctx) {
       auto& map = primaryCtxDevices.get();
       auto it = map.find(ctx);
       if (it != map.end()) {
@@ -1028,15 +1027,15 @@ inline Backend loadHipBackend() {
       if (!fn) return 1;
       return fn(ctx);
     };
-    b.ctxSynchronize = []() -> CUresult_b {
+    b.ctxSynchronize = []() {
       if (!hipDeviceSynchronize) return 1;
       return hipDeviceSynchronize();
     };
-    b.ctxGetCacheConfig = [](int* config) -> CUresult_b {
+    b.ctxGetCacheConfig = [](int* config) {
       if (!hipDeviceGetCacheConfig) return 1;
       return hipDeviceGetCacheConfig(config);
     };
-    b.ctxSetCacheConfig = [](int config) -> CUresult_b {
+    b.ctxSetCacheConfig = [](int config) {
       if (!hipDeviceSetCacheConfig) return 1;
       return hipDeviceSetCacheConfig(config);
     };
@@ -1093,13 +1092,13 @@ inline Backend loadHipBackend() {
             dlsym(b.lib, "hipMemsetD32Async"));
 
     b.memsetD2D8 = [](CUdeviceptr_b dst, size_t pitch, unsigned char value,
-                      size_t width, size_t height) -> CUresult_b {
+                      size_t width, size_t height) {
       if (!rawMemset2D) return 1;
       return rawMemset2D(reinterpret_cast<void*>(dst), pitch, value, width,
                          height);
     };
     b.memsetD2D16 = [](CUdeviceptr_b dst, size_t pitch, unsigned short value,
-                       size_t width, size_t height) -> CUresult_b {
+                       size_t width, size_t height) {
       for (size_t row = 0; row < height; ++row) {
         if (!rawMemsetD16) return 1;
         int err = rawMemsetD16(reinterpret_cast<void*>(dst + row * pitch),
@@ -1109,7 +1108,7 @@ inline Backend loadHipBackend() {
       return 0;
     };
     b.memsetD2D32 = [](CUdeviceptr_b dst, size_t pitch, unsigned int value,
-                       size_t width, size_t height) -> CUresult_b {
+                       size_t width, size_t height) {
       for (size_t row = 0; row < height; ++row) {
         if (!rawMemsetD32) return 1;
         int err = rawMemsetD32(reinterpret_cast<void*>(dst + row * pitch),
@@ -1119,15 +1118,14 @@ inline Backend loadHipBackend() {
       return 0;
     };
     b.memsetD2D8Async = [](CUdeviceptr_b dst, size_t pitch, unsigned char value,
-                           size_t width, size_t height,
-                           CUstream_b stream) -> CUresult_b {
+                           size_t width, size_t height, CUstream_b stream) {
       if (!rawMemset2DAsync) return 1;
       return rawMemset2DAsync(reinterpret_cast<void*>(dst), pitch, value, width,
                               height, reinterpret_cast<void*>(stream));
     };
     b.memsetD2D16Async = [](CUdeviceptr_b dst, size_t pitch,
                             unsigned short value, size_t width, size_t height,
-                            CUstream_b stream) -> CUresult_b {
+                            CUstream_b stream) {
       for (size_t row = 0; row < height; ++row) {
         if (!rawMemsetD16Async) return 1;
         int err =
@@ -1138,8 +1136,7 @@ inline Backend loadHipBackend() {
       return 0;
     };
     b.memsetD2D32Async = [](CUdeviceptr_b dst, size_t pitch, unsigned int value,
-                            size_t width, size_t height,
-                            CUstream_b stream) -> CUresult_b {
+                            size_t width, size_t height, CUstream_b stream) {
       for (size_t row = 0; row < height; ++row) {
         if (!rawMemsetD32Async) return 1;
         int err =

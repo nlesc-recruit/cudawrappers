@@ -1508,7 +1508,9 @@ TEST_CASE("Stream: launchHostFunc", "[stream]") {
   }
 
   SECTION("Multiple host functions") {
-    int a = 0, b = 0, c = 0;
+    int a = 0;
+    int b = 0;
+    int c = 0;
     stream.launchHostFunc(
         +[](void* data) { *static_cast<int*>(data) = 1; }, &a);
     stream.launchHostFunc(
@@ -2253,7 +2255,7 @@ TEST_CASE("Pointer: pointerGetAttributes", "[pointer]") {
   unsigned int memType = 0;
   void* dataPtr = &memType;
   void** dataArr = &dataPtr;
-  cu::pointerGetAttributes(1, &attr, dataArr, ptr);
+  cu::pointerGetAttributes(1, &attr, const_cast<void**>(dataArr), ptr);
   CHECK(memType != 0);
 #endif
 }

@@ -1,0 +1,55 @@
+digraph dot {
+subgraph cluster_7 {
+label="graph_7" graph[style="dashed"];
+"graph_7_node_0"[style="solid" shape="rectangle" label="0 (topoId: 1)
+HOST
+node handle: 0x0000635028B927A8
+fn: 0x0000634FF6DA6EF4
+userData: 0x00007FFE16C919BC
+"];
+
+"graph_7_node_1"[style="solid" shape="record" label="{
+MEM_ALLOC
+| {{ID | node handle} | {1 (topoId: 5) | 0x0000635028B91FA0}}
+| {{{poolProps | {allocType | handleTypes | {location | {type | id}}} | {PINNED | NONE | DEVICE | 0}}}}
+| {{bytesize | dptr} | {12 | 0x0000000322000000}}
+}"];
+
+"graph_7_node_2"[style="solid" shape="rectangle" label="2 (topoId: 4)
+HOST
+node handle: 0x0000635028B91798
+fn: 0x0000634FF6DA6EF4
+userData: 0x00007FFE16C919BC
+"];
+
+"graph_7_node_3"[style="solid" shape="record" label="{
+MEMCPY
+| {{ID | node handle} | {3 (topoId: 3) | 0x0000635028B90F90}}
+| {{src | dst} | { MemoryType | Array | Host | Device | XInBytes | Y | Z | Pitch | Height | LOD | MemoryType | Array | Host | Device | XInBytes | Y | Z | Pitch | Height | LOD} | {HOST (HOST PAGEABLE) | 0x0000000000000000 | 0x00007FFE16C919BC | 0x0000000000000000 | 0 | 0 | 0 | 0 | 0 | 0 | DEVICE (DEVICE) | 0x0000000000000000 | 0x0000000000000000 | 0x0000000322000000 | 0 | 0 | 0 | 0 | 0 | 0}}
+| {Extent | {WidthInBytes | Height | Depth} | {12 | 1 | 1}}
+}"];
+
+"graph_7_node_4"[style="bold" shape="record" label="{KERNEL
+| {ID | 4 (topoId: 2) | _Z12vector_printPfm\<\<\<3,1,0\>\>\>}
+| {{node handle | func handle} | {0x0000635028B8DF60 | 0x000063502B516720}}
+| {accessPolicyWindow | {base_ptr | num_bytes | hitRatio | hitProp | missProp} | {0x0000000000000000 | 0 | 0.000000 | N | N}}
+| {cooperative | 0}
+| {priority | 0}
+| {cluster dim | (0,0,0)}
+| {preferred cluster dim | (0,0,0)}
+| {cluster scheduling policy preference | 0}
+}"];
+
+"graph_7_node_5"[style="solid" shape="record" label="{
+MEMCPY
+| {{ID | node handle} | {5 (topoId: 0) | 0x0000635028B8E768}}
+| {{src | dst} | { MemoryType | Array | Host | Device | XInBytes | Y | Z | Pitch | Height | LOD | MemoryType | Array | Host | Device | XInBytes | Y | Z | Pitch | Height | LOD} | {DEVICE (DEVICE) | 0x0000000000000000 | 0x0000000000000000 | 0x0000000322000000 | 0 | 0 | 0 | 0 | 0 | 0 | HOST (HOST PAGEABLE) | 0x0000000000000000 | 0x00007FFE16C919B0 | 0x0000000000000000 | 0 | 0 | 0 | 0 | 0 | 0}}
+| {Extent | {WidthInBytes | Height | Depth} | {3 | 1 | 1}}
+}"];
+
+"graph_7_node_1" -> "graph_7_node_2" [headlabel=0];
+"graph_7_node_2" -> "graph_7_node_3" [headlabel=0];
+"graph_7_node_3" -> "graph_7_node_4" [headlabel=0];
+"graph_7_node_4" -> "graph_7_node_5" [headlabel=0];
+}
+}

@@ -425,15 +425,15 @@ constexpr unsigned int CU_GRAPH_DEFAULT = 0;
 namespace cu_backend_cast {
 template <typename T>
 inline void** toVoidPP(T& ptr) {
-  return reinterpret_cast<void**>(&ptr);
+  return static_cast<void**>(static_cast<void*>(&ptr));
 }
 template <typename T>
 inline void* toVoidP(T ptr) {
-  return reinterpret_cast<void*>(ptr);
+  return static_cast<void*>(ptr);
 }
 template <typename T>
 inline T fromVoidP(void* ptr) {
-  return reinterpret_cast<T>(ptr);
+  return static_cast<T>(ptr);
 }
 }  // namespace cu_backend_cast
 
@@ -578,7 +578,7 @@ class HostMemory : public Wrapper<void*> {
 
 class UnmanagedMemory : public HostMemory {
  public:
-  UnmanagedMemory(void* ptr, size_t size);
+  UnmanagedMemory(const void* ptr, size_t size);
 };
 
 class Stream;
@@ -1298,8 +1298,8 @@ inline size_t HostMemory::size() const { return _size; }
 
 // --- UnmanagedMemory ---
 
-inline UnmanagedMemory::UnmanagedMemory(void* ptr, size_t size)
-    : HostMemory(ptr, size, 0) {}
+inline UnmanagedMemory::UnmanagedMemory(const void* ptr, size_t size)
+    : HostMemory(const_cast<void*>(ptr), size, 0) {}
 
 // --- MemPool ---
 

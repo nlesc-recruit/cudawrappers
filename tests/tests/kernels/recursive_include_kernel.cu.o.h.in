@@ -1,0 +1,4 @@
+
+extern const unsigned char _binary_tests_kernels_recursive_include_kernel_cu_start[];
+extern const unsigned char _binary_tests_kernels_recursive_include_kernel_cu_end[];
+extern const unsigned int  _binary_tests_kernels_recursive_include_kernel_cu_size;
