@@ -5,9 +5,7 @@ find_package(CUDAToolkit REQUIRED)
 enable_language(CUDA)
 
 include(FetchContent)
-FetchContent_Declare(
-  cudawrappers
-  SOURCE_DIR /home/veenboer/src/cudawrappers)
+FetchContent_Declare(cudawrappers SOURCE_DIR /home/veenboer/src/cudawrappers)
 FetchContent_MakeAvailable(cudawrappers)
 
 add_executable(${PROJECT_NAME} main.cu)

@@ -15,7 +15,7 @@ void initialize_arrays(float *a, float *b, float *c, float *r, int N) {
   }
 }
 
-int main(int argc, char* argv[]) {
+int main(int argc, char *argv[]) {
   const std::string kernel = R"(
     extern "C" __global__ void vector_add(float *c, float *a, float *b, int n) {
       int i = blockIdx.x * blockDim.x + threadIdx.x;
@@ -43,7 +43,7 @@ int main(int argc, char* argv[]) {
     std::cerr << program.getLog();
     throw;
   }
-    // std::cout << "log: " << program.getLog() << std::endl;;
+  // std::cout << "log: " << program.getLog() << std::endl;;
 
   std::string ptx = program.getPTX();
   // std::cout << "ptx: " << std::endl << ptx << std::endl;
@@ -52,7 +52,6 @@ int main(int argc, char* argv[]) {
 
   cu::Module module(static_cast<const void *>(program.getPTX().data()));
   cu::Function function(module, "vector_add");
-
 
   cu::HostMemory h_a(bytesize);
   cu::HostMemory h_b(bytesize);

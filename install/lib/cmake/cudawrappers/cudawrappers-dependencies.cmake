@@ -85,8 +85,8 @@ else()
   find_package(CUDAToolkit ${CUDA_MIN_VERSION} REQUIRED)
   if(${CUDAToolkit_FOUND})
     if(${CUDAToolkit_VERSION_MAJOR} LESS ${CUDA_MIN_VERSION})
-      message(FATAL_ERROR "Insufficient CUDA version: "
-                          ${CUDAToolkit_VERSION} " < " ${CUDA_MIN_VERSION}
+      message(FATAL_ERROR "Insufficient CUDA version: " ${CUDAToolkit_VERSION}
+                          " < " ${CUDA_MIN_VERSION}
       )
     endif()
   else()
