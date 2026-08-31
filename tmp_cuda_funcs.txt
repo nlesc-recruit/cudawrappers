@@ -1,1 +1,0 @@
-GetProcAddress_v2_ptsz
