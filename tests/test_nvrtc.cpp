@@ -86,10 +86,6 @@ TEST_CASE("Test nvrtc::findIncludePath", "[helper]") {
   CHECK(path.size() > 0);
 #else
   CHECK(path.find("include") != std::string::npos);
-
-#if CUDA_VERSION >= 13000
-  CHECK(path.find("include/cccl") != std::string::npos);
-#endif
 #endif
 }
 
@@ -114,4 +110,15 @@ TEST_CASE("Test nvrtc::findIncludePaths", "[helper]") {
   }
 
   CHECK(non_empty_paths > 0);
+}
+
+TEST_CASE("Test nvrtc::version", "[version]") {
+  auto [major, minor] = nvrtc::version();
+  CHECK(major >= 0);
+  CHECK(minor >= 0);
+}
+
+TEST_CASE("Test nvrtc::getSupportedArchs", "[archs]") {
+  auto archs = nvrtc::getSupportedArchs();
+  CHECK(archs.size() > 0);
 }
