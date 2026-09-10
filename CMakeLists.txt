@@ -32,18 +32,44 @@ if(NOT DEFINED CUDAWRAPPERS_BACKEND)
 endif()
 set(CUDAWRAPPERS_BACKEND
     ${CUDAWRAPPERS_BACKEND}
-    CACHE STRING "Backend API to use in cudawrappers"
+    CACHE STRING "Backend API(s) to use in cudawrappers (semicolon-separated)"
 )
-set_property(CACHE CUDAWRAPPERS_BACKEND PROPERTY STRINGS "CUDA" "HIP")
+set_property(
+  CACHE CUDAWRAPPERS_BACKEND PROPERTY STRINGS "CUDA" "HIP" "CUDA;HIP"
+)
 
-if(${CUDAWRAPPERS_BACKEND} STREQUAL "CUDA")
-  set(CUDAWRAPPERS_BACKEND_CUDA True)
-elseif(${CUDAWRAPPERS_BACKEND} STREQUAL "HIP")
-  set(CUDAWRAPPERS_BACKEND_HIP True)
+# Parse the backend list into per-backend flags
+set(CUDAWRAPPERS_BACKEND_CUDA False)
+set(CUDAWRAPPERS_BACKEND_HIP False)
+set(_valid_backends CUDA HIP)
+
+foreach(backend ${CUDAWRAPPERS_BACKEND})
+  string(STRIP "${backend}" backend)
+  if("${backend}" STREQUAL "CUDA")
+    set(CUDAWRAPPERS_BACKEND_CUDA True)
+  elseif("${backend}" STREQUAL "HIP")
+    set(CUDAWRAPPERS_BACKEND_HIP True)
+  else()
+    set(_valid_backends "CUDA HIP")
+    message(
+      FATAL_ERROR
+        "Invalid value '${backend}' in CUDAWRAPPERS_BACKEND: "
+        "${CUDAWRAPPERS_BACKEND}. Valid values are: ${_valid_backends}"
+    )
+  endif()
+endforeach()
+
+if(CUDAWRAPPERS_BACKEND_CUDA AND CUDAWRAPPERS_BACKEND_HIP)
+  set(CUDAWRAPPERS_BACKEND_ALL True)
+  message(STATUS "cudawrappers: building for both CUDA and HIP backends")
+elseif(CUDAWRAPPERS_BACKEND_CUDA)
+  message(STATUS "cudawrappers: building for CUDA backend")
+elseif(CUDAWRAPPERS_BACKEND_HIP)
+  message(STATUS "cudawrappers: building for HIP backend")
 else()
   message(
     FATAL_ERROR
-      "Invalid value for CUDAWRAPPERS_BACKEND: ${CUDAWRAPPERS_BACKEND}"
+      "No valid backend specified in CUDAWRAPPERS_BACKEND: ${CUDAWRAPPERS_BACKEND}"
   )
 endif()
 
@@ -65,8 +91,8 @@ if(_found GREATER -1)
   set(CUDAWRAPPERS_COMPONENTS ${CUDAWRAPPERS_ALL_COMPONENTS})
 endif()
 
-# If HIP backend is used, remove NVML
-if(CUDAWRAPPERS_BACKEND_HIP)
+# If only HIP backend is used, remove NVML (NVIDIA-only, no AMD equivalent)
+if(CUDAWRAPPERS_BACKEND_HIP AND NOT CUDAWRAPPERS_BACKEND_CUDA)
   list(FIND CUDAWRAPPERS_COMPONENTS "nvml" _found)
   if(_found GREATER -1)
     message(WARNING "HIP backend is used, removing nvml component.")
@@ -93,7 +119,7 @@ foreach(component ${CUDAWRAPPERS_ALL_COMPONENTS})
   endif()
 endforeach()
 
-if(${CUDAWRAPPERS_BACKEND_HIP})
+if(CUDAWRAPPERS_BACKEND_HIP)
   enable_language(HIP)
   set(CMAKE_HIP_COMPILER_ENV_VAR "HIPCXX")
 endif()
@@ -137,9 +163,12 @@ if(CUDAWRAPPERS_BUILD_TESTING)
   include(CTest)
   enable_testing()
 
-  # Set up coverage collection
-  add_compile_options(--coverage -g -O0)
-  add_link_options("--coverage")
+  # Set up coverage collection (disabled for HIP as ROCm toolchain may lack
+  # coverage runtime)
+  if(NOT CUDAWRAPPERS_BACKEND_HIP)
+    add_compile_options(--coverage -g -O0)
+    add_link_options("--coverage")
+  endif()
   add_subdirectory(tests)
 endif()
 

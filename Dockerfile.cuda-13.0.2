@@ -1,0 +1,19 @@
+FROM nvidia/cuda:13.0.2-devel-ubuntu24.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    cmake \
+    g++ \
+    git \
+    wget \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /workspace
+
+COPY . /workspace/
+
+RUN cmake -DCUDAWRAPPERS_BUILD_TESTING=True -DCUDAWRAPPERS_COMPONENTS='cu;cufft;nvrtc' -S . -B build -DCMAKE_INSTALL_PREFIX=install && \
+    cmake --build build -j && \
+    cmake --install build
