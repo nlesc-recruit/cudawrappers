@@ -1534,8 +1534,13 @@ inline DeviceMemory::DeviceMemory(CUdeviceptr ptr, size_t size) {
 
 inline DeviceMemory::DeviceMemory(const HostMemory& hostMemory) {
   _size = hostMemory.size();
-  checkCudaCall(getBackend(_backendIdx).memAlloc(&_obj, _size));
-  checkCudaCall(getBackend(_backendIdx).memcpyHtoD(_obj, hostMemory, _size));
+  void* hp = hostMemory;
+  void* devPtr = nullptr;
+  // Return the device-addressable pointer of the host allocation so that the
+  // device memory aliases the (pinned/indexed) host buffer.  This keeps a
+  // single buffer shared between CPU and GPU on integrated-memory devices.
+  checkCudaCall(getBackend(_backendIdx).memHostGetDevicePointer(&devPtr, hp, 0));
+  _obj = reinterpret_cast<CUdeviceptr>(devPtr);
 }
 
 inline DeviceMemory::DeviceMemory(const DeviceMemory& other, size_t offset,
