@@ -1540,7 +1540,8 @@ inline DeviceMemory::DeviceMemory(const HostMemory& hostMemory) {
   // Return the device-addressable pointer of the host allocation so that the
   // device memory aliases the (pinned/indexed) host buffer.  This keeps a
   // single buffer shared between CPU and GPU on integrated-memory devices.
-  checkCudaCall(getBackend(_backendIdx).memHostGetDevicePointer(&devPtr, hp, 0));
+  checkCudaCall(
+      getBackend(_backendIdx).memHostGetDevicePointer(&devPtr, hp, 0));
   _obj = reinterpret_cast<CUdeviceptr>(devPtr);
 }
 
