@@ -5,10 +5,43 @@
 #include <hip/hip_fp16.h>
 #include <hipfft/hipfft.h>
 #include <hipfft/hipfftXt.h>
+typedef hipComplex cufftComplex;
 #else
 #include <cuda_fp16.h>
 #include <cufft.h>
 #include <cufftXt.h>
+#endif
+
+// HIP compatibility layer
+#if defined(__HIP__)
+typedef hipDataType cudaDataType_t;
+typedef hipfftResult cufftResult;
+typedef hipfftResult_t cufftResult_t;
+typedef hipfftHandle cufftHandle;
+typedef hipFloatComplex cuFloatComplex;
+#define CUFFT_SUCCESS HIPFFT_SUCCESS
+#define CUFFT_C2C HIPFFT_C2C
+#define CUFFT_R2C HIPFFT_R2C
+#define CUFFT_C2R HIPFFT_C2R
+#define CUFFT_Z2Z HIPFFT_Z2Z
+#define CUFFT_D2Z HIPFFT_D2Z
+#define CUFFT_Z2D HIPFFT_Z2D
+#define CUFFT_FORWARD HIPFFT_FORWARD
+#define CUFFT_INVERSE HIPFFT_BACKWARD
+#define cufftDestroy hipfftDestroy
+#define cufftSetStream hipfftSetStream
+#define cufftGetSize hipfftGetSize
+#define cufftXtExec hipfftXtExec
+#define cufftCreate hipfftCreate
+#define cufftPlan1d hipfftPlan1d
+#define cufftPlan2d hipfftPlan2d
+#define cufftPlanMany hipfftPlanMany
+#define cufftXtMakePlanMany hipfftXtMakePlanMany
+#define cufftMakePlan3d hipfftMakePlan3d
+#define CUDA_C_32F HIP_C_32F
+#define CUDA_C_16F HIP_C_16F
+#define CUDA_R_32F HIP_R_32F
+#define CUDA_R_16F HIP_R_16F
 #endif
 
 #include <array>
@@ -66,6 +99,12 @@ class FFT {
 
   void setStream(cu::Stream &stream) const {
     checkCuFFTCall(cufftSetStream(plan_, stream));
+  }
+
+  size_t getSize() const {
+    size_t ws{};
+    checkCuFFTCall(cufftGetSize(plan_, &ws));
+    return ws;
   }
 
   void execute(cu::DeviceMemory &in, cu::DeviceMemory &out,
@@ -258,6 +297,25 @@ inline FFT1DC2R<CUDA_C_32F>::FFT1DC2R(const int nx, const int batch,
   checkCuFFTCall(cufftXtMakePlanMany(
       *plan(), rank, n.data(), &inembed, istride, idist, CUDA_C_32F, &ouembed,
       ostride, odist, CUDA_R_32F, batch, &ws, CUDA_C_32F));
+}
+
+/*
+ * FFT3D
+ */
+template <cudaDataType_t T>
+class FFT3D : public FFT {
+ public:
+#if defined(__HIP__)
+  __host__
+#endif
+  FFT3D(const int nx, const int ny, const int nz) = delete;
+};
+
+template <>
+inline FFT3D<CUDA_C_32F>::FFT3D(const int nx, const int ny, const int nz) {
+  checkCuFFTCall(cufftCreate(plan()));
+  size_t ws = 0;
+  checkCuFFTCall(cufftMakePlan3d(*plan(), nx, ny, nz, CUFFT_C2C, &ws));
 }
 
 }  // namespace cufft

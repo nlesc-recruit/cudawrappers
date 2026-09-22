@@ -13,3 +13,13 @@ TEST_CASE("Test nvtx Marker use", "[marker-use]") {
   cu::init();
   marker.end();
 }
+
+TEST_CASE("Test nvtx mark", "[mark]") {
+  CHECK_NOTHROW(nvtx::mark("test_mark"));
+}
+
+TEST_CASE("Test nvtx ThreadRange", "[thread-range]") {
+  {
+    nvtx::ThreadRange range("test_thread_range");
+  }
+}
