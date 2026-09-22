@@ -591,6 +591,7 @@ inline Backend loadCudaBackend() {
   LOAD(eventElapsedTime, "cuEventElapsedTime");
   LOAD(eventQuery, "cuEventQuery");
   b.streamRecordEvent = cuEventRecordWrapper;
+  LOAD(streamAddCallback, "cuStreamAddCallback");
   LOAD(streamLaunchHostFunc, "cuLaunchHostFunc");
 
   LOAD(moduleLoad, "cuModuleLoad");

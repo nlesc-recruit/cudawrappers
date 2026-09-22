@@ -78,6 +78,10 @@ struct CUdevprop {
 
 typedef void (*CUhostFn)(void*);
 
+#if defined(__HIP__)
+typedef void (*CUstreamCallback)(CUstream, CUresult, void*);
+#endif
+
 #ifndef CUDA_SUCCESS
 constexpr CUresult CUDA_SUCCESS = 0;
 #endif
@@ -858,6 +862,8 @@ class Stream : public Wrapper<CUstream> {
   void record(Event& event);
   void record(Event& event, unsigned int flags);
   void launchHostFunc(CUhostFn fn, void* userData = nullptr);
+  void addCallback(CUstreamCallback callback, void* userData,
+                   unsigned int flags = 0);
   void beginCapture(unsigned int flags = 0);  // CU_STREAM_CAPTURE_MODE_GLOBAL
   CUgraph endCapture();
   bool isCapturing() const;
@@ -1774,6 +1780,12 @@ inline void Stream::record(Event& event, unsigned int flags) {
 inline void Stream::launchHostFunc(CUhostFn fn, void* userData) {
   checkCudaCall(
       getBackend(_backendIdx).streamLaunchHostFunc(_obj, fn, userData));
+}
+
+inline void Stream::addCallback(CUstreamCallback callback, void* userData,
+                                unsigned int flags) {
+  checkCudaCall(getBackend(_backendIdx).streamAddCallback(
+      _obj, reinterpret_cast<CUstreamCallback_b>(callback), userData, flags));
 }
 
 inline void Stream::beginCapture(unsigned int flags) {
