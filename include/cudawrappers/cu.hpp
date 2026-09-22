@@ -1784,8 +1784,10 @@ inline void Stream::launchHostFunc(CUhostFn fn, void* userData) {
 
 inline void Stream::addCallback(CUstreamCallback callback, void* userData,
                                 unsigned int flags) {
-  checkCudaCall(getBackend(_backendIdx).streamAddCallback(
-      _obj, reinterpret_cast<CUstreamCallback_b>(callback), userData, flags));
+  checkCudaCall(getBackend(_backendIdx)
+                    .streamAddCallback(
+                        _obj, reinterpret_cast<CUstreamCallback_b>(callback),
+                        userData, flags));
 }
 
 inline void Stream::beginCapture(unsigned int flags) {
