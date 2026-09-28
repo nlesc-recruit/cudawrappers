@@ -71,12 +71,9 @@ if(CUDAWRAPPERS_BACKEND_HIP)
     set(CUDAWRAPPERS_LINK_HIPRTC False)
   endif()
   if(CUDAWRAPPERS_BUILD_CUFFT)
+    # The cufft component no longer needs the hipfft development package: it
+    # loads the cuFFT or hipFFT library at run time (see cufft_backend.hpp).
     find_package(hipfft QUIET)
-    if(NOT hipfft_FOUND)
-      message(WARNING "hipfft was not found, cufft component is disabled.")
-      list(REMOVE_ITEM CUDAWRAPPERS_COMPONENTS cufft)
-      set(CUDAWRAPPERS_BUILD_CUFFT OFF)
-    endif()
   endif()
 endif()
 

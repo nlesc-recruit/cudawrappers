@@ -76,22 +76,13 @@ if(CUDAWRAPPERS_BACKEND_ALL)
     target_link_libraries(nvrtc INTERFACE nvrtc_cuda nvrtc_hip)
   endif()
 
-  # cuFFT targets (header-only)
+  # cuFFT target (header-only, runtime dispatch between cuFFT and hipFFT)
   if(CUDAWRAPPERS_BUILD_CUFFT)
-    add_library(cufft_cuda INTERFACE)
-    add_library(${PROJECT_NAME}::cufft_cuda ALIAS cufft_cuda)
-    target_link_libraries(cufft_cuda INTERFACE CUDA::cuda_driver CUDA::cufft)
+    add_library(cufft INTERFACE)
+    add_library(${PROJECT_NAME}::cufft ALIAS cufft)
     target_include_directories(
-      cufft_cuda INTERFACE $<BUILD_INTERFACE:${CUDAWRAPPERS_INCLUDE_DIR}>
-                           $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
-    )
-
-    add_library(cufft_hip INTERFACE)
-    add_library(${PROJECT_NAME}::cufft_hip ALIAS cufft_hip)
-    target_link_libraries(cufft_hip INTERFACE hip::host hip::hipfft)
-    target_include_directories(
-      cufft_hip INTERFACE $<BUILD_INTERFACE:${CUDAWRAPPERS_INCLUDE_DIR}>
-                          $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+      cufft INTERFACE $<BUILD_INTERFACE:${CUDAWRAPPERS_INCLUDE_DIR}>
+                      $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
     )
   endif()
 
@@ -124,7 +115,7 @@ else()
     set(LINK_macros hip::host)
     set(LINK_cu hip::host ${CMAKE_DL_LIBS})
     if(CUDAWRAPPERS_BUILD_CUFFT)
-      set(LINK_cufft hip::host hip::hipfft)
+      set(LINK_cufft ${CMAKE_DL_LIBS})
     endif()
     if(CUDAWRAPPERS_BUILD_NVML)
       set(LINK_nvml hip::host)
@@ -158,7 +149,7 @@ else()
     set(LINK_cu CUDA::cuda_driver ${CMAKE_DL_LIBS})
 
     if(CUDAWRAPPERS_BUILD_CUFFT)
-      set(LINK_cufft CUDA::cuda_driver CUDA::cufft)
+      set(LINK_cufft ${CMAKE_DL_LIBS})
     endif()
     if(CUDAWRAPPERS_BUILD_NVML)
       set(LINK_nvml CUDA::cuda_driver CUDA::nvml)
@@ -196,12 +187,7 @@ if(CUDAWRAPPERS_BUILD_CUFFT)
   )
 
   FetchContent_MakeAvailable(magic_enum)
-  if(CUDAWRAPPERS_BACKEND_ALL)
-    target_link_libraries(cufft_cuda INTERFACE magic_enum)
-    target_link_libraries(cufft_hip INTERFACE magic_enum)
-  else()
-    target_link_libraries(cufft INTERFACE magic_enum)
-  endif()
+  target_link_libraries(cufft INTERFACE magic_enum)
 endif()
 
 # Collect all created targets for installation
@@ -215,7 +201,7 @@ if(CUDAWRAPPERS_BACKEND_ALL)
     list(APPEND CUDAWRAPPERS_INSTALL_TARGETS nvrtc_cuda nvrtc_hip)
   endif()
   if(CUDAWRAPPERS_BUILD_CUFFT)
-    list(APPEND CUDAWRAPPERS_INSTALL_TARGETS cufft_cuda cufft_hip)
+    list(APPEND CUDAWRAPPERS_INSTALL_TARGETS cufft)
   endif()
   if(CUDAWRAPPERS_BUILD_NVTX)
     list(APPEND CUDAWRAPPERS_INSTALL_TARGETS nvtx_cuda nvtx_hip)

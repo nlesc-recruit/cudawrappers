@@ -60,7 +60,7 @@ if(CUDAWRAPPERS_BACKEND_ALL)
 
   # cuFFT
   if(CUDAWRAPPERS_BUILD_CUFFT)
-    target_link_libraries(test_cufft PUBLIC cudawrappers::cufft_cuda)
+    target_link_libraries(test_cufft PUBLIC cudawrappers::cufft)
   endif()
 
   # NVTX
