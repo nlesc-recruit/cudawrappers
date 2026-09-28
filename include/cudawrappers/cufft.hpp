@@ -157,7 +157,8 @@ class FFT {
   FFT() = default;
   FFT(const FFT&) = delete;
   FFT& operator=(const FFT&) = delete;
-  FFT(FFT&& other) noexcept : _backendIdx(other._backendIdx), plan_(other.plan_) {
+  FFT(FFT&& other) noexcept
+      : _backendIdx(other._backendIdx), plan_(other.plan_) {
     other.plan_ = 0;
   }
   FFT& operator=(FFT&& other) noexcept {
@@ -196,8 +197,8 @@ class FFT {
                      int ostride, int odist, cufftType type, int batch) const {
     size_t ws{};
     checkCuFFTCall(backend().getSizeMany(plan_, rank, n.data(), inembed.data(),
-                                        istride, idist, onembed.data(), ostride,
-                                        odist, type, batch, &ws));
+                                         istride, idist, onembed.data(),
+                                         ostride, odist, type, batch, &ws));
     return ws;
   }
 
@@ -207,9 +208,9 @@ class FFT {
                        long long ostride, long long odist, cufftType type,
                        long long batch) const {
     size_t ws{};
-    checkCuFFTCall(backend().getSizeMany64(plan_, rank, n.data(), inembed.data(),
-                                          istride, idist, onembed.data(),
-                                          ostride, odist, type, batch, &ws));
+    checkCuFFTCall(backend().getSizeMany64(
+        plan_, rank, n.data(), inembed.data(), istride, idist, onembed.data(),
+        ostride, odist, type, batch, &ws));
     return ws;
   }
 
@@ -348,7 +349,8 @@ class FFT {
     checkCuFFTCall(backend().xtSetCallback(plan_, callbacks, cbType, userData));
   }
 
-  void setCallbackSharedSize(cufftCallbackType cbType, size_t sharedSize) const {
+  void setCallbackSharedSize(cufftCallbackType cbType,
+                             size_t sharedSize) const {
     ensurePlan();
     checkCuFFTCall(
         backend().xtSetCallbackSharedSize(plan_, cbType, sharedSize));
@@ -450,9 +452,9 @@ inline FFT2D<CUDA_C_32F>::FFT2D(const int nx, const int ny, const int stride,
                                 const int dist, const int batch) {
   checkCuFFTCall((backend().create(plan())));
   std::array<int, 2> n{nx, ny};
-  checkCuFFTCall((backend().planMany(
-      plan(), 2, n.data(), n.data(), stride, dist, n.data(), stride, dist,
-      CUFFT_C2C, batch)));
+  checkCuFFTCall(
+      (backend().planMany(plan(), 2, n.data(), n.data(), stride, dist, n.data(),
+                          stride, dist, CUFFT_C2C, batch)));
 }
 
 template <>
@@ -567,8 +569,7 @@ template <>
 inline FFT3D<CUDA_C_32F>::FFT3D(const int nx, const int ny, const int nz) {
   checkCuFFTCall((backend().create(plan())));
   size_t ws = 0;
-  checkCuFFTCall(
-      (backend().makePlan3d(plan_, nx, ny, nz, CUFFT_C2C, &ws)));
+  checkCuFFTCall((backend().makePlan3d(plan_, nx, ny, nz, CUFFT_C2C, &ws)));
 }
 
 /*
@@ -576,7 +577,8 @@ inline FFT3D<CUDA_C_32F>::FFT3D(const int nx, const int ny, const int nz) {
  */
 inline size_t estimate1d(int nx, cufftType type, int batch) {
   size_t ws{};
-  int result = getFFTBackend(cu::activeBackendIdx()).estimate1d(nx, type, batch, &ws);
+  int result =
+      getFFTBackend(cu::activeBackendIdx()).estimate1d(nx, type, batch, &ws);
   if (result != CUFFT_SUCCESS) {
     throw Error(static_cast<cufftResult>(result));
   }
@@ -585,7 +587,8 @@ inline size_t estimate1d(int nx, cufftType type, int batch) {
 
 inline size_t estimate2d(int nx, int ny, cufftType type) {
   size_t ws{};
-  int result = getFFTBackend(cu::activeBackendIdx()).estimate2d(nx, ny, type, &ws);
+  int result =
+      getFFTBackend(cu::activeBackendIdx()).estimate2d(nx, ny, type, &ws);
   if (result != CUFFT_SUCCESS) {
     throw Error(static_cast<cufftResult>(result));
   }
@@ -603,12 +606,12 @@ inline size_t estimate3d(int nx, int ny, int nz, cufftType type) {
 }
 
 inline size_t estimateMany(int rank, int* n, int* inembed, int istride,
-                          int idist, int* onembed, int ostride, int odist,
-                          cufftType type, int batch) {
+                           int idist, int* onembed, int ostride, int odist,
+                           cufftType type, int batch) {
   size_t ws{};
   int result = getFFTBackend(cu::activeBackendIdx())
-                  .estimateMany(rank, n, inembed, istride, idist, onembed,
-                                ostride, odist, type, batch, &ws);
+                   .estimateMany(rank, n, inembed, istride, idist, onembed,
+                                 ostride, odist, type, batch, &ws);
   if (result != CUFFT_SUCCESS) {
     throw Error(static_cast<cufftResult>(result));
   }

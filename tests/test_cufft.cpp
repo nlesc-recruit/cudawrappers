@@ -78,7 +78,8 @@ TEST_CASE("Test 1D FFT", "[FFT1D]") {
     cu::DeviceMemory d_out(arraySize);
     cu::DeviceMemory d_out2(arraySize);
 
-    generateSignal(static_cast<cufft::cufftComplex *>(h_in), size, patchSize, {1, 1});
+    generateSignal(static_cast<cufft::cufftComplex *>(h_in), size, patchSize,
+                   {1, 1});
     stream.memcpyHtoDAsync(d_in, h_in, arraySize);
 
     cufft::FFT1D<cufft::CUDA_C_32F> fft(size);
@@ -130,7 +131,8 @@ TEST_CASE("Test 1D FFT", "[FFT1D]") {
     cu::DeviceMemory d_out(arraySize);
     cu::DeviceMemory d_out2(arraySize);
 
-    generateSignal(static_cast<cufft::cufftComplex *>(h_in), size, patchSize, {1, 1});
+    generateSignal(static_cast<cufft::cufftComplex *>(h_in), size, patchSize,
+                   {1, 1});
     stream.memcpyHtoDAsync(d_in, h_in, arraySize);
 
     cufft::FFT1DR2C<cufft::CUDA_R_32F> fft_r2c(size, 1, 1, 1);
@@ -169,8 +171,8 @@ TEST_CASE("Test 2D FFT", "[FFT2D]") {
     cu::DeviceMemory d_out(arraySize);
     cu::DeviceMemory d_out2(arraySize);
 
-    generateSignal(static_cast<cufft::cufftComplex *>(h_in), height, width, patchSize,
-                   {1, 1});
+    generateSignal(static_cast<cufft::cufftComplex *>(h_in), height, width,
+                   patchSize, {1, 1});
     stream.memcpyHtoDAsync(d_in, h_in, arraySize);
 
     cufft::FFT2D<cufft::CUDA_C_32F> fft(height, width);
@@ -189,7 +191,8 @@ TEST_CASE("Test 2D FFT", "[FFT2D]") {
 
   SECTION("FP32 batched") {
     const size_t batch = 2;
-    const size_t arraySize = batch * height * width * sizeof(cufft::cufftComplex);
+    const size_t arraySize =
+        batch * height * width * sizeof(cufft::cufftComplex);
 
     cu::HostMemory h_in(arraySize);
     cu::HostMemory h_out(arraySize);
@@ -202,8 +205,8 @@ TEST_CASE("Test 2D FFT", "[FFT2D]") {
 
     generateSignal(static_cast<cufft::cufftComplex *>(h_in), height, width,
                    patchSize, {1, 1});
-    generateSignal(static_cast<cufft::cufftComplex *>(h_in) + dist, height, width,
-                   patchSize, {2, 2});
+    generateSignal(static_cast<cufft::cufftComplex *>(h_in) + dist, height,
+                   width, patchSize, {2, 2});
     stream.memcpyHtoDAsync(d_in, h_in, arraySize);
 
     cufft::FFT2D<cufft::CUDA_C_32F> fft(height, width, stride, dist, batch);
@@ -251,9 +254,9 @@ TEST_CASE("Test 2D FFT", "[FFT2D]") {
 TEST_CASE("Test error messages", "[Error]") {
   CHECK_THROWS_WITH(throw cufft::Error(cufft::CUFFT_SUCCESS), "CUFFT_SUCCESS");
   CHECK_THROWS_WITH(throw cufft::Error(cufft::CUFFT_INVALID_PLAN),
-                   "CUFFT_INVALID_PLAN");
+                    "CUFFT_INVALID_PLAN");
   CHECK_THROWS_WITH(throw cufft::Error(cufft::CUFFT_ALLOC_FAILED),
-                   "CUFFT_ALLOC_FAILED");
+                    "CUFFT_ALLOC_FAILED");
 }
 
 TEST_CASE("Test cuFFT version and property", "[FFT1D]") {
@@ -271,11 +274,11 @@ TEST_CASE("Test work-size estimation", "[FFT1D]") {
   CHECK_NOTHROW(cufft::estimate3d(8, 8, 8, cufft::CUFFT_C2C));
   int n[1] = {64};
   CHECK_NOTHROW(cufft::estimateMany(1, n, nullptr, 1, 1, nullptr, 1, 1,
-                                   cufft::CUFFT_C2C, 1));
+                                    cufft::CUFFT_C2C, 1));
 }
 
-// The 64-bit execution entry points do not exist in current cuFFT or hipFFT; the
-// backend stubs them, so calling one must raise CUFFT_NOT_SUPPORTED, never
+// The 64-bit execution entry points do not exist in current cuFFT or hipFFT;
+// the backend stubs them, so calling one must raise CUFFT_NOT_SUPPORTED, never
 // crash.  This is version- and vendor-independent.
 TEST_CASE("Test unsupported cuFFT calls raise CUFFT_NOT_SUPPORTED", "[FFT1D]") {
   cu::init();
@@ -362,7 +365,7 @@ TEST_CASE("Test mixed-vendor FFT1D", "[FFT1D][multi_backend]") {
   const int count = cu::Device::getCount();
 
   // one context, plan, and stream per usable GPU
-  std::vector<cu::Device>             devices;
+  std::vector<cu::Device> devices;
   for (int ordinal = 0; ordinal < count; ordinal++) {
     try {
       devices.emplace_back(ordinal);
@@ -374,10 +377,10 @@ TEST_CASE("Test mixed-vendor FFT1D", "[FFT1D][multi_backend]") {
     WARN("fewer than two usable GPUs; mixed-vendor test reduced to coverage");
   }
 
-  std::vector<cu::Context>             contexts;
-  std::vector<cu::Stream>              streams;
-  std::vector<cu::DeviceMemory>        d_ins, d_outs;
-  std::vector<cu::HostMemory>          h_ins;
+  std::vector<cu::Context> contexts;
+  std::vector<cu::Stream> streams;
+  std::vector<cu::DeviceMemory> d_ins, d_outs;
+  std::vector<cu::HostMemory> h_ins;
   std::vector<cufft::FFT1D<cufft::CUDA_C_32F>> ffts;
 
   for (cu::Device &device : devices) {
@@ -391,7 +394,7 @@ TEST_CASE("Test mixed-vendor FFT1D", "[FFT1D][multi_backend]") {
       d_ins.emplace_back(arraySize);
       d_outs.emplace_back(arraySize);
       generateSignal(static_cast<cufft::cufftComplex *>(h_ins.back()), size, 6,
-                    {1, 1});
+                     {1, 1});
       streams.back().memcpyHtoDAsync(d_ins.back(), h_ins.back(), arraySize);
 
       ffts.emplace_back(size);
@@ -406,6 +409,5 @@ TEST_CASE("Test mixed-vendor FFT1D", "[FFT1D][multi_backend]") {
   // all plans still work, one per GPU vendor, in the same process
   for (size_t i = 0; i < ffts.size(); i++)
     ffts[i].execute(d_ins[i], d_outs[i], cufft::CUFFT_FORWARD);
-  for (size_t i = 0; i < ffts.size(); i++)
-    streams[i].synchronize();
+  for (size_t i = 0; i < ffts.size(); i++) streams[i].synchronize();
 }
