@@ -4,25 +4,29 @@
 #include <dlfcn.h>
 
 #include <cstddef>
+#include <cstdint>
 #include <cstring>
 #include <stdexcept>
 #include <vector>
 
 #include "cudawrappers/cu_backend.hpp"
 
-// Both the cuFFT (cufftHandle) and hipFFT (hipfftHandle) plan handles are plain
-// ints and the stream and buffer pointers are opaque pointers, so a single
-// function-pointer table, loaded by dlsym, can serve both libraries.  The
-// enumerators (cufftType, cudaDataType, direction, ...) share identical
-// values on both, so a plan created and executed through this table works on
-// an NVIDIA GPU (cuFFT) and transparently on an AMD GPU (hipFFT).
+// The cuFFT (cufftHandle) and hipFFT (hipfftHandle) plan handles differ: cuFFT
+// uses a small integer id, hipFFT (on AMD) a pointer to the plan structure.
+// A single pointer-sized handle type below serves both ABIs so one
+// function-pointer table, loaded by dlsym, can drive either library: cuFFT
+// reads the low 32 bits of the id, hipFFT uses the full pointer, and the
+// stream and buffer pointers are plain pointers on both.  The enumerators
+// (cufftType, cudaDataType, direction, ...) share identical values on both,
+// so a plan created and executed through this table works on an NVIDIA GPU
+// (cuFFT) and transparently on an AMD GPU (hipFFT).
 //
 // Every function that is absent from a given library gets a stub returning
 // CUFFT_NOT_SUPPORTED (0x10) so that calling it throws a proper cufft::Error
 // instead of crashing through a null pointer.  Only the library itself being
 // unloadable is a hard error, raised as soon as the backend table is built.
 
-typedef int cufftHandle_b;
+typedef uintptr_t cufftHandle_b;
 
 // Every entry point of the wrapper.  Each entry is (field name, symbol suffix,
 // signature); the symbol looked up in the library is "cufft"+suffix or

@@ -3,6 +3,7 @@
 
 #include <array>
 #include <cstddef>
+#include <cstdint>
 #include <exception>
 #include <magic_enum/magic_enum.hpp>
 
@@ -19,7 +20,10 @@
 
 namespace cufft {
 
-typedef int cufftHandle;
+// The cuFFT plan handle is an int (a small id); the hipFFT plan handle is a
+// pointer.  Store the handle pointer-sized so one ABI serves both libraries
+// (cuFFT reads the low 32 bits of the small id, hipFFT uses the full pointer).
+typedef uintptr_t cufftHandle;
 
 enum cufftResult {
   CUFFT_SUCCESS = 0x0,
