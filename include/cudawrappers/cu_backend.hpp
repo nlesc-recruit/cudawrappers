@@ -205,12 +205,13 @@ struct Backend {
   CUresult_b (*memPrefetchAsync)(const void*, size_t, int, CUstream_b);
   CUresult_b (*memGetHandleForAddressRange)(void*, CUdeviceptr_b, size_t, int,
                                             unsigned long long);
-  CUresult_b (*memAddressReserve)(CUdeviceptr_b*, size_t, size_t,
-                                  CUdeviceptr_b, unsigned long long);
+  CUresult_b (*memAddressReserve)(CUdeviceptr_b*, size_t, size_t, CUdeviceptr_b,
+                                  unsigned long long);
   CUresult_b (*memAddressFree)(CUdeviceptr_b, size_t);
   CUresult_b (*memCreate)(void*, size_t, const void*, unsigned long long);
   CUresult_b (*memRelease)(void*);
-  CUresult_b (*memMap)(CUdeviceptr_b, size_t, size_t, void*, unsigned long long);
+  CUresult_b (*memMap)(CUdeviceptr_b, size_t, size_t, void*,
+                       unsigned long long);
   CUresult_b (*memUnmap)(CUdeviceptr_b, size_t);
   CUresult_b (*memSetAccess)(CUdeviceptr_b, size_t, const void*, size_t);
   CUresult_b (*memGetAccess)(unsigned long long*, const void*, CUdeviceptr_b);
@@ -274,13 +275,13 @@ struct Backend {
   CUresult_b (*streamLaunchHostFunc)(CUstream_b, CUhostFn_b, void*);
   CUresult_b (*streamRecordEvent)(CUstream_b, CUevent_b);
   CUresult_b (*streamWaitValue32)(CUstream_b, CUdeviceptr_b, unsigned int,
-                                 unsigned int);
+                                  unsigned int);
   CUresult_b (*streamWriteValue32)(CUstream_b, CUdeviceptr_b, unsigned int,
-                                  unsigned int);
+                                   unsigned int);
   CUresult_b (*streamWaitValue64)(CUstream_b, CUdeviceptr_b, unsigned long long,
-                                 unsigned int);
-  CUresult_b (*streamWriteValue64)(CUstream_b, CUdeviceptr_b, unsigned long long,
                                   unsigned int);
+  CUresult_b (*streamWriteValue64)(CUstream_b, CUdeviceptr_b,
+                                   unsigned long long, unsigned int);
   CUresult_b (*streamBatchMemOp)(CUstream_b, unsigned int, void*, unsigned int);
   CUresult_b (*streamGetDevice)(CUdevice_b*, CUstream_b);
   CUresult_b (*streamGetId)(unsigned long long*, CUstream_b);
@@ -310,7 +311,7 @@ struct Backend {
   CUresult_b (*funcSetCacheConfig)(const void*, int);
   CUresult_b (*funcSetSharedMemConfig)(const void*, int);
   CUresult_b (*occupancyMaxActiveBlocksPerMultiprocessor)(int*, CUfunction_b,
-                                                        int, size_t);
+                                                          int, size_t);
   CUresult_b (*occupancyMaxActiveBlocksPerMultiprocessorWithFlags)(
       int*, CUfunction_b, int, size_t, unsigned int);
   CUresult_b (*occupancyAvailableDynamicSMemPerBlock)(size_t*, CUfunction_b,
@@ -387,7 +388,7 @@ struct Backend {
   CUresult_b (*memPoolSetAccess)(void*, const void*, size_t);
 
   CUresult_b (*streamAttachMemAsync)(CUstream_b, CUdeviceptr_b, size_t,
-                                    unsigned int);
+                                     unsigned int);
   CUresult_b (*streamUpdateCaptureDependencies)(CUstream_b, CUgraphNode_b*,
                                                 size_t, unsigned int);
 
@@ -717,7 +718,8 @@ inline Backend loadCudaBackend() {
        "cuOccupancyMaxActiveBlocksPerMultiprocessor");
   LOAD(occupancyMaxActiveBlocksPerMultiprocessorWithFlags,
        "cuOccupancyMaxActiveBlocksPerMultiprocessorWithFlags");
-  LOAD(occupancyAvailableDynamicSMemPerBlock, "cuOccupancyAvailableDynamicSMemPerBlock");
+  LOAD(occupancyAvailableDynamicSMemPerBlock,
+       "cuOccupancyAvailableDynamicSMemPerBlock");
 
   LOAD(graphCreate, "cuGraphCreate");
   LOAD(graphDestroy, "cuGraphDestroy");
