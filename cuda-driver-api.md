@@ -33,7 +33,7 @@ Reference: [CUDA Driver API reference](https://docs.nvidia.com/cuda/cuda-driver-
 | `cuDeviceGetCount` | `Device::getCount()` |
 | `cuDeviceGetDefaultMemPool` | `Device::getDefaultMemPool()` |
 | `cuDeviceGetExecAffinitySupport` | `Device::getExecAffinitySupport()` |
-| `cuDeviceGetHostAtomicCapabilities` | Missing |
+| `cuDeviceGetHostAtomicCapabilities` | `Device::getHostAtomicCapabilities()` (NVIDIA)  |
 | `cuDeviceGetLuid` | `Device::getLuid()` |
 | `cuDeviceGetMemPool` | `Device::getMemPool()` |
 | `cuDeviceGetName` | `Device::getName()` |
@@ -48,11 +48,11 @@ Reference: [CUDA Driver API reference](https://docs.nvidia.com/cuda/cuda-driver-
 
 | CUDA Driver API | cudawrappers interface |
 | --- | --- |
-| `cuDevicePrimaryCtxGetState` | Missing |
-| `cuDevicePrimaryCtxRelease` | Missing |
-| `cuDevicePrimaryCtxReset` | Missing |
-| `cuDevicePrimaryCtxRetain` | Missing |
-| `cuDevicePrimaryCtxSetFlags` | Missing |
+| `cuDevicePrimaryCtxGetState` | `Device::primaryContextGetFlags(int&)`  |
+| `cuDevicePrimaryCtxRelease` | `Device::primaryContextRelease()`  |
+| `cuDevicePrimaryCtxReset` | `Device::primaryContextReset()`  |
+| `cuDevicePrimaryCtxRetain` | `Device::primaryContext()`  |
+| `cuDevicePrimaryCtxSetFlags` | `Device::primaryContextSetFlags()`  |
 
 ## Context Management 🟡 (13/21)
 
@@ -64,21 +64,21 @@ Reference: [CUDA Driver API reference](https://docs.nvidia.com/cuda/cuda-driver-
 | `cuCtxGetCacheConfig` | `Context::getCacheConfig()` |
 | `cuCtxGetCurrent` | `Context::getCurrent()` |
 | `cuCtxGetDevice` | `Context::getDevice()` |
-| `cuCtxGetExecAffinity` | Missing |
-| `cuCtxGetFlags` | Missing |
-| `cuCtxGetId` | Missing |
+| `cuCtxGetExecAffinity` | `Context::getExecAffinity()` (NVIDIA, CUDA>=12.0)  |
+| `cuCtxGetFlags` | `Context::getFlags()`  |
+| `cuCtxGetId` | `Context::getId()` (NVIDIA, CUDA>=12.0)  |
 | `cuCtxGetLimit` | `Context::getLimit()` |
 | `cuCtxGetStreamPriorityRange` | Missing |
 | `cuCtxPopCurrent` | `Context::popCurrent()` |
 | `cuCtxPushCurrent` | `Context::pushCurrent()` |
-| `cuCtxRecordEvent` | Missing |
-| `cuCtxResetPersistingL2Cache` | Missing |
+| `cuCtxRecordEvent` | `Context::recordEvent(Event&)` (NVIDIA, CUDA>=12.4)  |
+| `cuCtxResetPersistingL2Cache` | `Context::resetPersistingL2Cache()` (NVIDIA, CUDA>=12.8)  |
 | `cuCtxSetCacheConfig` | `Context::setCacheConfig()` |
 | `cuCtxSetCurrent` | `Context::setCurrent()` |
-| `cuCtxSetFlags` | Missing |
+| `cuCtxSetFlags` | `Context::setFlags()` (NVIDIA)  |
 | `cuCtxSetLimit` | `Context::setLimit()` |
 | `cuCtxSynchronize` | `Context::synchronize()` |
-| `cuCtxWaitEvent` | Missing |
+| `cuCtxWaitEvent` | `Context::waitEvent(Event&)` (NVIDIA, CUDA>=12.4)  |
 
 ## Module Management 🟡 (6/15)
 
@@ -209,20 +209,20 @@ Reference: [CUDA Driver API reference](https://docs.nvidia.com/cuda/cuda-driver-
 
 | CUDA Driver API | cudawrappers interface |
 | --- | --- |
-| `cuMemAddressFree` | Missing |
-| `cuMemAddressReserve` | Missing |
-| `cuMemCreate` | Missing |
-| `cuMemExportToShareableHandle` | Missing |
-| `cuMemGetAccess` | Missing |
-| `cuMemGetAllocationGranularity` | Missing |
-| `cuMemGetAllocationPropertiesFromHandle` | Missing |
-| `cuMemImportFromShareableHandle` | Missing |
-| `cuMemMap` | Missing |
+| `cuMemAddressFree` | `DeviceMemory::addressFree()`  |
+| `cuMemAddressReserve` | `DeviceMemory::addressReserve()`  |
+| `cuMemCreate` | `DeviceMemory::map()` (via `addressReserve`)  |
+| `cuMemExportToShareableHandle` | `DeviceMemory::exportToShareableHandle()`  |
+| `cuMemGetAccess` | `DeviceMemory::getAccess()`  |
+| `cuMemGetAllocationGranularity` | `DeviceMemory::allocationGranularity()`  |
+| `cuMemGetAllocationPropertiesFromHandle` | `DeviceMemory::getAllocationPropertiesFromHandle()`  |
+| `cuMemImportFromShareableHandle` | `DeviceMemory::importFromShareableHandle()`  |
+| `cuMemMap` | `DeviceMemory::map()`  |
 | `cuMemMapArrayAsync` | Missing |
-| `cuMemRelease` | Missing |
+| `cuMemRelease` | `DeviceMemory::release()`  |
 | `cuMemRetainAllocationHandle` | Missing |
-| `cuMemSetAccess` | Missing |
-| `cuMemUnmap` | Missing |
+| `cuMemSetAccess` | `DeviceMemory::setAccess()`  |
+| `cuMemUnmap` | `DeviceMemory::unmap()`  |
 
 ## Stream Ordered Memory Allocator 🟡 (2/17)
 
@@ -233,17 +233,17 @@ Reference: [CUDA Driver API reference](https://docs.nvidia.com/cuda/cuda-driver-
 | `cuMemFreeAsync` | `Stream::memFreeAsync(DeviceMemory &)` |
 | `cuMemGetDefaultMemPool` | Missing |
 | `cuMemGetMemPool` | Missing |
-| `cuMemPoolCreate` | Missing |
-| `cuMemPoolDestroy` | Missing |
-| `cuMemPoolExportPointer` | Missing |
-| `cuMemPoolExportToShareableHandle` | Missing |
-| `cuMemPoolGetAccess` | Missing |
-| `cuMemPoolGetAttribute` | Missing |
-| `cuMemPoolImportFromShareableHandle` | Missing |
-| `cuMemPoolImportPointer` | Missing |
-| `cuMemPoolSetAccess` | Missing |
-| `cuMemPoolSetAttribute` | Missing |
-| `cuMemPoolTrimTo` | Missing |
+| `cuMemPoolCreate` | `MemPool::MemPool(Device&)`  |
+| `cuMemPoolDestroy` | `MemPool destructor`  |
+| `cuMemPoolExportPointer` | `MemPool::exportPointer()`  |
+| `cuMemPoolExportToShareableHandle` | `MemPool::exportToShareableHandle()`  |
+| `cuMemPoolGetAccess` | `MemPool::getAccess()`  |
+| `cuMemPoolGetAttribute` | `MemPool::getAttribute()`  |
+| `cuMemPoolImportFromShareableHandle` | `MemPool::importFromShareableHandle()`  |
+| `cuMemPoolImportPointer` | `MemPool::importPointer()`  |
+| `cuMemPoolSetAccess` | `MemPool::setAccess()`  |
+| `cuMemPoolSetAttribute` | `MemPool::setAttribute()`  |
+| `cuMemPoolTrimTo` | `MemPool::trimTo()`  |
 | `cuMemSetMemPool` | Missing |
 
 ## Multicast Object Management ❌ (0/6)
@@ -283,8 +283,8 @@ Reference: [CUDA Driver API reference](https://docs.nvidia.com/cuda/cuda-driver-
 | `cuMemDiscardBatchAsync` | Missing |
 | `cuMemPrefetchAsync` | `Stream::memPrefetchAsync(...)` |
 | `cuMemPrefetchBatchAsync` | Missing |
-| `cuMemRangeGetAttribute` | Missing |
-| `cuMemRangeGetAttributes` | Missing |
+| `cuMemRangeGetAttribute` | `DeviceMemory::getRangeAttribute()`  |
+| `cuMemRangeGetAttributes` | `DeviceMemory::getRangeAttributes()`  |
 | `cuPointerGetAttribute` | `Implemented` |
 | `cuPointerGetAttributes` | `Implemented` |
 | `cuPointerSetAttribute` | `pointerSetAttribute()` |
@@ -294,10 +294,10 @@ Reference: [CUDA Driver API reference](https://docs.nvidia.com/cuda/cuda-driver-
 | CUDA Driver API | cudawrappers interface |
 | --- | --- |
 | `cuStreamAddCallback` | `Stream::addCallback(CUstreamCallback, void *, unsigned int)` |
-| `cuStreamAttachMemAsync` | Missing |
+| `cuStreamAttachMemAsync` | `Stream::attachMemAsync()`  |
 | `cuStreamBeginCapture` | Missing |
 | `cuStreamBeginCaptureToCig` | Missing |
-| `cuStreamBeginCaptureToGraph` | Missing |
+| `cuStreamBeginCaptureToGraph` | `Stream::beginCaptureToGraph()`  |
 | `cuStreamBeginRecaptureToGraph` | Missing |
 | `cuStreamCopyAttributes` | Missing |
 | `cuStreamCreate` | `Stream::Stream(unsigned int)` |
@@ -307,16 +307,16 @@ Reference: [CUDA Driver API reference](https://docs.nvidia.com/cuda/cuda-driver-
 | `cuStreamEndCaptureToCig` | Missing |
 | `cuStreamGetAttribute` | Missing |
 | `cuStreamGetCaptureInfo` | Missing |
-| `cuStreamGetCtx` | Missing |
-| `cuStreamGetDevice` | Missing |
+| `cuStreamGetCtx` | backend entry only  |
+| `cuStreamGetDevice` | `Stream::getDevice()` (CUDA>=12.0)  |
 | `cuStreamGetFlags` | Missing |
-| `cuStreamGetId` | Missing |
+| `cuStreamGetId` | `Stream::getStreamId()` (CUDA>=12.0)  |
 | `cuStreamGetPriority` | Missing |
 | `cuStreamIsCapturing` | Missing |
 | `cuStreamQuery` | `Stream::query()` |
 | `cuStreamSetAttribute` | Missing |
 | `cuStreamSynchronize` | `Stream::synchronize()` |
-| `cuStreamUpdateCaptureDependencies` | Missing |
+| `cuStreamUpdateCaptureDependencies` | `Stream::updateCaptureDependencies()`  |
 | `cuStreamWaitEvent` | `Stream::wait(Event &)` |
 | `cuThreadExchangeStreamCaptureMode` | Missing |
 
@@ -351,9 +351,9 @@ Reference: [CUDA Driver API reference](https://docs.nvidia.com/cuda/cuda-driver-
 | --- | --- |
 | `cuStreamBatchMemOp` | `Stream::batchMemOp(unsigned count, CUstreamBatchMemOpParams *, unsigned flags)` |
 | `cuStreamWaitValue32` | `Stream::waitValue32()` |
-| `cuStreamWaitValue64` | Missing |
+| `cuStreamWaitValue64` | `Stream::waitValue64()`  |
 | `cuStreamWriteValue32` | `Stream::writeValue32()` |
-| `cuStreamWriteValue64` | Missing |
+| `cuStreamWriteValue64` | `Stream::writeValue64()`  |
 
 ## Execution Control 🟡 (6/13)
 
@@ -470,9 +470,9 @@ Reference: [CUDA Driver API reference](https://docs.nvidia.com/cuda/cuda-driver-
 
 | CUDA Driver API | cudawrappers interface |
 | --- | --- |
-| `cuOccupancyAvailableDynamicSMemPerBlock` | Missing |
+| `cuOccupancyAvailableDynamicSMemPerBlock` | `Function::occupancyAvailableDynamicSMemPerBlock()`  |
 | `cuOccupancyMaxActiveBlocksPerMultiprocessor` | `Function::occupancyMaxActiveBlocksPerMultiprocessor(int, size_t)` |
-| `cuOccupancyMaxActiveBlocksPerMultiprocessorWithFlags` | Missing |
+| `cuOccupancyMaxActiveBlocksPerMultiprocessorWithFlags` | `Function::occupancyMaxActiveBlocksPerMultiprocessorWithFlags()`  |
 | `cuOccupancyMaxActiveClusters` | Missing |
 | `cuOccupancyMaxPotentialBlockSize` | Missing |
 | `cuOccupancyMaxPotentialBlockSizeWithFlags` | Missing |

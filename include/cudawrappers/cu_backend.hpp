@@ -145,6 +145,11 @@ struct Backend {
   CUresult_b (*deviceSetMemPool)(CUdevice_b, CUmemoryPool_b);
   CUresult_b (*deviceGetLuid)(char*, unsigned int*, CUdevice_b);
   CUresult_b (*deviceGetP2PAttribute)(int*, int, CUdevice_b, CUdevice_b);
+  CUresult_b (*deviceGetHostAtomicCapabilities)(unsigned int*, const void*,
+                                                unsigned int, CUdevice_b);
+  CUresult_b (*deviceGetP2PAtomicCapabilities)(unsigned int*, const void*,
+                                               unsigned int, CUdevice_b,
+                                               CUdevice_b);
   CUresult_b (*deviceCanAccessPeer)(int*, CUdevice_b, CUdevice_b);
   CUresult_b (*deviceGetTexture1DLinearMaxWidth)(size_t*, int, unsigned int,
                                                  CUdevice_b);
@@ -169,6 +174,20 @@ struct Backend {
   CUresult_b (*ctxGetLimit)(size_t*, int);
   CUresult_b (*ctxSetLimit)(int, size_t);
   CUresult_b (*ctxSynchronize)();
+  CUresult_b (*ctxGetFlags)(unsigned int*);
+  CUresult_b (*ctxSetFlags)(unsigned int);
+  CUresult_b (*ctxGetSharedMemConfig)(int*);
+  CUresult_b (*ctxSetSharedMemConfig)(int);
+  CUresult_b (*ctxGetExecAffinity)(void*, int);
+  CUresult_b (*ctxGetId)(CUcontext_b, unsigned long long*);
+  CUresult_b (*ctxResetPersistingL2Cache)();
+  CUresult_b (*ctxRecordEvent)(CUcontext_b, CUevent_b);
+  CUresult_b (*ctxWaitEvent)(CUcontext_b, CUevent_b);
+  CUresult_b (*devicePrimaryCtxRetain)(CUcontext_b*, CUdevice_b);
+  CUresult_b (*devicePrimaryCtxRelease)(CUdevice_b);
+  CUresult_b (*devicePrimaryCtxReset)(CUdevice_b);
+  CUresult_b (*devicePrimaryCtxGetState)(CUdevice_b, unsigned int*, int*);
+  CUresult_b (*devicePrimaryCtxSetFlags)(CUdevice_b, unsigned int);
   CUresult_b (*ctxGetDevResource)(CUcontext_b, void*, int);
   CUresult_b (*ctxFromGreenCtx)(CUcontext_b*, void*);
 
@@ -186,6 +205,24 @@ struct Backend {
   CUresult_b (*memPrefetchAsync)(const void*, size_t, int, CUstream_b);
   CUresult_b (*memGetHandleForAddressRange)(void*, CUdeviceptr_b, size_t, int,
                                             unsigned long long);
+  CUresult_b (*memAddressReserve)(CUdeviceptr_b*, size_t, size_t,
+                                  CUdeviceptr_b, unsigned long long);
+  CUresult_b (*memAddressFree)(CUdeviceptr_b, size_t);
+  CUresult_b (*memCreate)(void*, size_t, const void*, unsigned long long);
+  CUresult_b (*memRelease)(void*);
+  CUresult_b (*memMap)(CUdeviceptr_b, size_t, size_t, void*, unsigned long long);
+  CUresult_b (*memUnmap)(CUdeviceptr_b, size_t);
+  CUresult_b (*memSetAccess)(CUdeviceptr_b, size_t, const void*, size_t);
+  CUresult_b (*memGetAccess)(unsigned long long*, const void*, CUdeviceptr_b);
+  CUresult_b (*memGetAllocationGranularity)(size_t*, const void*, int);
+  CUresult_b (*memGetAllocationPropertiesFromHandle)(void*, void*);
+  CUresult_b (*memRetainAllocationHandle)(void**, void*);
+  CUresult_b (*memRangeGetAttribute)(void*, size_t, int, CUdeviceptr_b, size_t);
+  CUresult_b (*memRangeGetAttributes)(void**, size_t*, int*, size_t,
+                                      CUdeviceptr_b, size_t);
+  CUresult_b (*memExportToShareableHandle)(void*, void*, int,
+                                           unsigned long long);
+  CUresult_b (*memImportFromShareableHandle)(void**, void*, int);
 
   CUresult_b (*memcpyHtoD)(CUdeviceptr_b, const void*, size_t);
   CUresult_b (*memcpyDtoH)(void*, CUdeviceptr_b, size_t);
@@ -237,10 +274,17 @@ struct Backend {
   CUresult_b (*streamLaunchHostFunc)(CUstream_b, CUhostFn_b, void*);
   CUresult_b (*streamRecordEvent)(CUstream_b, CUevent_b);
   CUresult_b (*streamWaitValue32)(CUstream_b, CUdeviceptr_b, unsigned int,
-                                  unsigned int);
+                                 unsigned int);
   CUresult_b (*streamWriteValue32)(CUstream_b, CUdeviceptr_b, unsigned int,
-                                   unsigned int);
+                                  unsigned int);
+  CUresult_b (*streamWaitValue64)(CUstream_b, CUdeviceptr_b, unsigned long long,
+                                 unsigned int);
+  CUresult_b (*streamWriteValue64)(CUstream_b, CUdeviceptr_b, unsigned long long,
+                                  unsigned int);
   CUresult_b (*streamBatchMemOp)(CUstream_b, unsigned int, void*, unsigned int);
+  CUresult_b (*streamGetDevice)(CUdevice_b*, CUstream_b);
+  CUresult_b (*streamGetId)(unsigned long long*, CUstream_b);
+  CUresult_b (*streamGetCtx)(CUcontext_b*, CUstream_b);
   CUresult_b (*streamGetDevResource)(CUstream_b, void*, int);
   CUresult_b (*streamGetGreenCtx)(CUstream_b, void**);
 
@@ -264,8 +308,13 @@ struct Backend {
   CUresult_b (*funcGetAttribute)(int*, int, CUfunction_b);
   CUresult_b (*funcSetAttribute)(const void*, int, int);
   CUresult_b (*funcSetCacheConfig)(const void*, int);
+  CUresult_b (*funcSetSharedMemConfig)(const void*, int);
   CUresult_b (*occupancyMaxActiveBlocksPerMultiprocessor)(int*, CUfunction_b,
-                                                          int, size_t);
+                                                        int, size_t);
+  CUresult_b (*occupancyMaxActiveBlocksPerMultiprocessorWithFlags)(
+      int*, CUfunction_b, int, size_t, unsigned int);
+  CUresult_b (*occupancyAvailableDynamicSMemPerBlock)(size_t*, CUfunction_b,
+                                                      int, int);
 
   CUresult_b (*graphCreate)(CUgraph_b*, unsigned int);
   CUresult_b (*graphDestroy)(CUgraph_b);
@@ -328,12 +377,19 @@ struct Backend {
   CUresult_b (*memPoolSetAttribute)(void*, int, const void*);
   CUresult_b (*memPoolGetAttribute)(void*, int, void*);
   CUresult_b (*memAllocFromPoolAsync)(CUdeviceptr_b*, size_t, void*);
-  CUresult_b (*memPoolExportToShareableHandle)(void*, void**, void*,
+  CUresult_b (*memPoolExportToShareableHandle)(void*, void*, int,
                                                unsigned long long);
-  CUresult_b (*memPoolImportFromShareableHandle)(void**, void*, void*,
-                                                 unsigned long long);
+  CUresult_b (*memPoolImportFromShareableHandle)(void**, void*, int);
   CUresult_b (*memPoolExportPointer)(void*, CUdeviceptr_b);
-  CUresult_b (*memPoolImportPointer)(CUdeviceptr_b*, void**, void*);
+  CUresult_b (*memPoolImportPointer)(CUdeviceptr_b*, void*, void*);
+  CUresult_b (*memPoolTrimTo)(void*, size_t);
+  CUresult_b (*memPoolGetAccess)(int*, void*, const void*);
+  CUresult_b (*memPoolSetAccess)(void*, const void*, size_t);
+
+  CUresult_b (*streamAttachMemAsync)(CUstream_b, CUdeviceptr_b, size_t,
+                                    unsigned int);
+  CUresult_b (*streamUpdateCaptureDependencies)(CUstream_b, CUgraphNode_b*,
+                                                size_t, unsigned int);
 
   CUresult_b (*memAdvise)(const void*, size_t, int, int);
 
@@ -501,6 +557,8 @@ inline Backend loadCudaBackend() {
   LOAD(deviceSetMemPool, "cuDeviceSetMemPool");
   LOAD(deviceGetLuid, "cuDeviceGetLuid");
   LOAD(deviceGetP2PAttribute, "cuDeviceGetP2PAttribute");
+  LOAD(deviceGetHostAtomicCapabilities, "cuDeviceGetHostAtomicCapabilities");
+  LOAD(deviceGetP2PAtomicCapabilities, "cuDeviceGetP2PAtomicCapabilities");
   LOAD(deviceCanAccessPeer, "cuDeviceCanAccessPeer");
   LOAD(deviceGetTexture1DLinearMaxWidth, "cuDeviceGetTexture1DLinearMaxWidth");
   LOAD(deviceGraphMemTrim, "cuDeviceGraphMemTrim");
@@ -526,6 +584,37 @@ inline Backend loadCudaBackend() {
   LOAD(ctxEnablePeerAccess, "cuCtxEnablePeerAccess");
   LOAD(ctxDisablePeerAccess, "cuCtxDisablePeerAccess");
   LOAD(ctxGetDevice, "cuCtxGetDevice");
+  LOAD(ctxGetFlags, "cuCtxGetFlags");
+  LOAD(ctxSetFlags, "cuCtxSetFlags");
+  LOAD(ctxGetExecAffinity, "cuCtxGetExecAffinity");
+  LOAD(ctxGetId, "cuCtxGetId");
+  LOAD(ctxResetPersistingL2Cache, "cuCtxResetPersistingL2Cache");
+  LOAD(ctxRecordEvent, "cuCtxRecordEvent");
+  LOAD(ctxWaitEvent, "cuCtxWaitEvent");
+  LOAD(ctxGetSharedMemConfig, "cuCtxGetSharedMemConfig");
+  LOAD(ctxSetSharedMemConfig, "cuCtxSetSharedMemConfig");
+  LOAD(devicePrimaryCtxRetain, "cuDevicePrimaryCtxRetain");
+  LOAD(devicePrimaryCtxRelease, "cuDevicePrimaryCtxRelease");
+  LOAD(devicePrimaryCtxReset, "cuDevicePrimaryCtxReset");
+  LOAD(devicePrimaryCtxGetState, "cuDevicePrimaryCtxGetState");
+  LOAD(devicePrimaryCtxSetFlags, "cuDevicePrimaryCtxSetFlags");
+  LOAD(devicePrimaryCtxRetain, "cuDevicePrimaryCtxRetain");
+  LOAD(devicePrimaryCtxRelease, "cuDevicePrimaryCtxRelease");
+  LOAD(devicePrimaryCtxReset, "cuDevicePrimaryCtxReset");
+  LOAD(devicePrimaryCtxGetState, "cuDevicePrimaryCtxGetState");
+  LOAD(devicePrimaryCtxSetFlags, "cuDevicePrimaryCtxSetFlags");
+  LOAD(streamAttachMemAsync, "cuStreamAttachMemAsync");
+  LOAD(streamWaitValue32, "cuStreamWaitValue32");
+  LOAD(streamWriteValue32, "cuStreamWriteValue32");
+  LOAD(streamWaitValue64, "cuStreamWaitValue64");
+  LOAD(streamWriteValue64, "cuStreamWriteValue64");
+  LOAD(streamBatchMemOp, "cuStreamBatchMemOp");
+  LOAD(streamGetDevice, "cuStreamGetDevice");
+  LOAD(streamGetId, "cuStreamGetId");
+  LOAD(streamGetCtx, "cuStreamGetCtx");
+  LOAD(memPoolTrimTo, "cuMemPoolTrimTo");
+  LOAD(memPoolGetAccess, "cuMemPoolGetAccess");
+  LOAD(memPoolSetAccess, "cuMemPoolSetAccess");
   LOAD(ctxGetLimit, "cuCtxGetLimit");
   LOAD(ctxSetLimit, "cuCtxSetLimit");
   LOAD(ctxSynchronize, "cuCtxSynchronize");
@@ -545,6 +634,22 @@ inline Backend loadCudaBackend() {
   LOAD(memGetInfo, "cuMemGetInfo_v2");
   LOAD(memPrefetchAsync, "cuMemPrefetchAsync");
   LOAD(memGetHandleForAddressRange, "cuMemGetHandleForAddressRange");
+  LOAD(memAddressReserve, "cuMemAddressReserve");
+  LOAD(memAddressFree, "cuMemAddressFree");
+  LOAD(memCreate, "cuMemCreate");
+  LOAD(memRelease, "cuMemRelease");
+  LOAD(memMap, "cuMemMap");
+  LOAD(memUnmap, "cuMemUnmap");
+  LOAD(memSetAccess, "cuMemSetAccess");
+  LOAD(memGetAccess, "cuMemGetAccess");
+  LOAD(memGetAllocationGranularity, "cuMemGetAllocationGranularity");
+  LOAD(memGetAllocationPropertiesFromHandle,
+       "cuMemGetAllocationPropertiesFromHandle");
+  LOAD(memRetainAllocationHandle, "cuMemRetainAllocationHandle");
+  LOAD(memRangeGetAttribute, "cuMemRangeGetAttribute");
+  LOAD(memRangeGetAttributes, "cuMemRangeGetAttributes");
+  LOAD(memExportToShareableHandle, "cuMemExportToShareableHandle");
+  LOAD(memImportFromShareableHandle, "cuMemImportFromShareableHandle");
 
   LOAD(memcpyHtoD, "cuMemcpyHtoD_v2");
   LOAD(memcpyDtoH, "cuMemcpyDtoH_v2");
@@ -607,8 +712,12 @@ inline Backend loadCudaBackend() {
   LOAD(funcGetAttribute, "cuFuncGetAttribute");
   LOAD(funcSetAttribute, "cuFuncSetAttribute");
   LOAD(funcSetCacheConfig, "cuFuncSetCacheConfig");
+  LOAD(funcSetSharedMemConfig, "cuFuncSetSharedMemConfig");
   LOAD(occupancyMaxActiveBlocksPerMultiprocessor,
        "cuOccupancyMaxActiveBlocksPerMultiprocessor");
+  LOAD(occupancyMaxActiveBlocksPerMultiprocessorWithFlags,
+       "cuOccupancyMaxActiveBlocksPerMultiprocessorWithFlags");
+  LOAD(occupancyAvailableDynamicSMemPerBlock, "cuOccupancyAvailableDynamicSMemPerBlock");
 
   LOAD(graphCreate, "cuGraphCreate");
   LOAD(graphDestroy, "cuGraphDestroy");
@@ -642,6 +751,7 @@ inline Backend loadCudaBackend() {
   LOAD(streamEndCapture, "cuStreamEndCapture");
   LOAD(streamIsCapturing, "cuStreamIsCapturing");
   LOAD(streamBeginCaptureToGraph, "cuStreamBeginCaptureToGraph");
+  LOAD(streamUpdateCaptureDependencies, "cuStreamUpdateCaptureDependencies");
 
   LOAD(occupancyMaxPotentialBlockSize, "cuOccupancyMaxPotentialBlockSize");
 
@@ -960,6 +1070,46 @@ inline Backend loadHipBackend() {
   LOAD(ctxEnablePeerAccess, "hipCtxEnablePeerAccess");
   LOAD(ctxDisablePeerAccess, "hipCtxDisablePeerAccess");
   LOAD(ctxGetDevice, "hipCtxGetDevice");
+  LOAD(ctxGetFlags, "hipCtxGetFlags");
+  LOAD(ctxGetSharedMemConfig, "hipCtxGetSharedMemConfig");
+  LOAD(ctxSetSharedMemConfig, "hipCtxSetSharedMemConfig");
+  LOAD(devicePrimaryCtxRetain, "hipDevicePrimaryCtxRetain");
+  LOAD(devicePrimaryCtxRelease, "hipDevicePrimaryCtxRelease");
+  LOAD(devicePrimaryCtxReset, "hipDevicePrimaryCtxReset");
+  LOAD(devicePrimaryCtxGetState, "hipDevicePrimaryCtxGetState");
+  LOAD(devicePrimaryCtxSetFlags, "hipDevicePrimaryCtxSetFlags");
+  LOAD(devicePrimaryCtxRetain, "hipDevicePrimaryCtxRetain");
+  LOAD(devicePrimaryCtxRelease, "hipDevicePrimaryCtxRelease");
+  LOAD(devicePrimaryCtxReset, "hipDevicePrimaryCtxReset");
+  LOAD(devicePrimaryCtxGetState, "hipDevicePrimaryCtxGetState");
+  LOAD(devicePrimaryCtxSetFlags, "hipDevicePrimaryCtxSetFlags");
+  LOAD(streamAttachMemAsync, "hipStreamAttachMemAsync");
+  LOAD(streamWaitValue32, "hipStreamWaitValue32");
+  LOAD(streamWriteValue32, "hipStreamWriteValue32");
+  LOAD(streamWaitValue64, "hipStreamWaitValue64");
+  LOAD(streamWriteValue64, "hipStreamWriteValue64");
+  LOAD(streamBatchMemOp, "hipStreamBatchMemOp");
+  LOAD(streamGetDevice, "hipStreamGetDevice");
+  LOAD(streamGetId, "hipStreamGetId");
+  LOAD(memPoolTrimTo, "hipMemPoolTrimTo");
+  LOAD(memPoolGetAccess, "hipMemPoolGetAccess");
+  LOAD(memPoolSetAccess, "hipMemPoolSetAccess");
+  LOAD(memAddressReserve, "hipMemAddressReserve");
+  LOAD(memAddressFree, "hipMemAddressFree");
+  LOAD(memCreate, "hipMemCreate");
+  LOAD(memRelease, "hipMemRelease");
+  LOAD(memMap, "hipMemMap");
+  LOAD(memUnmap, "hipMemUnmap");
+  LOAD(memSetAccess, "hipMemSetAccess");
+  LOAD(memGetAccess, "hipMemGetAccess");
+  LOAD(memGetAllocationGranularity, "hipMemGetAllocationGranularity");
+  LOAD(memGetAllocationPropertiesFromHandle,
+       "hipMemGetAllocationPropertiesFromHandle");
+  LOAD(memRetainAllocationHandle, "hipMemRetainAllocationHandle");
+  LOAD(memRangeGetAttribute, "hipMemRangeGetAttribute");
+  LOAD(memRangeGetAttributes, "hipMemRangeGetAttributes");
+  LOAD(memExportToShareableHandle, "hipMemExportToShareableHandle");
+  LOAD(memImportFromShareableHandle, "hipMemImportFromShareableHandle");
   LOAD(ctxGetApiVersion, "hipCtxGetApiVersion");
   LOAD(ctxGetLimit, "hipDeviceGetLimit");
   LOAD(ctxSetLimit, "hipDeviceSetLimit");
@@ -1194,8 +1344,13 @@ inline Backend loadHipBackend() {
   LOAD(funcGetAttribute, "hipFuncGetAttribute");
   LOAD(funcSetAttribute, "hipFuncSetAttribute");
   LOAD(funcSetCacheConfig, "hipFuncSetCacheConfig");
+  LOAD(funcSetSharedMemConfig, "hipFuncSetSharedMemConfig");
   LOAD(occupancyMaxActiveBlocksPerMultiprocessor,
        "hipModuleOccupancyMaxActiveBlocksPerMultiprocessor");
+  LOAD(occupancyMaxActiveBlocksPerMultiprocessorWithFlags,
+       "hipModuleOccupancyMaxActiveBlocksPerMultiprocessorWithFlags");
+  LOAD(occupancyAvailableDynamicSMemPerBlock,
+       "hipOccupancyAvailableDynamicSMemPerBlock");
 
   LOAD(graphCreate, "hipGraphCreate");
   LOAD(graphDestroy, "hipGraphDestroy");
@@ -1219,6 +1374,7 @@ inline Backend loadHipBackend() {
   LOAD(streamEndCapture, "hipStreamEndCapture");
   LOAD(streamIsCapturing, "hipStreamIsCapturing");
   LOAD(streamBeginCaptureToGraph, "hipStreamBeginCaptureToGraph");
+  LOAD(streamUpdateCaptureDependencies, "hipStreamUpdateCaptureDependencies");
 
   LOAD(occupancyMaxPotentialBlockSize,
        "hipModuleOccupancyMaxPotentialBlockSize");

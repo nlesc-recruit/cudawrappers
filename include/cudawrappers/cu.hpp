@@ -5,6 +5,7 @@
 
 #include <array>
 #include <cstddef>
+#include <cstdint>
 #include <cstring>
 #include <exception>
 #include <iomanip>
@@ -80,6 +81,14 @@ typedef void (*CUhostFn)(void*);
 
 #if defined(__HIP__)
 typedef void (*CUstreamCallback)(CUstream, CUresult, void*);
+typedef hipMemAccessFlags CUmemAccess_flags;
+typedef hipMemAccessDesc CUmemAccessDesc;
+typedef hipMemAllocationGranularity_flags CUmemAllocationGranularity_flags;
+typedef hipMemGenericAllocationHandle_t CUmemGenericAllocationHandle;
+typedef int CUsharedconfig;
+typedef int CUmem_range_attribute;
+typedef int CUatomicOperation;
+struct CUmemPoolPtrExportData;
 #endif
 
 #ifndef CUDA_SUCCESS
@@ -522,6 +531,7 @@ class Wrapper {
   int _backendIdx{activeBackendIdx()};
 };
 
+class Context;
 class Device : public Wrapper<CUdevice> {
  public:
   explicit Device(unsigned int ordinal);
@@ -563,6 +573,21 @@ class Device : public Wrapper<CUdevice> {
   void getDevResource(CUdevResource& resource, CUdevResourceType type) const;
 #endif
 
+  Context primaryContext() const;
+  void primaryContextRelease() const;
+  void primaryContextReset() const;
+  unsigned int primaryContextGetFlags(int& active) const;
+  void primaryContextSetFlags(unsigned int flags) const;
+
+#if !defined(__HIP__) && CUDA_VERSION >= 12000
+  void getHostAtomicCapabilities(unsigned int* capabilities,
+                                 const CUatomicOperation* operations,
+                                 unsigned int count) const;
+  void getP2PAtomicCapabilities(unsigned int* capabilities,
+                                const CUatomicOperation* operations,
+                                unsigned int count, Device& peer) const;
+#endif
+
  private:
   int _ordinal{-1};
 };
@@ -598,6 +623,16 @@ class MemPool : public Wrapper<void*> {
   void setAttribute(int attr, const void* value);
   void getAttribute(int attr, void* value) const;
   CUdeviceptr allocFromPoolAsync(size_t size, Stream& stream);
+  void trimTo(size_t minBytesToKeep) const;
+  void setAccess(const CUmemAccessDesc* map, size_t count);
+  unsigned int getAccess(const CUmemLocation& location) const;
+  void exportToShareableHandle(void* handle, int handleType,
+                               unsigned long long flags = 0) const;
+  void exportPointer(CUmemPoolPtrExportData& shareData,
+                     CUdeviceptr ptr) const;
+  CUdeviceptr importPointer(const CUmemPoolPtrExportData& shareData);
+  static MemPool importFromShareableHandle(void* handle, int handleType,
+                                          unsigned long long flags = 0);
   operator CUmemoryPool() const { return static_cast<CUmemoryPool>(_obj); }
 };
 
@@ -629,6 +664,12 @@ class Function : public Wrapper<CUfunction> {
   void setAttribute(CUfunction_attribute attribute, int value);
   int occupancyMaxActiveBlocksPerMultiprocessor(int blockSize,
                                                 size_t dynamicSMemSize);
+  int occupancyMaxActiveBlocksPerMultiprocessorWithFlags(int blockSize,
+                                                       size_t dynamicSMemSize,
+                                                       unsigned int flags);
+  size_t occupancyAvailableDynamicSMemPerBlock(int numBlocks,
+                                              int blockSize) const;
+  void setSharedMemConfig(CUsharedconfig config);
   void occupancyMaxPotentialBlockSize(int& minGridSize, int& blockSize,
                                       size_t dynamicSMemSize = 0);
   void setCacheConfig(CUfunc_cache config);
@@ -667,6 +708,33 @@ class DeviceMemory : public Wrapper<CUdeviceptr> {
   const void* parameter() const;
   void getHandleForAddressRange(void* handle, int handleType,
                                 unsigned long long flags = 0) const;
+  static void exportToShareableHandle(void* shareableHandle,
+                                     CUmemGenericAllocationHandle handle,
+                                     int handleType,
+                                     unsigned long long flags = 0);
+  static CUmemGenericAllocationHandle importFromShareableHandle(
+      void* osHandle, int handleType);
+  static void release(CUmemGenericAllocationHandle handle);
+  static void getAllocationPropertiesFromHandle(
+      CUmemAllocationProp& prop, CUmemGenericAllocationHandle handle);
+  static DeviceMemory addressReserve(size_t size, size_t alignment,
+                                   CUdeviceptr address = 0,
+                                   unsigned long long flags = 0);
+  static void addressFree(CUdeviceptr address, size_t size);
+  void map(size_t size, size_t offset, CUmemGenericAllocationHandle handle,
+          unsigned long long flags = 0);
+  static void unmap(CUdeviceptr address, size_t size);
+  void setAccess(const CUmemAccessDesc* desc, size_t count);
+  static unsigned long long getAccess(const CUmemLocation* location,
+                                    CUdeviceptr address);
+  static void allocationGranularity(size_t& granularity,
+                                   const CUmemAllocationProp& prop,
+                                   CUmemAllocationGranularity_flags option);
+  void getRangeAttribute(CUmem_range_attribute attribute, void* data,
+                        size_t dataSize, size_t count) const;
+  void getRangeAttributes(void** data, size_t* dataSizes,
+                         CUmem_range_attribute* attributes,
+                         size_t numAttributes, size_t count) const;
   template <typename T>
   operator T*() {
     return reinterpret_cast<T*>(_obj);
@@ -759,12 +827,30 @@ class Context : public Wrapper<CUcontext> {
   }
   static void synchronize();
 
+  unsigned int getFlags() const;
+  CUsharedconfig getSharedMemConfig() const;
+  void setSharedMemConfig(CUsharedconfig config);
+
 #if !defined(__HIP__)
+  void setFlags(unsigned int flags) const;
+#if CUDA_VERSION >= 12000
+  void getExecAffinity(CUexecAffinityParam* pExecAffinity,
+                       CUexecAffinityType type) const;
+  unsigned long long getId() const;
+#endif
+#if CUDA_VERSION >= 12400
+  void recordEvent(Event& event) const;
+  void waitEvent(Event& event) const;
+#endif
+#if CUDA_VERSION >= 12800
+  void resetPersistingL2Cache() const;
+#endif
   void getDevResource(CUdevResource& resource, CUdevResourceType type) const;
   static Context fromGreenCtx(GreenContext& greenContext);
 #endif
 
  private:
+  friend class Device;
   Context(CUcontext context, Device& device);
   Device* _device{nullptr};
 };
@@ -873,6 +959,22 @@ class Stream : public Wrapper<CUstream> {
   bool isCapturing() const;
   unsigned int getFlags() const;
   int getPriority() const;
+  void waitValue32(CUdeviceptr address, unsigned int value, unsigned int flags);
+  void waitValue64(CUdeviceptr address, unsigned long long value,
+                   unsigned int flags);
+  void writeValue32(CUdeviceptr address, unsigned int value, unsigned int flags);
+  void writeValue64(CUdeviceptr address, unsigned long long value,
+                    unsigned int flags);
+  void batchMemOp(unsigned int count, void* paramArray, unsigned int flags);
+  void attachMemAsync(CUdeviceptr address, size_t length = 0,
+                      unsigned int flags = 0);
+  void beginCaptureToGraph(Graph& graph, unsigned int flags = 0);
+  void updateCaptureDependencies(CUgraphNode* dependencies,
+                                size_t numDependencies, unsigned int flags = 0);
+#if CUDA_VERSION >= 12000
+  Device getDevice() const;
+  unsigned long long getStreamId() const;
+#endif
 #if !defined(__HIP__)
   void getDevResource(CUdevResource& resource, CUdevResourceType type) const;
 #endif
@@ -2051,6 +2153,354 @@ inline GraphMemCopyToHostNodeParams::GraphMemCopyToHostNodeParams(
     _obj.dstPitch = size_x * element_size;
   }
 }
+
+// --- Extended CUDA Driver API surface (added for full driver-API parity) ---
+
+inline Context Device::primaryContext() const {
+  CUcontext ctx{};
+  checkCudaCall(getBackend(_backendIdx)
+                    .devicePrimaryCtxRetain(reinterpret_cast<void**>(&ctx),
+                                            _obj));
+  return Context(ctx, const_cast<Device&>(*this));
+}
+
+inline void Device::primaryContextRelease() const {
+  checkCudaCall(getBackend(_backendIdx).devicePrimaryCtxRelease(_obj));
+}
+
+inline void Device::primaryContextReset() const {
+  checkCudaCall(getBackend(_backendIdx).devicePrimaryCtxReset(_obj));
+}
+
+inline unsigned int Device::primaryContextGetFlags(int& active) const {
+  unsigned int flags{};
+  checkCudaCall(
+      getBackend(_backendIdx).devicePrimaryCtxGetState(_obj, &flags, &active));
+  return flags;
+}
+
+inline void Device::primaryContextSetFlags(unsigned int flags) const {
+  checkCudaCall(getBackend(_backendIdx).devicePrimaryCtxSetFlags(_obj, flags));
+}
+
+inline unsigned int Context::getFlags() const {
+  unsigned int flags{};
+  checkCudaCall(getBackend(_backendIdx).ctxGetFlags(&flags));
+  return flags;
+}
+
+inline CUsharedconfig Context::getSharedMemConfig() const {
+  CUsharedconfig config{};
+  checkCudaCall(getBackend(_backendIdx)
+                    .ctxGetSharedMemConfig(reinterpret_cast<int*>(&config)));
+  return config;
+}
+
+inline void Context::setSharedMemConfig(CUsharedconfig config) {
+  checkCudaCall(getBackend(_backendIdx).ctxSetSharedMemConfig(config));
+}
+
+inline int Function::occupancyMaxActiveBlocksPerMultiprocessorWithFlags(
+    int blockSize, size_t dynamicSMemSize, unsigned int flags) {
+  int numBlocks{};
+  checkCudaCall(getBackend(_backendIdx)
+                    .occupancyMaxActiveBlocksPerMultiprocessorWithFlags(
+                        &numBlocks, _obj, blockSize, dynamicSMemSize, flags));
+  return numBlocks;
+}
+
+inline void Function::setSharedMemConfig(CUsharedconfig config) {
+  checkCudaCall(getBackend(_backendIdx).funcSetSharedMemConfig(_obj, config));
+}
+
+inline DeviceMemory DeviceMemory::addressReserve(size_t size, size_t alignment,
+                                               CUdeviceptr address,
+                                               unsigned long long flags) {
+  CUdeviceptr ptr{};
+  checkCudaCall(getBackend(activeBackendIdx())
+                    .memAddressReserve(&ptr, size, alignment, address, flags));
+  return DeviceMemory(ptr, size);
+}
+
+inline void DeviceMemory::addressFree(CUdeviceptr address, size_t size) {
+  checkCudaCall(
+          getBackend(activeBackendIdx()).memAddressFree(address, size));
+}
+
+inline void DeviceMemory::map(size_t size, size_t offset,
+                            CUmemGenericAllocationHandle handle,
+                            unsigned long long flags) {
+#if defined(__HIP__)
+  void* h = static_cast<void*>(handle);
+#else
+  void* h = reinterpret_cast<void*>(static_cast<std::uintptr_t>(handle));
+#endif
+  checkCudaCall(getBackend(_backendIdx).memMap(_obj, size, offset, h, flags));
+}
+
+inline void DeviceMemory::unmap(CUdeviceptr address, size_t size) {
+  checkCudaCall(getBackend(activeBackendIdx()).memUnmap(address, size));
+}
+
+inline void DeviceMemory::setAccess(const CUmemAccessDesc* desc, size_t count) {
+  checkCudaCall(getBackend(activeBackendIdx()).memSetAccess(_obj, count, desc,
+                                                            count));
+}
+
+inline unsigned long long DeviceMemory::getAccess(const CUmemLocation* location,
+                                               CUdeviceptr address) {
+  unsigned long long flags{};
+  checkCudaCall(getBackend(activeBackendIdx())
+                    .memGetAccess(&flags, location, address));
+  return flags;
+}
+
+inline void DeviceMemory::allocationGranularity(
+    size_t& granularity, const CUmemAllocationProp& prop,
+    CUmemAllocationGranularity_flags option) {
+  checkCudaCall(getBackend(activeBackendIdx())
+                    .memGetAllocationGranularity(&granularity, &prop, option));
+}
+
+inline void DeviceMemory::getRangeAttribute(CUmem_range_attribute attribute,
+                                          void* data, size_t dataSize,
+                                          size_t count) const {
+  checkCudaCall(getBackend(_backendIdx)
+                    .memRangeGetAttribute(data, dataSize,
+                                           static_cast<int>(attribute), _obj,
+                                           count));
+}
+
+inline void MemPool::trimTo(size_t minBytesToKeep) const {
+  checkCudaCall(getBackend(_backendIdx).memPoolTrimTo(_obj, minBytesToKeep));
+}
+
+inline void MemPool::setAccess(const CUmemAccessDesc* map, size_t count) {
+  checkCudaCall(
+      getBackend(_backendIdx).memPoolSetAccess(_obj, map, count));
+}
+
+inline unsigned int MemPool::getAccess(const CUmemLocation& location) const {
+  unsigned int flags{};
+  checkCudaCall(getBackend(_backendIdx)
+                    .memPoolGetAccess(reinterpret_cast<int*>(&flags), _obj,
+                                      const_cast<CUmemLocation*>(&location)));
+  return flags;
+}
+
+inline void Stream::waitValue32(CUdeviceptr address, unsigned int value,
+                              unsigned int flags) {
+  checkCudaCall(getBackend(_backendIdx)
+                    .streamWaitValue32(_obj, address, value, flags));
+}
+
+inline void Stream::waitValue64(CUdeviceptr address, unsigned long long value,
+                              unsigned int flags) {
+  checkCudaCall(getBackend(_backendIdx)
+                    .streamWaitValue64(_obj, address, value, flags));
+}
+
+inline void Stream::writeValue32(CUdeviceptr address, unsigned int value,
+                               unsigned int flags) {
+  checkCudaCall(getBackend(_backendIdx)
+                    .streamWriteValue32(_obj, address, value, flags));
+}
+
+inline void Stream::writeValue64(CUdeviceptr address, unsigned long long value,
+                               unsigned int flags) {
+  checkCudaCall(getBackend(_backendIdx)
+                    .streamWriteValue64(_obj, address, value, flags));
+}
+
+inline void Stream::attachMemAsync(CUdeviceptr address, size_t length,
+                                 unsigned int flags) {
+  checkCudaCall(getBackend(_backendIdx)
+                    .streamAttachMemAsync(_obj, address, length, flags));
+}
+
+inline void Stream::beginCaptureToGraph(Graph& graph, unsigned int flags) {
+  checkCudaCall(getBackend(_backendIdx)
+                    .streamBeginCaptureToGraph(_obj, graph, nullptr, 0, flags));
+}
+
+inline void Stream::updateCaptureDependencies(CUgraphNode* dependencies,
+                                            size_t numDependencies,
+                                            unsigned int flags) {
+  checkCudaCall(getBackend(_backendIdx)
+                    .streamUpdateCaptureDependencies(
+                        _obj, reinterpret_cast<void**>(dependencies),
+                        numDependencies, flags));
+}
+
+#if CUDA_VERSION >= 12000
+inline Device Stream::getDevice() const {
+  CUdevice device{};
+  checkCudaCall(getBackend(_backendIdx).streamGetDevice(&device, _obj));
+  return Device(static_cast<unsigned int>(device));
+}
+
+inline unsigned long long Stream::getStreamId() const {
+  unsigned long long streamId{};
+  checkCudaCall(getBackend(_backendIdx).streamGetId(&streamId, _obj));
+  return streamId;
+}
+#endif
+
+inline void Stream::batchMemOp(unsigned int count, void* paramArray,
+                             unsigned int flags) {
+  checkCudaCall(getBackend(_backendIdx)
+                    .streamBatchMemOp(_obj, count, paramArray, flags));
+}
+
+inline size_t Function::occupancyAvailableDynamicSMemPerBlock(int numBlocks,
+                                                            int blockSize) const {
+  size_t dynamicSmemSize{};
+  checkCudaCall(getBackend(_backendIdx)
+                    .occupancyAvailableDynamicSMemPerBlock(
+                        &dynamicSmemSize, _obj, numBlocks, blockSize));
+  return dynamicSmemSize;
+}
+
+inline void MemPool::exportToShareableHandle(void* handle, int handleType,
+                                            unsigned long long flags) const {
+  checkCudaCall(getBackend(_backendIdx)
+                    .memPoolExportToShareableHandle(handle, _obj, handleType,
+                                                    flags));
+}
+
+inline void MemPool::exportPointer(CUmemPoolPtrExportData& shareData,
+                                 CUdeviceptr ptr) const {
+  checkCudaCall(getBackend(_backendIdx)
+                    .memPoolExportPointer(&shareData, ptr));
+}
+
+inline CUdeviceptr MemPool::importPointer(const CUmemPoolPtrExportData& shareData) {
+  CUdeviceptr ptr{};
+  checkCudaCall(getBackend(_backendIdx)
+                    .memPoolImportPointer(
+                        &ptr, _obj,
+                        const_cast<CUmemPoolPtrExportData*>(&shareData)));
+  return ptr;
+}
+
+inline MemPool MemPool::importFromShareableHandle(void* handle, int handleType,
+                                                unsigned long long flags) {
+  void* pool{};
+  checkCudaCall(getBackend(activeBackendIdx())
+                    .memPoolImportFromShareableHandle(&pool, handle, handleType));
+  return MemPool(static_cast<CUmemoryPool>(pool));
+}
+
+inline void DeviceMemory::getRangeAttributes(void** data, size_t* dataSizes,
+                                           CUmem_range_attribute* attributes,
+                                           size_t numAttributes,
+                                           size_t count) const {
+  checkCudaCall(getBackend(_backendIdx)
+                    .memRangeGetAttributes(
+                        data, dataSizes,
+                        reinterpret_cast<int*>(attributes), numAttributes,
+                        _obj, count));
+}
+
+inline void DeviceMemory::exportToShareableHandle(
+    void* shareableHandle, CUmemGenericAllocationHandle handle, int handleType,
+    unsigned long long flags) {
+#if defined(__HIP__)
+  void* h = static_cast<void*>(handle);
+#else
+  void* h = reinterpret_cast<void*>(static_cast<std::uintptr_t>(handle));
+#endif
+  checkCudaCall(getBackend(activeBackendIdx())
+                    .memExportToShareableHandle(shareableHandle, h, handleType,
+                                                flags));
+}
+
+inline CUmemGenericAllocationHandle DeviceMemory::importFromShareableHandle(
+    void* osHandle, int handleType) {
+  void* handle{};
+  checkCudaCall(getBackend(activeBackendIdx())
+                    .memImportFromShareableHandle(&handle, osHandle, handleType));
+#if defined(__HIP__)
+  return static_cast<CUmemGenericAllocationHandle>(handle);
+#else
+  return static_cast<CUmemGenericAllocationHandle>(
+      reinterpret_cast<std::uintptr_t>(handle));
+#endif
+}
+
+inline void DeviceMemory::release(CUmemGenericAllocationHandle handle) {
+#if defined(__HIP__)
+  void* h = static_cast<void*>(handle);
+#else
+  void* h = reinterpret_cast<void*>(static_cast<std::uintptr_t>(handle));
+#endif
+  checkCudaCall(getBackend(activeBackendIdx()).memRelease(h));
+}
+
+inline void DeviceMemory::getAllocationPropertiesFromHandle(
+    CUmemAllocationProp& prop, CUmemGenericAllocationHandle handle) {
+#if defined(__HIP__)
+  void* h = static_cast<void*>(handle);
+#else
+  void* h = reinterpret_cast<void*>(static_cast<std::uintptr_t>(handle));
+#endif
+  checkCudaCall(getBackend(activeBackendIdx())
+                    .memGetAllocationPropertiesFromHandle(&prop, h));
+}
+
+#if !defined(__HIP__) && CUDA_VERSION >= 12000
+inline void Device::getHostAtomicCapabilities(
+    unsigned int* capabilities, const CUatomicOperation* operations,
+    unsigned int count) const {
+  checkCudaCall(getBackend(_backendIdx)
+                    .deviceGetHostAtomicCapabilities(capabilities, operations,
+                                                     count, _obj));
+}
+
+inline void Device::getP2PAtomicCapabilities(
+    unsigned int* capabilities, const CUatomicOperation* operations,
+    unsigned int count, Device& peer) const {
+  checkCudaCall(getBackend(_backendIdx)
+                    .deviceGetP2PAtomicCapabilities(
+                        capabilities, operations, count, _obj, peer));
+}
+#endif
+
+#if !defined(__HIP__)
+inline void Context::setFlags(unsigned int flags) const {
+  checkCudaCall(getBackend(_backendIdx).ctxSetFlags(flags));
+}
+
+#if CUDA_VERSION >= 12000
+inline void Context::getExecAffinity(CUexecAffinityParam* pExecAffinity,
+                                     CUexecAffinityType type) const {
+  checkCudaCall(getBackend(_backendIdx)
+                    .ctxGetExecAffinity(pExecAffinity, static_cast<int>(type)));
+}
+
+inline unsigned long long Context::getId() const {
+  unsigned long long ctxId{};
+  checkCudaCall(getBackend(_backendIdx).ctxGetId(_obj, &ctxId));
+  return ctxId;
+}
+#endif
+
+#if CUDA_VERSION >= 12400
+inline void Context::recordEvent(Event& event) const {
+  checkCudaCall(getBackend(_backendIdx).ctxRecordEvent(_obj, event));
+}
+
+inline void Context::waitEvent(Event& event) const {
+  checkCudaCall(getBackend(_backendIdx).ctxWaitEvent(_obj, event));
+}
+#endif
+
+#if CUDA_VERSION >= 12800
+inline void Context::resetPersistingL2Cache() const {
+  checkCudaCall(getBackend(_backendIdx).ctxResetPersistingL2Cache());
+}
+#endif
+#endif  // !defined(__HIP__)
 
 // --- NVIDIA-only implementations ---
 
