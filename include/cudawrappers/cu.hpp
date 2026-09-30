@@ -462,7 +462,9 @@ const char* getErrorName(CUresult result);
 void memcpyHtoD(CUdeviceptr dst, const void* src, size_t size);
 void memcpyDtoH(void* dst, CUdeviceptr src, size_t size);
 void pointerSetAttribute(const void* value, CUpointer_attribute attribute,
-                         CUdeviceptr ptr);
+                        CUdeviceptr ptr);
+void memGetHandleForAddressRange(void* handle, CUdeviceptr dptr, size_t size,
+                                int handleType, unsigned long long flags);
 void memAdvise(const void* ptr, size_t count, int advice, int device);
 CUdeviceptr pointerGetAttribute(CUpointer_attribute attribute, CUdeviceptr ptr);
 void pointerGetAttributes(unsigned int numAttributes,
@@ -663,6 +665,8 @@ class DeviceMemory : public Wrapper<CUdeviceptr> {
   void memset2D(unsigned int value, size_t pitch, size_t width, size_t height);
   void zero(size_t size);
   const void* parameter() const;
+  void getHandleForAddressRange(void* handle, int handleType,
+                                unsigned long long flags = 0) const;
   template <typename T>
   operator T*() {
     return reinterpret_cast<T*>(_obj);
@@ -958,6 +962,14 @@ inline void pointerSetAttribute(const void* value,
 inline void memAdvise(const void* ptr, size_t count, int advice, int device) {
   checkCudaCall(
       getBackend(activeBackendIdx()).memAdvise(ptr, count, advice, device));
+}
+
+inline void memGetHandleForAddressRange(void* handle, CUdeviceptr dptr,
+                                        size_t size, int handleType,
+                                        unsigned long long flags) {
+  checkCudaCall(getBackend(activeBackendIdx())
+                    .memGetHandleForAddressRange(handle, dptr, size, handleType,
+                                                 flags));
 }
 
 inline CUdeviceptr pointerGetAttribute(CUpointer_attribute attribute,
@@ -1571,6 +1583,14 @@ inline void DeviceMemory::memset(unsigned short value, size_t size) {
 
 inline void DeviceMemory::memset(unsigned int value, size_t size) {
   checkCudaCall(getBackend(_backendIdx).memsetD32(_obj, value, size));
+}
+
+inline void DeviceMemory::getHandleForAddressRange(void* handle, int handleType,
+                                                   unsigned long long flags)
+    const {
+  checkCudaCall(getBackend(_backendIdx)
+                    .memGetHandleForAddressRange(handle, _obj, _size, handleType,
+                                                 flags));
 }
 
 inline void DeviceMemory::memset2D(unsigned char value, size_t pitch,

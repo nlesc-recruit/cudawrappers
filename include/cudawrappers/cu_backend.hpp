@@ -184,6 +184,8 @@ struct Backend {
   CUresult_b (*memHostGetDevicePointer)(void**, void*, unsigned int);
   CUresult_b (*memGetInfo)(size_t*, size_t*);
   CUresult_b (*memPrefetchAsync)(const void*, size_t, int, CUstream_b);
+  CUresult_b (*memGetHandleForAddressRange)(void*, CUdeviceptr_b, size_t, int,
+                                            unsigned long long);
 
   CUresult_b (*memcpyHtoD)(CUdeviceptr_b, const void*, size_t);
   CUresult_b (*memcpyDtoH)(void*, CUdeviceptr_b, size_t);
@@ -542,6 +544,7 @@ inline Backend loadCudaBackend() {
   LOAD(memHostGetDevicePointer, "cuMemHostGetDevicePointer_v2");
   LOAD(memGetInfo, "cuMemGetInfo_v2");
   LOAD(memPrefetchAsync, "cuMemPrefetchAsync");
+  LOAD(memGetHandleForAddressRange, "cuMemGetHandleForAddressRange");
 
   LOAD(memcpyHtoD, "cuMemcpyHtoD_v2");
   LOAD(memcpyDtoH, "cuMemcpyDtoH_v2");
@@ -1054,6 +1057,7 @@ inline Backend loadHipBackend() {
   LOAD(memHostGetDevicePointer, "hipHostGetDevicePointer");
   LOAD(memGetInfo, "hipMemGetInfo");
   LOAD(memPrefetchAsync, "hipMemPrefetchAsync");
+  LOAD(memGetHandleForAddressRange, "hipMemGetHandleForAddressRange");
 
   LOAD(memcpyHtoD, "hipMemcpyHtoD");
   LOAD(memcpyDtoH, "hipMemcpyDtoH");
