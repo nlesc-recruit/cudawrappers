@@ -552,7 +552,7 @@ inline Backend loadCudaBackend() {
   LOAD(deviceGetUuid, "cuDeviceGetUuid");
   LOAD(deviceGetPCIBusId, "cuDeviceGetPCIBusId");
   LOAD(deviceGetByPCIBusId, "cuDeviceGetByPCIBusId");
-  LOAD(deviceTotalMem, "cuDeviceTotalMem");
+  LOAD(deviceTotalMem, "cuDeviceTotalMem_v2");
   LOAD(deviceGetDefaultMemPool, "cuDeviceGetDefaultMemPool");
   LOAD(deviceGetMemPool, "cuDeviceGetMemPool");
   LOAD(deviceSetMemPool, "cuDeviceSetMemPool");
@@ -605,11 +605,11 @@ inline Backend loadCudaBackend() {
   LOAD(devicePrimaryCtxGetState, "cuDevicePrimaryCtxGetState");
   LOAD(devicePrimaryCtxSetFlags, "cuDevicePrimaryCtxSetFlags");
   LOAD(streamAttachMemAsync, "cuStreamAttachMemAsync");
-  LOAD(streamWaitValue32, "cuStreamWaitValue32");
-  LOAD(streamWriteValue32, "cuStreamWriteValue32");
-  LOAD(streamWaitValue64, "cuStreamWaitValue64");
-  LOAD(streamWriteValue64, "cuStreamWriteValue64");
-  LOAD(streamBatchMemOp, "cuStreamBatchMemOp");
+  LOAD(streamWaitValue32, "cuStreamWaitValue32_v2");
+  LOAD(streamWriteValue32, "cuStreamWriteValue32_v2");
+  LOAD(streamWaitValue64, "cuStreamWaitValue64_v2");
+  LOAD(streamWriteValue64, "cuStreamWriteValue64_v2");
+  LOAD(streamBatchMemOp, "cuStreamBatchMemOp_v2");
   LOAD(streamGetDevice, "cuStreamGetDevice");
   LOAD(streamGetId, "cuStreamGetId");
   LOAD(streamGetCtx, "cuStreamGetCtx");
