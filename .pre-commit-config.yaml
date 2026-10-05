@@ -1,6 +1,6 @@
 repos:
   - repo: https://github.com/pre-commit/mirrors-clang-format
-    rev: v22.1.8
+    rev: v23.1.2
     hooks:
       - id: clang-format
         exclude: macros.hpp|\.json$
@@ -23,7 +23,7 @@ repos:
       - id: cmake-lint
         args: ['--line-width=90']
   - repo: https://github.com/psf/black-pre-commit-mirror
-    rev: 26.5.1
+    rev: 26.10.0
     hooks:
       - id: black
         language_version: python3
