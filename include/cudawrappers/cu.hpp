@@ -256,6 +256,11 @@ enum CUgraphMem_attribute {
 
 enum CUexecAffinityType { CU_EXEC_AFFINITY_TYPE_SM_COUNT = 0 };
 
+// cuda.h declares CUexecAffinityParam as a struct/union; only a pointer to it
+// is ever passed through the wrappers, so an opaque declaration suffices for
+// headerless (non-HIP, no-<cuda.h>) builds.
+typedef union CUexecAffinityParam_v1 CUexecAffinityParam;
+
 enum CUdevice_P2PAttribute {
   CU_DEVICE_P2P_ATTRIBUTE_PERFORMANCE_RANK = 0,
   CU_DEVICE_P2P_ATTRIBUTE_ACCESS_SUPPORTED = 1,
@@ -569,7 +574,9 @@ class Device : public Wrapper<CUdevice> {
                                     unsigned numChannels) const;
   void getExecAffinitySupport(int& pi, CUexecAffinityType type) const;
   void getProperties(CUdevprop& prop) const;
+#if CUDA_VERSION >= 12400
   void getDevResource(CUdevResource& resource, CUdevResourceType type) const;
+#endif
 #endif
 
   Context primaryContext() const;
@@ -578,7 +585,7 @@ class Device : public Wrapper<CUdevice> {
   unsigned int primaryContextGetFlags(int& active) const;
   void primaryContextSetFlags(unsigned int flags) const;
 
-#if !defined(__HIP__) && CUDA_VERSION >= 12000
+#if !defined(__HIP__) && CUDA_VERSION >= 13000
   void getHostAtomicCapabilities(unsigned int* capabilities,
                                  const CUatomicOperation* operations,
                                  unsigned int count) const;
@@ -830,21 +837,23 @@ class Context : public Wrapper<CUcontext> {
   void setSharedMemConfig(CUsharedconfig config);
 
 #if !defined(__HIP__)
+#if CUDA_VERSION >= 12010
   void setFlags(unsigned int flags) const;
-#if CUDA_VERSION >= 12000
+#endif
   void getExecAffinity(CUexecAffinityParam* pExecAffinity,
                        CUexecAffinityType type) const;
+#if CUDA_VERSION >= 12000
   unsigned long long getId() const;
 #endif
 #if CUDA_VERSION >= 12400
   void recordEvent(Event& event) const;
   void waitEvent(Event& event) const;
 #endif
-#if CUDA_VERSION >= 12800
   void resetPersistingL2Cache() const;
-#endif
+#if CUDA_VERSION >= 12400
   void getDevResource(CUdevResource& resource, CUdevResourceType type) const;
   static Context fromGreenCtx(GreenContext& greenContext);
+#endif
 #endif
 
  private:
@@ -855,7 +864,7 @@ class Context : public Wrapper<CUcontext> {
 
 class GraphExec;
 
-#if !defined(__HIP__)
+#if !defined(__HIP__) && CUDA_VERSION >= 12400
 class GreenContext : public Wrapper<CUgreenCtx> {
  public:
   GreenContext(CUdevResourceDesc desc, Device& device,
@@ -971,11 +980,13 @@ class Stream : public Wrapper<CUstream> {
   void updateCaptureDependencies(CUgraphNode* dependencies,
                                  size_t numDependencies,
                                  unsigned int flags = 0);
-#if CUDA_VERSION >= 12000
+#if CUDA_VERSION >= 12800
   Device getDevice() const;
+#endif
+#if CUDA_VERSION >= 12000
   unsigned long long getStreamId() const;
 #endif
-#if !defined(__HIP__)
+#if !defined(__HIP__) && CUDA_VERSION >= 12400
   void getDevResource(CUdevResource& resource, CUdevResourceType type) const;
 #endif
 
@@ -984,7 +995,7 @@ class Stream : public Wrapper<CUstream> {
 #endif
 };
 
-#if !defined(__HIP__)
+#if !defined(__HIP__) && CUDA_VERSION >= 12400
 inline void devResourceGenerateDesc(CUdevResourceDesc* phDesc,
                                     CUdevResource* resources,
                                     unsigned int nbResources) {
@@ -2321,13 +2332,15 @@ inline void Stream::updateCaptureDependencies(CUgraphNode* dependencies,
                         numDependencies, flags));
 }
 
-#if CUDA_VERSION >= 12000
+#if CUDA_VERSION >= 12800
 inline Device Stream::getDevice() const {
   CUdevice device{};
   checkCudaCall(getBackend(_backendIdx).streamGetDevice(&device, _obj));
   return Device(static_cast<unsigned int>(device));
 }
+#endif
 
+#if CUDA_VERSION >= 12000
 inline unsigned long long Stream::getStreamId() const {
   unsigned long long streamId{};
   checkCudaCall(getBackend(_backendIdx).streamGetId(&streamId, _obj));
@@ -2438,7 +2451,7 @@ inline void DeviceMemory::getAllocationPropertiesFromHandle(
                     .memGetAllocationPropertiesFromHandle(&prop, h));
 }
 
-#if !defined(__HIP__) && CUDA_VERSION >= 12000
+#if !defined(__HIP__) && CUDA_VERSION >= 13000
 inline void Device::getHostAtomicCapabilities(
     unsigned int* capabilities, const CUatomicOperation* operations,
     unsigned int count) const {
@@ -2457,17 +2470,19 @@ inline void Device::getP2PAtomicCapabilities(
 #endif
 
 #if !defined(__HIP__)
+#if CUDA_VERSION >= 12010
 inline void Context::setFlags(unsigned int flags) const {
   checkCudaCall(getBackend(_backendIdx).ctxSetFlags(flags));
 }
+#endif
 
-#if CUDA_VERSION >= 12000
 inline void Context::getExecAffinity(CUexecAffinityParam* pExecAffinity,
                                      CUexecAffinityType type) const {
   checkCudaCall(getBackend(_backendIdx)
                     .ctxGetExecAffinity(pExecAffinity, static_cast<int>(type)));
 }
 
+#if CUDA_VERSION >= 12000
 inline unsigned long long Context::getId() const {
   unsigned long long ctxId{};
   checkCudaCall(getBackend(_backendIdx).ctxGetId(_obj, &ctxId));
@@ -2485,11 +2500,9 @@ inline void Context::waitEvent(Event& event) const {
 }
 #endif
 
-#if CUDA_VERSION >= 12800
 inline void Context::resetPersistingL2Cache() const {
   checkCudaCall(getBackend(_backendIdx).ctxResetPersistingL2Cache());
 }
-#endif
 #endif  // !defined(__HIP__)
 
 // --- NVIDIA-only implementations ---
@@ -2534,6 +2547,7 @@ inline void Device::getProperties(CUdevprop& prop) const {
   prop.textureAlign = getAttribute<CU_DEVICE_ATTRIBUTE_TEXTURE_ALIGNMENT>();
 }
 
+#if CUDA_VERSION >= 12400
 inline void Device::getDevResource(CUdevResource& resource,
                                    CUdevResourceType type) const {
   Backend& b = getBackend(_backendIdx);
@@ -2608,7 +2622,7 @@ inline void Stream::getDevResource(CUdevResource& resource,
   checkCudaCall(
       b.streamGetDevResource(_obj, &resource, static_cast<int>(type)));
 }
-
+#endif  // CUDA_VERSION >= 12400
 #endif  // !defined(__HIP__)
 
 }  // namespace cu
