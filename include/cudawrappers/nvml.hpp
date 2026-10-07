@@ -61,6 +61,36 @@ class Device {
     return power;
   }
 
+  unsigned int getTemperature(nvmlTemperatureSensors_t sensor) const {
+    unsigned int temp;
+    checkNvmlCall(nvmlDeviceGetTemperature(device_, sensor, &temp));
+    return temp;
+  }
+
+  nvmlUtilization_t getUtilizationRates() const {
+    nvmlUtilization_t util{};
+    checkNvmlCall(nvmlDeviceGetUtilizationRates(device_, &util));
+    return util;
+  }
+
+  nvmlMemory_t getMemoryInfo() const {
+    nvmlMemory_t mem{};
+    checkNvmlCall(nvmlDeviceGetMemoryInfo(device_, &mem));
+    return mem;
+  }
+
+  static std::string getDriverVersion() {
+    char version[NVML_SYSTEM_DRIVER_VERSION_BUFFER_SIZE]{};
+    checkNvmlCall(nvmlSystemGetDriverVersion(version, sizeof(version)));
+    return version;
+  }
+
+  static std::string getNvmlVersion() {
+    char version[NVML_SYSTEM_NVML_VERSION_BUFFER_SIZE]{};
+    checkNvmlCall(nvmlSystemGetNVMLVersion(version, sizeof(version)));
+    return version;
+  }
+
  private:
   nvmlDevice_t device_;
 };
