@@ -5,6 +5,7 @@
 #include <sys/stat.h>
 
 #include <algorithm>
+#include <array>
 #include <cstddef>
 #include <cstring>
 #include <exception>
@@ -44,6 +45,21 @@ inline std::vector<std::string> tokenize(const std::string &input,
   }
   tokens.push_back(s);
   return tokens;
+}
+
+// Raw device architecture name as known to the backend: "sm_<cc>" for NVIDIA
+// (e.g. "sm_120") or the gcnArchName for AMD (e.g. "gfx1201").  This is not a
+// wrapped CUDA Driver API function (the CUDA flavor synthesizes it from the
+// compute-capability attributes, the HIP flavor reads hipGetDeviceProperties),
+// so it lives in detail instead of on cu::Device.
+inline std::string archName(const cu::Device &device) {
+  const size_t max_arch_length{64};
+  std::array<char, max_arch_length> arch{};
+  int r = getBackend(device.getBackendIdx())
+              .deviceGetArchName(arch.data(), static_cast<int>(arch.size()),
+                                 static_cast<CUdevice>(device));
+  cu::checkCudaCall(r);
+  return {arch.data()};
 }
 
 // Load the NVRTC builtins library, required by libnvrtc on some systems.
@@ -431,13 +447,13 @@ inline int capability(const cu::Device &device) {
 // since sm_90 gets the 'a' suffix, enabling architecture-dependent
 // extensions) or "--offload-arch=gfx1201" for AMD.
 inline std::string archOption(const cu::Device &device) {
+  std::string arch = detail::archName(device);  // "sm_120" or "gfx1201"
   if (device.isCuda()) {
-    std::string arch = device.getArch();  // e.g. "sm_120"
     if (capability(device) >= 900 && arch.back() != 'a' && arch.back() != 'f')
       arch += 'a';
     return "-arch=" + arch;
   }
-  return "--offload-arch=" + device.getArch();  // gcnArchName, e.g. "gfx1201"
+  return "--offload-arch=" + arch;
 }
 
 // "-D__HIP_ARCH__=<composite capability>", the vendor-neutral device-code

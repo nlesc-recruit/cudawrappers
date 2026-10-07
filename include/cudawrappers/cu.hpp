@@ -551,7 +551,6 @@ class Device : public Wrapper<CUdevice> {
   static int getDeviceOffset(int backendIdx);
   std::string getName() const;
   std::string getUuid() const;
-  std::string getArch() const;
   void getComputeCapability(int& major, int& minor) const;
   static Device getByPCIBusId(const std::string& pciBusId);
   std::string getPCIBusId() const;
@@ -1181,15 +1180,6 @@ inline std::string Device::getUuid() const {
            << static_cast<unsigned>(static_cast<unsigned char>(uuid.bytes[i]));
   }
   return result.str();
-}
-
-inline std::string Device::getArch() const {
-  const size_t max_arch_length{64};
-  std::array<char, max_arch_length> arch{};
-  int r =
-      getBackend(_backendIdx).deviceGetArchName(arch.data(), arch.size(), _obj);
-  checkCudaCall(r);
-  return {arch.data()};
 }
 
 inline void Device::getComputeCapability(int& major, int& minor) const {
