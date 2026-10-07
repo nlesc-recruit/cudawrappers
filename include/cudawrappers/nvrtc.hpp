@@ -449,8 +449,8 @@ inline std::string archDefine(const cu::Device &device) {
 
 // Clang builtin-header directory shipped with ROCm, which hipRTC needs via
 // -resource-dir= because its bundled clang cannot locate it at run time.
-inline std::optional<std::filesystem::path>
-findClangResourceDir(const std::filesystem::path &rocmRoot) {
+inline std::optional<std::filesystem::path> findClangResourceDir(
+    const std::filesystem::path &rocmRoot) {
   for (const std::filesystem::path &clangDir :
        {rocmRoot / "lib/llvm/lib/clang", rocmRoot / "lib/clang"}) {
     std::error_code ec;
