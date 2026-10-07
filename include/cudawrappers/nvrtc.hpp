@@ -11,6 +11,7 @@
 #include <filesystem>
 #include <fstream>
 #include <iterator>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -411,6 +412,120 @@ inline std::vector<int> getSupportedArchs() {
   return archs;
 }
 
+namespace util {
+
+// Composite compute capability: 100*major + 10*minor (norm-compatible with
+// __CUDA_ARCH__; e.g. sm_120 -> 1200, gfx1201 -> 1200).  Works on both
+// backends because cudawrappers maps the CUDA compute-capability attributes
+// onto the corresponding HIP attributes.
+inline int capability(const cu::Device &device) {
+  const int major =
+      device.getAttribute<CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MAJOR>();
+  const int minor =
+      device.getAttribute<CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MINOR>();
+  return 100 * major + 10 * minor;
+}
+
+// The architecture flag to pass to the runtime compiler for a device that
+// will run the compiled code: "-arch=sm_120a" for NVIDIA (every architecture
+// since sm_90 gets the 'a' suffix, enabling architecture-dependent
+// extensions) or "--offload-arch=gfx1201" for AMD.
+inline std::string archOption(const cu::Device &device) {
+  if (device.isCuda()) {
+    std::string arch = device.getArch();  // e.g. "sm_120"
+    if (capability(device) >= 900 && arch.back() != 'a' && arch.back() != 'f')
+      arch += 'a';
+    return "-arch=" + arch;
+  }
+  return "--offload-arch=" + device.getArch();  // gcnArchName, e.g. "gfx1201"
+}
+
+// "-D__HIP_ARCH__=<composite capability>", the vendor-neutral device-code
+// macro.  HIPRTC does not predefine it (unlike NVRTC's __CUDA_ARCH__), so
+// pass it explicitly when device code needs it.
+inline std::string archDefine(const cu::Device &device) {
+  return "-D__HIP_ARCH__=" + std::to_string(capability(device));
+}
+
+// Clang builtin-header directory shipped with ROCm, which hipRTC needs via
+// -resource-dir= because its bundled clang cannot locate it at run time.
+inline std::optional<std::filesystem::path>
+findClangResourceDir(const std::filesystem::path &rocmRoot) {
+  for (const std::filesystem::path &clangDir :
+       {rocmRoot / "lib/llvm/lib/clang", rocmRoot / "lib/clang"}) {
+    std::error_code ec;
+    for (const auto &entry :
+         std::filesystem::directory_iterator(clangDir, ec)) {
+      if (!entry.is_directory()) continue;
+      if (std::filesystem::exists(entry.path() / "include" / "stddef.h"))
+        return entry.path();
+    }
+  }
+  return std::nullopt;
+}
+
+// The -I (and -resource-dir) options needed to compile for the backend of
+// the given device: the NVRTC include directories (plus the cccl subdir on
+// CUDA 13, which provides <cuda/std/...>) or the ROCm include directories
+// (plus the clang builtin headers for hipRTC).
+inline std::vector<std::string> includeOptions(const cu::Device &device) {
+  std::vector<std::string> options;
+
+  if (device.isCuda()) {
+    for (const std::string &dir : cudaIncludePaths()) {
+      if (dir.empty()) continue;
+      options.push_back("-I" + dir);
+      // CUDA_Toolkit_INCLUDE_DIRS does not always list the cccl subdir
+      // (which holds <cuda/std/...> pulled in by <cooperative_groups/...>);
+      // add it explicitly when present so NVRTC can find those headers.
+      std::filesystem::path ccclDir = std::filesystem::path(dir) / "cccl";
+      if (std::filesystem::exists(ccclDir / "cuda" / "std" / "type_traits"))
+        options.push_back("-I" + ccclDir.string());
+    }
+    return options;
+  }
+
+  std::vector<std::string> dirs;
+  for (const std::string &dir : hipIncludePaths())
+    if (!dir.empty()) dirs.push_back(dir);
+
+  // The ROCm root (and with it the clang resource dir) is located even when
+  // hipIncludePaths() already yields the include dir, so that the builtin
+  // headers are found regardless of how cudawrappers was configured.
+  std::filesystem::path rocmRoot;
+  std::vector<std::string> rocmRoots;
+  if (const char *env = std::getenv("ROCM_PATH")) rocmRoots.push_back(env);
+  if (const char *env = std::getenv("HIP_PATH")) rocmRoots.push_back(env);
+  rocmRoots.push_back("/opt/rocm");
+
+  for (const std::string &root : rocmRoots) {
+    std::filesystem::path includeDir = std::filesystem::path(root) / "include";
+    if (std::filesystem::exists(includeDir / "hip" / "hip_runtime.h")) {
+      if (dirs.empty()) dirs.push_back(includeDir.string());
+      rocmRoot = includeDir.parent_path();
+      break;
+    }
+  }
+
+  for (const std::string &dir : dirs) options.push_back("-I" + dir);
+
+  if (!rocmRoot.empty())
+    if (auto resourceDir = findClangResourceDir(rocmRoot))
+      options.push_back("-resource-dir=" + resourceDir->string());
+
+  return options;
+}
+
+// The full base option set for compiling for the device's backend: the
+// architecture flag followed by the include options.
+inline std::vector<std::string> compileOptions(const cu::Device &device) {
+  std::vector<std::string> options{archOption(device)};
+  std::vector<std::string> includes = includeOptions(device);
+  options.insert(options.end(), includes.begin(), includes.end());
+  return options;
+}
+
+}  // namespace util
 }  // namespace nvrtc
 
 #endif
