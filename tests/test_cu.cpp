@@ -602,10 +602,9 @@ static unsigned int getTestDevice() {
 // ============================================================================
 static int findDevice(cu::Device& dev) {
   int count = cu::Device::getCount();
-  for (int i = 0; i < count; ++i) {
-    cu::Device d(static_cast<unsigned int>(i));
-    dev = d;
-    return i;
+  if (count > 0) {
+    dev = cu::Device(0);
+    return 0;
   }
   return -1;
 }

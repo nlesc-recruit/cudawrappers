@@ -859,7 +859,6 @@ class Context : public Wrapper<CUcontext> {
  private:
   friend class Device;
   Context(CUcontext context, Device& device);
-  Device* _device{nullptr};
 };
 
 class GraphExec;
@@ -1267,7 +1266,7 @@ inline void Device::getStreamPriorityRange(int& leastPriority,
 
 // --- Context ---
 
-inline Context::Context(int flags, Device& device) : _device(&device) {
+inline Context::Context(int flags, Device& device) {
   _backendIdx = device.getBackendIdx();
   checkCudaCall(getBackend(_backendIdx).ctxCreate(ptr(), flags, device));
   int bIdx = _backendIdx;
@@ -1280,7 +1279,7 @@ inline Context::Context(int flags, Device& device) : _device(&device) {
 }
 
 inline Context::Context(CUcontext context, Device& device)
-    : Wrapper<CUcontext>(context), _device(&device) {
+    : Wrapper<CUcontext>(context) {
   _backendIdx = device.getBackendIdx();
 }
 
@@ -1307,15 +1306,14 @@ inline Context Context::getCurrent() {
   CUcontext ctx{};
   int result =
       getBackend(activeIdx).ctxGetCurrent(cu_backend_cast::toVoidPP(ctx));
+  int globalOffset = 0;
   if (result == CUDA_SUCCESS && ctx) {
-    int globalOffset = 0;
     for (size_t j = 0; j < static_cast<size_t>(activeIdx); ++j) {
       globalOffset += Device::getCount(j);
     }
-    Device dev(static_cast<unsigned int>(globalOffset));
-    return Context(ctx, dev);
   }
-  return Context(0, *new Device(static_cast<unsigned int>(0)));
+  Device dev(static_cast<unsigned int>(globalOffset));
+  return Context(ctx, dev);
 }
 
 inline void Context::setCurrent() const {

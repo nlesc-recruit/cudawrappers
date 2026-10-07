@@ -176,7 +176,11 @@ class FFT {
 
   ~FFT() {
     if (plan_ != 0) {
-      checkCuFFTCall(backend().destroy(plan_));
+      try {
+        checkCuFFTCall(backend().destroy(plan_));
+      } catch (...) {
+        // Destructors must not throw.
+      }
     }
   }
 
