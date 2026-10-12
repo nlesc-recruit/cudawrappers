@@ -65,10 +65,44 @@ class Marker {
   }
 
 #if !defined(__HIP__)
-  nvtxEventAttributes_t _attributes;
   nvtxRangeId_t _id;
+  nvtxEventAttributes_t _attributes;
 #endif
 };
+
+class ThreadRange {
+ public:
+  explicit ThreadRange(const char* message) {
+#if !defined(__HIP__)
+    nvtxEventAttributes_t attrs{};
+    attrs.version = NVTX_VERSION;
+    attrs.size = NVTX_EVENT_ATTRIB_STRUCT_SIZE;
+    attrs.messageType = NVTX_MESSAGE_TYPE_ASCII;
+    attrs.message.ascii = message;
+    _id = nvtxRangeStartEx(&attrs);
+#endif
+  }
+
+  ~ThreadRange() {
+#if !defined(__HIP__)
+    nvtxRangeEnd(_id);
+#endif
+  }
+
+  ThreadRange(const ThreadRange&) = delete;
+  ThreadRange& operator=(const ThreadRange&) = delete;
+
+ private:
+#if !defined(__HIP__)
+  nvtxRangeId_t _id{};
+#endif
+};
+
+inline void mark(const char* message) {
+#if !defined(__HIP__)
+  nvtxMark(message);
+#endif
+}
 
 }  // end namespace nvtx
 

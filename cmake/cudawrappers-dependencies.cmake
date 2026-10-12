@@ -1,4 +1,4 @@
-if(${CUDAWRAPPERS_BACKEND_HIP})
+if(CUDAWRAPPERS_BACKEND_HIP)
   # cmake-format: off
   # This following code attempts to locate the HIP runtime library's root
   # directory.
@@ -71,15 +71,14 @@ if(${CUDAWRAPPERS_BACKEND_HIP})
     set(CUDAWRAPPERS_LINK_HIPRTC False)
   endif()
   if(CUDAWRAPPERS_BUILD_CUFFT)
+    # The cufft component no longer needs the hipfft development package: it
+    # loads the cuFFT or hipFFT library at run time (see cufft_backend.hpp).
     find_package(hipfft QUIET)
-    if(NOT hipfft_FOUND)
-      message(WARNING "hipfft was not found, cufft component is disabled.")
-      list(REMOVE_ITEM CUDAWRAPPERS_COMPONENTS cufft)
-      set(CUDAWRAPPERS_BUILD_CUFFT OFF)
-    endif()
   endif()
-else()
-  # cudawrappers requires the CUDA Toolkit.If you include cudawrappers in your
+endif()
+
+if(CUDAWRAPPERS_BACKEND_CUDA)
+  # cudawrappers requires the CUDA Toolkit. If you include cudawrappers in your
   # project, you need to include the toolkit yourself
   set(CUDA_MIN_VERSION 10.0)
   find_package(CUDAToolkit ${CUDA_MIN_VERSION} REQUIRED)

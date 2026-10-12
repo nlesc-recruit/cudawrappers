@@ -1,0 +1,1 @@
+#define TERNARY_VALUE 3

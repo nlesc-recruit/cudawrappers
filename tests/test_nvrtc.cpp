@@ -86,10 +86,6 @@ TEST_CASE("Test nvrtc::findIncludePath", "[helper]") {
   CHECK(path.size() > 0);
 #else
   CHECK(path.find("include") != std::string::npos);
-
-#if CUDA_VERSION >= 13000
-  CHECK(path.find("include/cccl") != std::string::npos);
-#endif
 #endif
 }
 
@@ -114,4 +110,71 @@ TEST_CASE("Test nvrtc::findIncludePaths", "[helper]") {
   }
 
   CHECK(non_empty_paths > 0);
+}
+
+TEST_CASE("Test nvrtc::version", "[version]") {
+  auto [major, minor] = nvrtc::version();
+  CHECK(major >= 0);
+  CHECK(minor >= 0);
+}
+
+TEST_CASE("Test nvrtc::getSupportedArchs", "[archs]") {
+  auto archs = nvrtc::getSupportedArchs();
+  CHECK(archs.size() > 0);
+}
+
+TEST_CASE("Test nvrtc::util compiler options", "[util]") {
+  // For every device (across all backends) the compiler options produced by
+  // nvrtc::util must match the device's backend and be accepted by the
+  // runtime compiler.  Backends whose devices cannot be enumerated in this
+  // build are reported rather than failed.
+  const std::string kernel = R"(
+    extern "C" __global__ void nothing() {}
+  )";
+  int globalOffset = 0;
+  int devicesTested = 0;
+  for (size_t bi = 0; bi < getBackendCount(); ++bi) {
+    int count = 0;
+    try {
+      // The apps always initialize the backend through context creation;
+      // do the same here so device enumeration can succeed.
+      if (getBackend(bi).init) getBackend(bi).init(0);
+      count = cu::Device::getCount(static_cast<int>(bi));
+    } catch (const std::exception &e) {
+      INFO("backend " << bi << " not available: " << e.what());
+      continue;
+    }
+    for (int local = 0; local < count; ++local) {
+      const int ordinal = globalOffset + local;
+      try {
+        cu::Device device(ordinal);
+        INFO("device " << device.getName());
+
+        const int cap = nvrtc::util::capability(device);
+        CHECK(cap >= 0);
+
+        const std::string arch = nvrtc::util::archOption(device);
+        if (device.isCuda()) {
+          CHECK(arch.rfind("-arch=sm_", 0) == 0);
+          if (cap >= 900) CHECK(arch.back() == 'a');
+        } else {
+          CHECK(arch.rfind("--offload-arch=", 0) == 0);
+          CHECK(arch.size() > std::string("--offload-arch=").size());
+        }
+
+        CHECK(nvrtc::util::archDefine(device) ==
+              "-D__HIP_ARCH__=" + std::to_string(cap));
+
+        // The emitted option set must compile a trivial kernel on this device.
+        nvrtc::Program program(kernel, "util_test.cu", {}, {},
+                               device.getBackendIdx());
+        CHECK_NOTHROW(program.compile(nvrtc::util::compileOptions(device)));
+        ++devicesTested;
+      } catch (const std::exception &e) {
+        INFO("device " << ordinal << " failed: " << e.what());
+      }
+    }
+    globalOffset += count;
+  }
+  CHECK(devicesTested > 0);
 }

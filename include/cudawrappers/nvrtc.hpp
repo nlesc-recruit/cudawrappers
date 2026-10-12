@@ -5,101 +5,269 @@
 #include <sys/stat.h>
 
 #include <algorithm>
+#include <array>
 #include <cstddef>
+#include <cstring>
 #include <exception>
 #include <filesystem>
 #include <fstream>
 #include <iterator>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <vector>
 
 #if !defined(__HIP__)
+#if __has_include(<cuda.h>)
 #include <cuda.h>
-#include <nvrtc.h>
-#else
-#include <hip/hip_runtime.h>
-#include <hip/hiprtc.h>
-
-#include <cudawrappers/macros.hpp>
 #endif
+#if __has_include(<nvrtc.h>)
+#include <nvrtc.h>
+#endif
+#endif
+
 #include <cudawrappers/config.h>
-namespace {
-std::vector<std::string> tokenize(const std::string &input,
-                                  const std::string &delimiter) {
+
+#include <cudawrappers/cu.hpp>
+
+namespace nvrtc {
+namespace detail {
+
+inline std::vector<std::string> tokenize(const std::string &input,
+                                         const std::string &delimiter) {
   std::string s = input;
   size_t pos = 0;
-  std::string token;
   std::vector<std::string> tokens;
   while ((pos = s.find(delimiter)) != std::string::npos) {
-    token = s.substr(0, pos);
-    tokens.push_back(token);
+    tokens.push_back(s.substr(0, pos));
     s.erase(0, pos + delimiter.length());
+    pos = s.find(delimiter);
   }
   tokens.push_back(s);
   return tokens;
 }
 
-void loadNvrtcBuiltins() {
-  if (!dlopen("libnvrtc-builtins.so", RTLD_LAZY)) {
+// Raw device architecture name as known to the backend: "sm_<cc>" for NVIDIA
+// (e.g. "sm_120") or the gcnArchName for AMD (e.g. "gfx1201").  This is not a
+// wrapped CUDA Driver API function (the CUDA flavor synthesizes it from the
+// compute-capability attributes, the HIP flavor reads hipGetDeviceProperties),
+// so it lives in detail instead of on cu::Device.
+inline std::string archName(const cu::Device &device) {
+  const size_t max_arch_length{64};
+  std::array<char, max_arch_length> arch{};
+  int r = getBackend(device.getBackendIdx())
+              .deviceGetArchName(arch.data(), static_cast<int>(arch.size()),
+                                 static_cast<CUdevice>(device));
+  cu::checkCudaCall(r);
+  return {arch.data()};
+}
+
+// Load the NVRTC builtins library, required by libnvrtc on some systems.
+inline void loadNvrtcBuiltins() {
+  if (!dlopen("libnvrtc-builtins.so", RTLD_LAZY) &&
+      !dlopen("libnvrtc-builtins.so.13", RTLD_LAZY) &&
+      !dlopen("libnvrtc-builtins.so.12", RTLD_LAZY)) {
     throw std::runtime_error("Failed to load libnvrtc-builtins.so");
   }
 }
-}  // namespace
+
+// Eagerly load the NVRTC library so that dl_iterate_phdr() can find it.
+// With -Wl,--as-needed (the default on modern toolchains), libnvrtc.so is
+// not added to DT_NEEDED when no symbols are referenced directly (all NVRTC
+// calls go through dlopen).  Downstream code that uses dl_iterate_phdr to
+// derive the NVRTC include path from the library location depends on it
+// being loaded.
+#if !defined(__HIP__)
+namespace detail {
+inline const int nvrtcEagerLoadResult = [] {
+  for (const char *name :
+       {"libnvrtc.so", "libnvrtc.so.13", "libnvrtc.so.12", "libnvrtc.so.11"}) {
+    if (dlopen(name, RTLD_LAZY | RTLD_GLOBAL)) break;
+  }
+  return 0;
+}();
+}  // namespace detail
+#endif
+
+// Runtime-selected compiler API: either NVIDIA NVRTC or AMD HIPRTC. Both
+// libraries expose identical entry-point shapes, so one set of function
+// pointers serves both backends.
+struct RtcApi {
+  void *lib{nullptr};
+  bool isHip{false};
+
+  int (*createProgram)(void **, const char *, const char *, int,
+                       const char *const *, const char *const *){nullptr};
+  int (*destroyProgram)(void **){nullptr};
+  int (*compileProgram)(void *, int, const char *const *){nullptr};
+  int (*getCodeSize)(const void *, size_t *){nullptr};
+  int (*getCode)(const void *, char *){nullptr};
+  int (*getBinarySize)(const void *, size_t *){nullptr};
+  int (*getBinary)(const void *, char *){nullptr};
+  int (*getLogSize)(const void *, size_t *){nullptr};
+  int (*getLog)(const void *, char *){nullptr};
+  int (*addNameExpression)(void *, const char *){nullptr};
+  int (*getLoweredName)(const void *, const char *, const char **){nullptr};
+  const char *(*getErrorString)(int){nullptr};
+  int (*version)(int *, int *){nullptr};
+  int (*getNumSupportedArchs)(int *){nullptr};
+  int (*getSupportedArchs)(int *){nullptr};
+
+  static const RtcApi &get(bool isHip);
+};
+
+template <typename T>
+T dlsymOrThrow(void *lib, const char *name) {
+  void *sym = dlsym(lib, name);
+  if (!sym)
+    throw std::runtime_error(std::string("nvrtc: cannot resolve ") + name);
+  return reinterpret_cast<T>(sym);
+}
+
+inline const RtcApi &RtcApi::get(bool isHip) {
+  struct Instance {
+    RtcApi api;
+    explicit Instance(bool hip) : api(make(hip)) {}
+    static RtcApi make(bool hip) {
+      RtcApi api{};
+      api.isHip = hip;
+      if (hip) {
+        for (const char *name : {"libhiprtc.so", "libhiprtc.so.7",
+                                 "libhiprtc.so.6", "libhiprtc.so.5"}) {
+          api.lib = dlopen(name, RTLD_LAZY | RTLD_GLOBAL);
+          if (api.lib) break;
+        }
+        if (!api.lib)
+          throw std::runtime_error("nvrtc: Failed to load libhiprtc.so");
+        api.createProgram = dlsymOrThrow<decltype(api.createProgram)>(
+            api.lib, "hiprtcCreateProgram");
+        api.destroyProgram = dlsymOrThrow<decltype(api.destroyProgram)>(
+            api.lib, "hiprtcDestroyProgram");
+        api.compileProgram = dlsymOrThrow<decltype(api.compileProgram)>(
+            api.lib, "hiprtcCompileProgram");
+        api.getCodeSize = dlsymOrThrow<decltype(api.getCodeSize)>(
+            api.lib, "hiprtcGetCodeSize");
+        api.getCode =
+            dlsymOrThrow<decltype(api.getCode)>(api.lib, "hiprtcGetCode");
+        api.getBinarySize = dlsymOrThrow<decltype(api.getBinarySize)>(
+            api.lib, "hiprtcGetCodeSize");
+        api.getBinary =
+            dlsymOrThrow<decltype(api.getBinary)>(api.lib, "hiprtcGetCode");
+        api.getLogSize = dlsymOrThrow<decltype(api.getLogSize)>(
+            api.lib, "hiprtcGetProgramLogSize");
+        api.getLog =
+            dlsymOrThrow<decltype(api.getLog)>(api.lib, "hiprtcGetProgramLog");
+        api.addNameExpression = dlsymOrThrow<decltype(api.addNameExpression)>(
+            api.lib, "hiprtcAddNameExpression");
+        api.getLoweredName = dlsymOrThrow<decltype(api.getLoweredName)>(
+            api.lib, "hiprtcGetLoweredName");
+        api.getErrorString = dlsymOrThrow<decltype(api.getErrorString)>(
+            api.lib, "hiprtcGetErrorString");
+        api.version = reinterpret_cast<decltype(api.version)>(
+            dlsym(api.lib, "hiprtcVersion"));
+        api.getNumSupportedArchs =
+            reinterpret_cast<decltype(api.getNumSupportedArchs)>(
+                dlsym(api.lib, "hiprtcGetNumSupportedArchs"));
+        api.getSupportedArchs =
+            reinterpret_cast<decltype(api.getSupportedArchs)>(
+                dlsym(api.lib, "hiprtcGetSupportedArchs"));
+      } else {
+        loadNvrtcBuiltins();
+        for (const char *name : {"libnvrtc.so", "libnvrtc.so.13",
+                                 "libnvrtc.so.12", "libnvrtc.so.11"}) {
+          api.lib = dlopen(name, RTLD_LAZY | RTLD_GLOBAL);
+          if (api.lib) break;
+        }
+        if (!api.lib)
+          throw std::runtime_error("nvrtc: Failed to load libnvrtc.so");
+        api.createProgram = dlsymOrThrow<decltype(api.createProgram)>(
+            api.lib, "nvrtcCreateProgram");
+        api.destroyProgram = dlsymOrThrow<decltype(api.destroyProgram)>(
+            api.lib, "nvrtcDestroyProgram");
+        api.compileProgram = dlsymOrThrow<decltype(api.compileProgram)>(
+            api.lib, "nvrtcCompileProgram");
+        api.getCodeSize =
+            dlsymOrThrow<decltype(api.getCodeSize)>(api.lib, "nvrtcGetPTXSize");
+        api.getCode =
+            dlsymOrThrow<decltype(api.getCode)>(api.lib, "nvrtcGetPTX");
+        api.getBinarySize = dlsymOrThrow<decltype(api.getBinarySize)>(
+            api.lib, "nvrtcGetCUBINSize");
+        api.getBinary =
+            dlsymOrThrow<decltype(api.getBinary)>(api.lib, "nvrtcGetCUBIN");
+        api.getLogSize = dlsymOrThrow<decltype(api.getLogSize)>(
+            api.lib, "nvrtcGetProgramLogSize");
+        api.getLog =
+            dlsymOrThrow<decltype(api.getLog)>(api.lib, "nvrtcGetProgramLog");
+        api.addNameExpression = dlsymOrThrow<decltype(api.addNameExpression)>(
+            api.lib, "nvrtcAddNameExpression");
+        api.getLoweredName = dlsymOrThrow<decltype(api.getLoweredName)>(
+            api.lib, "nvrtcGetLoweredName");
+        api.getErrorString = dlsymOrThrow<decltype(api.getErrorString)>(
+            api.lib, "nvrtcGetErrorString");
+        api.version = reinterpret_cast<decltype(api.version)>(
+            dlsym(api.lib, "nvrtcVersion"));
+        api.getNumSupportedArchs =
+            reinterpret_cast<decltype(api.getNumSupportedArchs)>(
+                dlsym(api.lib, "nvrtcGetNumSupportedArchs"));
+        api.getSupportedArchs =
+            reinterpret_cast<decltype(api.getSupportedArchs)>(
+                dlsym(api.lib, "nvrtcGetSupportedArchs"));
+      }
+      return api;
+    }
+  };
+  // Lazily initialized, one instance per backend.
+  if (isHip) {
+    static RtcApi api = Instance::make(true);
+    return api;
+  }
+  static RtcApi api = Instance::make(false);
+  return api;
+}
+}  // namespace detail
+}  // namespace nvrtc
 
 namespace nvrtc {
 class Error : public std::exception {
  public:
-  explicit Error(nvrtcResult result) : _result(result) {}
+  explicit Error(int result, bool isHip = false)
+      : _result(result), _isHip(isHip) {}
 
-  const char *what() const noexcept { return nvrtcGetErrorString(_result); }
+  const char *what() const noexcept {
+    try {
+      const detail::RtcApi &api = detail::RtcApi::get(_isHip);
+      if (api.getErrorString) return api.getErrorString(_result);
+    } catch (...) {
+    }
+    return "nvrtc error";
+  }
 
-  operator nvrtcResult() const { return _result; }
+  operator int() const { return _result; }
 
  private:
-  nvrtcResult _result;
+  int _result;
+  bool _isHip;
 };
 
-inline void checkNvrtcCall(nvrtcResult result) {
-  if (result != NVRTC_SUCCESS) throw Error(result);
+inline void checkNvrtcCall(int result, bool isHip) {
+  if (result != 0) throw Error(result, isHip);
 }
 
+inline std::vector<std::string> cudaIncludePaths() {
+  return detail::tokenize(CUDA_INCLUDE_DIRS, ";");
+}
+
+inline std::vector<std::string> hipIncludePaths() {
+  return detail::tokenize(HIP_INCLUDE_DIRS, ";");
+}
+
+// Deprecated: returns the paths of the compile-time default backend.
 inline std::vector<std::string> findIncludePaths() {
 #if defined(__HIP__)
-  std::string path = HIP_INCLUDE_DIRS;
+  return hipIncludePaths();
 #else
-  std::string path = CUDA_INCLUDE_DIRS;
+  return cudaIncludePaths();
 #endif
-
-  std::vector<std::string> paths = tokenize(path, ";");
-
-#if CUDA_VERSION >= 13000
-  const std::string cccl_suffix = "cccl";
-
-  // Check whether any of the paths contain /cccl
-  for (const std::filesystem::path &path : paths) {
-    const std::string path_string = path.string();
-    size_t pos = path_string.rfind("/" + cccl_suffix);
-    if (pos != std::string::npos &&
-        pos == path_string.size() - (cccl_suffix.size() + 1)) {
-      return paths;
-    }
-  }
-
-  // Try to find the path that contains /cccl
-  for (const auto &path : paths) {
-    std::filesystem::path cccl_path = std::filesystem::path(path) / cccl_suffix;
-
-    // Add the path if it exists
-    if (std::filesystem::exists(cccl_path) &&
-        std::filesystem::is_directory(cccl_path)) {
-      paths.emplace_back(path + "/" + cccl_suffix);
-      break;
-    }
-  }
-#endif
-
-  return paths;
 }
 
 inline std::string findIncludePath() {
@@ -120,13 +288,15 @@ inline std::string findIncludePath() {
 
 class Program {
  public:
-  Program(const std::string &src, const std::string &name,
-          const std::vector<std::string> &headers = std::vector<std::string>(),
-          const std::vector<std::string> &includeNames =
-              std::vector<std::string>()) {
-#if !defined(__HIP__)
-    loadNvrtcBuiltins();
-#endif
+  // backendIdx: global cudawrappers device/backend index selecting between
+  // NVRTC (CUDA) and HIPRTC (HIP) at runtime. A negative value selects the
+  // compile-time default backend.
+  Program(
+      const std::string &src, const std::string &name,
+      const std::vector<std::string> &headers = std::vector<std::string>(),
+      const std::vector<std::string> &includeNames = std::vector<std::string>(),
+      int backendIdx = -1)
+      : api(detail::RtcApi::get(resolveIsHip(backendIdx))) {
     std::vector<const char *> c_headers;
     std::transform(headers.begin(), headers.end(),
                    std::back_inserter(c_headers),
@@ -138,81 +308,240 @@ class Program {
         std::back_inserter(c_includeNames),
         [](const std::string &includeName) { return includeName.c_str(); });
 
-    checkNvrtcCall(nvrtcCreateProgram(&program, src.c_str(), name.c_str(),
-                                      static_cast<int>(c_headers.size()),
-                                      c_headers.data(), c_includeNames.data()));
+    checkNvrtcCall(api.createProgram(&program, src.c_str(), name.c_str(),
+                                     static_cast<int>(c_headers.size()),
+                                     c_headers.data(), c_includeNames.data()),
+                   api.isHip);
   }
 
-  explicit Program(const std::string &filename) {
-#if !defined(__HIP__)
-    loadNvrtcBuiltins();
-#endif
+  explicit Program(const std::string &filename, int backendIdx = -1)
+      : api(detail::RtcApi::get(resolveIsHip(backendIdx))) {
     std::ifstream ifs(filename);
     if (!ifs.is_open()) {
       throw std::runtime_error("Error opening file '" + filename +
                                "' in cudawrappers::nvrtc");
     }
     std::string source(std::istreambuf_iterator<char>{ifs}, {});
-    checkNvrtcCall(nvrtcCreateProgram(&program, source.c_str(),
-                                      filename.c_str(), 0, nullptr, nullptr));
+    checkNvrtcCall(api.createProgram(&program, source.c_str(), filename.c_str(),
+                                     0, nullptr, nullptr),
+                   api.isHip);
   }
 
-  ~Program() { checkNvrtcCall(nvrtcDestroyProgram(&program)); }
+  ~Program() {
+    if (api.destroyProgram) api.destroyProgram(&program);
+  }
+
+  Program(const Program &) = delete;
+  Program &operator=(const Program &) = delete;
 
   void compile(const std::vector<std::string> &options) {
     std::vector<const char *> c_options;
     std::transform(options.begin(), options.end(),
                    std::back_inserter(c_options),
                    [](const std::string &option) { return option.c_str(); });
-    checkNvrtcCall(nvrtcCompileProgram(
-        program, static_cast<int>(c_options.size()), c_options.data()));
+    checkNvrtcCall(
+        api.compileProgram(program, static_cast<int>(c_options.size()),
+                           c_options.data()),
+        api.isHip);
   }
 
+  // PTX (CUDA) or code object (HIP), depending on the selected backend.
   std::string getPTX() {
     size_t size{};
     std::string ptx;
 
-    checkNvrtcCall(nvrtcGetPTXSize(program, &size));
+    checkNvrtcCall(api.getCodeSize(program, &size), api.isHip);
     ptx.resize(size);
-    checkNvrtcCall(nvrtcGetPTX(program, const_cast<char *>(ptx.data())));
+    checkNvrtcCall(api.getCode(program, ptx.data()), api.isHip);
     return ptx;
   }
 
-#if CUDA_VERSION >= 11020
   std::vector<char> getCUBIN() {
     size_t size{};
     std::vector<char> cubin;
 
-    checkNvrtcCall(nvrtcGetCUBINSize(program, &size));
+    checkNvrtcCall(api.getBinarySize(program, &size), api.isHip);
     cubin.resize(size);
-    checkNvrtcCall(nvrtcGetCUBIN(program, &cubin[0]));
+    checkNvrtcCall(api.getBinary(program, cubin.data()), api.isHip);
     return cubin;
   }
-#endif
 
   std::string getLog() {
     size_t size{};
     std::string log;
 
-    checkNvrtcCall(nvrtcGetProgramLogSize(program, &size));
+    checkNvrtcCall(api.getLogSize(program, &size), api.isHip);
     log.resize(size);
-    checkNvrtcCall(nvrtcGetProgramLog(program, &log[0]));
+    checkNvrtcCall(api.getLog(program, log.data()), api.isHip);
     return log;
   }
 
   void addNameExpression(const std::string &name) {
-    checkNvrtcCall(nvrtcAddNameExpression(program, name.c_str()));
+    checkNvrtcCall(api.addNameExpression(program, name.c_str()), api.isHip);
   }
 
   const char *getLoweredName(const std::string &name) {
     const char *lowered_name;
-    checkNvrtcCall(nvrtcGetLoweredName(program, name.c_str(), &lowered_name));
+    checkNvrtcCall(api.getLoweredName(program, name.c_str(), &lowered_name),
+                   api.isHip);
     return lowered_name;
   }
 
  private:
-  nvrtcProgram program{};
+  static bool resolveIsHip(int backendIdx) {
+    if (backendIdx < 0) {
+#if defined(__HIP__)
+      return true;
+#else
+      return false;
+#endif
+    }
+    return !cu::Device::backendIsCuda(backendIdx);
+  }
+
+  const detail::RtcApi &api;
+  void *program{nullptr};
 };
+
+inline std::pair<int, int> version() {
+#if defined(__HIP__)
+  const detail::RtcApi &api = detail::RtcApi::get(true);
+#else
+  const detail::RtcApi &api = detail::RtcApi::get(false);
+#endif
+  int major{}, minor{};
+  if (api.version) checkNvrtcCall(api.version(&major, &minor), api.isHip);
+  return {major, minor};
+}
+
+inline std::vector<int> getSupportedArchs() {
+#if defined(__HIP__)
+  const detail::RtcApi &api = detail::RtcApi::get(true);
+#else
+  const detail::RtcApi &api = detail::RtcApi::get(false);
+#endif
+  if (!api.getNumSupportedArchs || !api.getSupportedArchs) return {};
+  int count{};
+  checkNvrtcCall(api.getNumSupportedArchs(&count), api.isHip);
+  std::vector<int> archs(count);
+  checkNvrtcCall(api.getSupportedArchs(archs.data()), api.isHip);
+  return archs;
+}
+
+namespace util {
+
+// Composite compute capability: 100*major + 10*minor (norm-compatible with
+// __CUDA_ARCH__; e.g. sm_120 -> 1200, gfx1201 -> 1200).  Works on both
+// backends because cudawrappers maps the CUDA compute-capability attributes
+// onto the corresponding HIP attributes.
+inline int capability(const cu::Device &device) {
+  const int major =
+      device.getAttribute<CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MAJOR>();
+  const int minor =
+      device.getAttribute<CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MINOR>();
+  return 100 * major + 10 * minor;
+}
+
+// The architecture flag to pass to the runtime compiler for a device that
+// will run the compiled code: "-arch=sm_120a" for NVIDIA (every architecture
+// since sm_90 gets the 'a' suffix, enabling architecture-dependent
+// extensions) or "--offload-arch=gfx1201" for AMD.
+inline std::string archOption(const cu::Device &device) {
+  std::string arch = detail::archName(device);  // "sm_120" or "gfx1201"
+  if (device.isCuda()) {
+    if (capability(device) >= 900 && arch.back() != 'a' && arch.back() != 'f')
+      arch += 'a';
+    return "-arch=" + arch;
+  }
+  return "--offload-arch=" + arch;
+}
+
+// "-D__HIP_ARCH__=<composite capability>", the vendor-neutral device-code
+// macro.  HIPRTC does not predefine it (unlike NVRTC's __CUDA_ARCH__), so
+// pass it explicitly when device code needs it.
+inline std::string archDefine(const cu::Device &device) {
+  return "-D__HIP_ARCH__=" + std::to_string(capability(device));
+}
+
+// Clang builtin-header directory shipped with ROCm, which hipRTC needs via
+// -resource-dir= because its bundled clang cannot locate it at run time.
+inline std::optional<std::filesystem::path> findClangResourceDir(
+    const std::filesystem::path &rocmRoot) {
+  for (const std::filesystem::path &clangDir :
+       {rocmRoot / "lib/llvm/lib/clang", rocmRoot / "lib/clang"}) {
+    std::error_code ec;
+    for (const auto &entry :
+         std::filesystem::directory_iterator(clangDir, ec)) {
+      if (!entry.is_directory()) continue;
+      if (std::filesystem::exists(entry.path() / "include" / "stddef.h"))
+        return entry.path();
+    }
+  }
+  return std::nullopt;
+}
+
+// The -I (and -resource-dir) options needed to compile for the backend of
+// the given device: the NVRTC include directories (plus the cccl subdir on
+// CUDA 13, which provides <cuda/std/...>) or the ROCm include directories
+// (plus the clang builtin headers for hipRTC).
+inline std::vector<std::string> includeOptions(const cu::Device &device) {
+  std::vector<std::string> options;
+
+  if (device.isCuda()) {
+    for (const std::string &dir : cudaIncludePaths()) {
+      if (dir.empty()) continue;
+      options.push_back("-I" + dir);
+      // CUDA_Toolkit_INCLUDE_DIRS does not always list the cccl subdir
+      // (which holds <cuda/std/...> pulled in by <cooperative_groups/...>);
+      // add it explicitly when present so NVRTC can find those headers.
+      std::filesystem::path ccclDir = std::filesystem::path(dir) / "cccl";
+      if (std::filesystem::exists(ccclDir / "cuda" / "std" / "type_traits"))
+        options.push_back("-I" + ccclDir.string());
+    }
+    return options;
+  }
+
+  std::vector<std::string> dirs;
+  for (const std::string &dir : hipIncludePaths())
+    if (!dir.empty()) dirs.push_back(dir);
+
+  // The ROCm root (and with it the clang resource dir) is located even when
+  // hipIncludePaths() already yields the include dir, so that the builtin
+  // headers are found regardless of how cudawrappers was configured.
+  std::filesystem::path rocmRoot;
+  std::vector<std::string> rocmRoots;
+  if (const char *env = std::getenv("ROCM_PATH")) rocmRoots.push_back(env);
+  if (const char *env = std::getenv("HIP_PATH")) rocmRoots.push_back(env);
+  rocmRoots.push_back("/opt/rocm");
+
+  for (const std::string &root : rocmRoots) {
+    std::filesystem::path includeDir = std::filesystem::path(root) / "include";
+    if (std::filesystem::exists(includeDir / "hip" / "hip_runtime.h")) {
+      if (dirs.empty()) dirs.push_back(includeDir.string());
+      rocmRoot = includeDir.parent_path();
+      break;
+    }
+  }
+
+  for (const std::string &dir : dirs) options.push_back("-I" + dir);
+
+  if (!rocmRoot.empty())
+    if (auto resourceDir = findClangResourceDir(rocmRoot))
+      options.push_back("-resource-dir=" + resourceDir->string());
+
+  return options;
+}
+
+// The full base option set for compiling for the device's backend: the
+// architecture flag followed by the include options.
+inline std::vector<std::string> compileOptions(const cu::Device &device) {
+  std::vector<std::string> options{archOption(device)};
+  std::vector<std::string> includes = includeOptions(device);
+  options.insert(options.end(), includes.begin(), includes.end());
+  return options;
+}
+
+}  // namespace util
 }  // namespace nvrtc
 
 #endif

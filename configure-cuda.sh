@@ -1,0 +1,1 @@
+cmake -S. -Bbuild-cuda -DCUDAWRAPPERS_BUILD_TESTING=1
