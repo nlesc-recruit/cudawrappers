@@ -1037,10 +1037,19 @@ inline void checkCudaCall(int result) {
 }
 
 inline void init(unsigned flags) {
+  bool anySucceeded = false;
+  CUresult firstError = CUDA_SUCCESS;
   for (size_t i = 0; i < getBackendCount(); ++i) {
     Backend& b = getBackend(i);
-    if (b.init) checkCudaCall(b.init(flags));
+    if (!b.init) continue;
+    CUresult result = static_cast<CUresult>(b.init(flags));
+    if (result == CUDA_SUCCESS) {
+      anySucceeded = true;
+    } else if (firstError == CUDA_SUCCESS) {
+      firstError = result;
+    }
   }
+  if (!anySucceeded && firstError != CUDA_SUCCESS) throw Error(firstError);
 }
 
 inline int driverGetVersion() {
