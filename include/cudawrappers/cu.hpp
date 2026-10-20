@@ -404,7 +404,11 @@ class Context : public Wrapper<CUcontext> {
  public:
   // Context Management
 
-  Context(int flags, Device &device) : _device(device) {
+  Context(int flags, Device &device)
+#if defined(__HIP__)
+  : _device(device)
+#endif
+  {
 #if !defined(__HIP__)
 #if CUDA_VERSION >= 13000
     CUctxCreateParams ctxCreateParams{0};
@@ -419,6 +423,9 @@ class Context : public Wrapper<CUcontext> {
         });
 #endif
   }
+
+  Context(CUcontext context)
+      : Wrapper<CUcontext>(context) {}
 
   unsigned getApiVersion() const {
     unsigned version{};
@@ -442,12 +449,12 @@ class Context : public Wrapper<CUcontext> {
 #endif
   }
 
-  Context getCurrent() {
+  static Context getCurrent() {
     CUcontext context{};
 #if !defined(__HIP__)
     checkCudaCall(cuCtxGetCurrent(&context));
 #endif
-    return Context(context, _device);
+    return Context(context);
   }
 
   void setCurrent() const {
@@ -456,12 +463,12 @@ class Context : public Wrapper<CUcontext> {
 #endif
   }
 
-  Context popCurrent() {
+  static Context popCurrent() {
     CUcontext context{};
 #if !defined(__HIP__)
     checkCudaCall(cuCtxPopCurrent(&context));
 #endif
-    return Context(context, _device);
+    return Context(context);
   }
 
   void pushCurrent() {
@@ -518,10 +525,6 @@ class Context : public Wrapper<CUcontext> {
     setLimit(limit, value);
   }
 
-#if !defined(__HIP__)
-  static Context fromGreenCtx(GreenContext &greenContext);
-#endif
-
   size_t getFreeMemory() const {
     size_t free;
     size_t total;
@@ -542,12 +545,10 @@ class Context : public Wrapper<CUcontext> {
 #endif
   }
 
-  friend class Device;
-  Context(CUcontext context, Device &device)
-      : Wrapper<CUcontext>(context), _device(device) {}
-
  private:
-  cu::Device &_device;
+#if defined(__HIP__)
+  CUdevice _device;
+#endif
 };
 
 class HostMemory : public Wrapper<void *> {
@@ -1408,8 +1409,7 @@ class Stream : public Wrapper<CUstream> {
 class GreenContext : public Wrapper<CUgreenCtx> {
  public:
   GreenContext(CUdevResourceDesc desc, Device &device,
-               unsigned int flags = CU_GREEN_CTX_DEFAULT_STREAM)
-      : _device(device) {
+               unsigned int flags = CU_GREEN_CTX_DEFAULT_STREAM) {
     checkCudaCall(cuGreenCtxCreate(&_obj, desc, device, flags));
     manager =
         std::shared_ptr<CUgreenCtx>(new CUgreenCtx(_obj), [](CUgreenCtx *ptr) {
@@ -1444,18 +1444,13 @@ class GreenContext : public Wrapper<CUgreenCtx> {
     checkCudaCall(cuGreenCtxWaitEvent(_obj, static_cast<CUevent>(event)));
   }
 
-  Device &getDevice() { return _device; }
-  const Device &getDevice() const { return _device; }
-
- private:
-  Device &_device;
+  operator Context () {
+    CUcontext context{};
+    checkCudaCall(cuCtxFromGreenCtx(&context, _obj));
+    return Context(context);
+  }
 };
 
-inline Context Context::fromGreenCtx(GreenContext &greenContext) {
-  CUcontext context{};
-  checkCudaCall(cuCtxFromGreenCtx(&context, greenContext));
-  return Context(context, greenContext.getDevice());
-}
 #endif
 
 inline void Event::record(Stream &stream) {
