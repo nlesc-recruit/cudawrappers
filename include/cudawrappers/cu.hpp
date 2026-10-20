@@ -352,30 +352,22 @@ class Device : public Wrapper<CUdevice> {
   }
 #endif
 
-  static int getP2PAttribute(CUdevice_P2PAttribute attrib,
-                             const Device &srcDevice, const Device &dstDevice) {
+  int getP2PAttribute(CUdevice_P2PAttribute attrib, const Device &dstDevice) const {
     int value{};
     checkCudaCall(
-        cuDeviceGetP2PAttribute(&value, attrib, srcDevice, dstDevice));
+        cuDeviceGetP2PAttribute(&value, attrib, _obj, dstDevice));
     return value;
   }
 
 #if !defined(__HIP__) && CUDA_VERSION >= 13000
-  static void getP2PAtomicCapabilities(unsigned int *capabilities,
+  void getP2PAtomicCapabilities(unsigned int *capabilities,
                                        const CUatomicOperation *operations,
                                        unsigned int count,
-                                       const Device &srcDevice,
-                                       const Device &dstDevice) {
+                                       const Device &dstDevice) const {
     checkCudaCall(cuDeviceGetP2PAtomicCapabilities(
-        capabilities, operations, count, srcDevice, dstDevice));
+        capabilities, operations, count, _obj, dstDevice));
   }
 #endif
-
-  static bool canAccessPeer(const Device &device, const Device &peerDevice) {
-    int canAccess{};
-    checkCudaCall(cuDeviceCanAccessPeer(&canAccess, device, peerDevice));
-    return static_cast<bool>(canAccess);
-  }
 
   void registerAsyncNotification(CUasyncCallback callbackFunc, void *userData,
                                  CUasyncCallbackHandle *callback) const {
@@ -387,6 +379,12 @@ class Device : public Wrapper<CUdevice> {
     checkCudaCall(cuDeviceUnregisterAsyncNotification(_obj, callback));
   }
 #endif
+
+  bool canAccessPeer(const Device &peerDevice) const {
+    int canAccess{};
+    checkCudaCall(cuDeviceCanAccessPeer(&canAccess, _obj, peerDevice));
+    return static_cast<bool>(canAccess);
+  }
 
   size_t totalMem() const {
     size_t size{};
@@ -477,15 +475,15 @@ class Context : public Wrapper<CUcontext> {
 #endif
   }
 
-  void enablePeerAccess(Context &peerContext, unsigned int flags = 0) {
+  void enablePeerAccess(unsigned int flags = 0) {
 #if !defined(__HIP__)
-    checkCudaCall(cuCtxEnablePeerAccess(peerContext, flags));
+    checkCudaCall(cuCtxEnablePeerAccess(_obj, flags));
 #endif
   }
 
-  void disablePeerAccess(Context &peerContext) {
+  void disablePeerAccess() {
 #if !defined(__HIP__)
-    checkCudaCall(cuCtxDisablePeerAccess(peerContext));
+    checkCudaCall(cuCtxDisablePeerAccess(_obj));
 #endif
   }
 
