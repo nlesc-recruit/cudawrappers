@@ -352,20 +352,20 @@ class Device : public Wrapper<CUdevice> {
   }
 #endif
 
-  int getP2PAttribute(CUdevice_P2PAttribute attrib, const Device &dstDevice) const {
+  int getP2PAttribute(CUdevice_P2PAttribute attrib,
+                      const Device &dstDevice) const {
     int value{};
-    checkCudaCall(
-        cuDeviceGetP2PAttribute(&value, attrib, _obj, dstDevice));
+    checkCudaCall(cuDeviceGetP2PAttribute(&value, attrib, _obj, dstDevice));
     return value;
   }
 
 #if !defined(__HIP__) && CUDA_VERSION >= 13000
   void getP2PAtomicCapabilities(unsigned int *capabilities,
-                                       const CUatomicOperation *operations,
-                                       unsigned int count,
-                                       const Device &dstDevice) const {
-    checkCudaCall(cuDeviceGetP2PAtomicCapabilities(
-        capabilities, operations, count, _obj, dstDevice));
+                                const CUatomicOperation *operations,
+                                unsigned int count,
+                                const Device &dstDevice) const {
+    checkCudaCall(cuDeviceGetP2PAtomicCapabilities(capabilities, operations,
+                                                   count, _obj, dstDevice));
   }
 #endif
 
@@ -404,7 +404,7 @@ class Context : public Wrapper<CUcontext> {
 
   Context(int flags, Device &device)
 #if defined(__HIP__)
-  : _device(device)
+      : _device(device)
 #endif
   {
 #if !defined(__HIP__)
@@ -422,8 +422,7 @@ class Context : public Wrapper<CUcontext> {
 #endif
   }
 
-  Context(CUcontext context)
-      : Wrapper<CUcontext>(context) {}
+  Context(CUcontext context) : Wrapper<CUcontext>(context) {}
 
   unsigned getApiVersion() const {
     unsigned version{};
@@ -1442,7 +1441,7 @@ class GreenContext : public Wrapper<CUgreenCtx> {
     checkCudaCall(cuGreenCtxWaitEvent(_obj, static_cast<CUevent>(event)));
   }
 
-  operator Context () {
+  operator Context() {
     CUcontext context{};
     checkCudaCall(cuCtxFromGreenCtx(&context, _obj));
     return Context(context);
