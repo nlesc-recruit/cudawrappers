@@ -808,15 +808,18 @@ class GreenContext;
 class Context : public Wrapper<CUcontext> {
  public:
   Context(int flags, Device& device);
+  // Wraps an externally created context; does not manage it.
+  Context(CUcontext context);
   unsigned getApiVersion() const;
   static CUfunc_cache getCacheConfig();
   static void setCacheConfig(CUfunc_cache config);
-  Context getCurrent();
+  static Context getCurrent();
   void setCurrent() const;
-  Context popCurrent();
+  static Context popCurrent();
   void pushCurrent();
-  void enablePeerAccess(Context& peerContext, unsigned int flags = 0);
-  void disablePeerAccess(Context& peerContext);
+  // Enables peer access from the current context to this context.
+  void enablePeerAccess(unsigned int flags = 0);
+  void disablePeerAccess();
   Device getDevice();
   size_t getFreeMemory() const;
   size_t getTotalMemory() const;
@@ -852,13 +855,13 @@ class Context : public Wrapper<CUcontext> {
   void resetPersistingL2Cache() const;
 #if CUDA_VERSION >= 12400
   void getDevResource(CUdevResource& resource, CUdevResourceType type) const;
-  static Context fromGreenCtx(GreenContext& greenContext);
 #endif
 #endif
 
  private:
   friend class Device;
-  Context(CUcontext context, Device& device);
+  friend class GreenContext;
+  Context(CUcontext context, int backendIdx);
 };
 
 class GraphExec;
@@ -872,11 +875,8 @@ class GreenContext : public Wrapper<CUgreenCtx> {
   Stream createStream(unsigned int flags = 0, int priority = 0) const;
   void recordEvent(Event& event) const;
   void waitEvent(Event& event) const;
-  Device& getDevice();
-  const Device& getDevice() const;
-
- private:
-  Device& _device;
+  // Converts this green context to an (unmanaged) cu::Context.
+  operator Context();
 };
 #endif
 
@@ -1287,9 +1287,11 @@ inline Context::Context(int flags, Device& device) {
       });
 }
 
-inline Context::Context(CUcontext context, Device& device)
+inline Context::Context(CUcontext context) : Wrapper<CUcontext>(context) {}
+
+inline Context::Context(CUcontext context, int backendIdx)
     : Wrapper<CUcontext>(context) {
-  _backendIdx = device.getBackendIdx();
+  _backendIdx = backendIdx;
 }
 
 inline unsigned Context::getApiVersion() const {
@@ -1312,17 +1314,11 @@ inline void Context::setCacheConfig(CUfunc_cache config) {
 
 inline Context Context::getCurrent() {
   int activeIdx = activeBackendIdx();
-  CUcontext ctx{};
-  int result =
-      getBackend(activeIdx).ctxGetCurrent(cu_backend_cast::toVoidPP(ctx));
-  int globalOffset = 0;
-  if (result == CUDA_SUCCESS && ctx) {
-    for (size_t j = 0; j < static_cast<size_t>(activeIdx); ++j) {
-      globalOffset += Device::getCount(j);
-    }
-  }
-  Device dev(static_cast<unsigned int>(globalOffset));
-  return Context(ctx, dev);
+  CUcontext context{};
+  int result = getBackend(activeIdx)
+                   .ctxGetCurrent(cu_backend_cast::toVoidPP(context));
+  if (result == CUDA_SUCCESS && context) return Context(context);
+  return Context(CUcontext{});
 }
 
 inline void Context::setCurrent() const {
@@ -1332,18 +1328,11 @@ inline void Context::setCurrent() const {
 
 inline Context Context::popCurrent() {
   int activeIdx = activeBackendIdx();
-  CUcontext ctx{};
-  int result =
-      getBackend(activeIdx).ctxPopCurrent(cu_backend_cast::toVoidPP(ctx));
-  if (result == CUDA_SUCCESS && ctx) {
-    int globalOffset = 0;
-    for (size_t j = 0; j < static_cast<size_t>(activeIdx); ++j) {
-      globalOffset += Device::getCount(j);
-    }
-    Device dev(static_cast<unsigned int>(globalOffset));
-    return Context(ctx, dev);
-  }
-  return Context(0, *new Device(static_cast<unsigned int>(0)));
+  CUcontext context{};
+  int result = getBackend(activeIdx)
+                   .ctxPopCurrent(cu_backend_cast::toVoidPP(context));
+  if (result == CUDA_SUCCESS && context) return Context(context);
+  return Context(CUcontext{});
 }
 
 inline void Context::pushCurrent() {
@@ -1351,14 +1340,12 @@ inline void Context::pushCurrent() {
   checkCudaCall(getBackend(_backendIdx).ctxPushCurrent(_obj));
 }
 
-inline void Context::enablePeerAccess(Context& peerContext,
-                                      unsigned int flags) {
-  checkCudaCall(
-      getBackend(_backendIdx).ctxEnablePeerAccess(peerContext._obj, flags));
+inline void Context::enablePeerAccess(unsigned int flags) {
+  checkCudaCall(getBackend(_backendIdx).ctxEnablePeerAccess(_obj, flags));
 }
 
-inline void Context::disablePeerAccess(Context& peerContext) {
-  checkCudaCall(getBackend(_backendIdx).ctxDisablePeerAccess(peerContext._obj));
+inline void Context::disablePeerAccess() {
+  checkCudaCall(getBackend(_backendIdx).ctxDisablePeerAccess(_obj));
 }
 
 inline Device Context::getDevice() {
@@ -2170,7 +2157,7 @@ inline Context Device::primaryContext() const {
   checkCudaCall(
       getBackend(_backendIdx)
           .devicePrimaryCtxRetain(reinterpret_cast<void**>(&ctx), _obj));
-  return Context(ctx, const_cast<Device&>(*this));
+  return Context(ctx, _backendIdx);
 }
 
 inline void Device::primaryContextRelease() const {
@@ -2568,19 +2555,10 @@ inline void Context::getDevResource(CUdevResource& resource,
   checkCudaCall(b.ctxGetDevResource(_obj, &resource, static_cast<int>(type)));
 }
 
-inline Context Context::fromGreenCtx(GreenContext& greenContext) {
-  CUcontext context{};
-  Backend& b = getBackend(greenContext.getBackendIdx());
-  checkCudaCall(
-      b.ctxFromGreenCtx(cu_backend_cast::toVoidPP(context), greenContext));
-  return Context(context, greenContext.getDevice());
-}
-
 // --- GreenContext ---
 
 inline GreenContext::GreenContext(CUdevResourceDesc desc, Device& device,
-                                  unsigned int flags)
-    : _device(device) {
+                                  unsigned int flags) {
   _backendIdx = device.getBackendIdx();
   Backend& b = getBackend(_backendIdx);
   checkCudaCall(
@@ -2620,8 +2598,12 @@ inline void GreenContext::waitEvent(Event& event) const {
   checkCudaCall(b.greenCtxWaitEvent(_obj, event));
 }
 
-inline Device& GreenContext::getDevice() { return _device; }
-inline const Device& GreenContext::getDevice() const { return _device; }
+inline GreenContext::operator Context() {
+  CUcontext context{};
+  Backend& b = getBackend(_backendIdx);
+  checkCudaCall(b.ctxFromGreenCtx(cu_backend_cast::toVoidPP(context), *this));
+  return Context(context, _backendIdx);
+}
 
 inline void Stream::getDevResource(CUdevResource& resource,
                                    CUdevResourceType type) const {
