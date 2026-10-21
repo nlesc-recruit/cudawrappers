@@ -522,7 +522,7 @@ TEST_CASE("Test cu::GreenContext", "[greencontext]") {
   CHECK_NOTHROW(cu::devResourceGenerateDesc(&desc, &resources[0], 1));
 
   cu::GreenContext greenContext(desc, device, CU_GREEN_CTX_DEFAULT_STREAM);
-  cu::Context greenContextBase = cu::Context::fromGreenCtx(greenContext);
+  cu::Context greenContextBase = greenContext;
   greenContextBase.setCurrent();
 
   cu::Stream stream = greenContext.createStream(CU_STREAM_NON_BLOCKING, 0);
