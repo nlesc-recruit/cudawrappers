@@ -574,7 +574,7 @@ class Device : public Wrapper<CUdevice> {
                                     unsigned numChannels) const;
   void getExecAffinitySupport(int& pi, CUexecAffinityType type) const;
   void getProperties(CUdevprop& prop) const;
-#if CUDA_VERSION >= 12400
+#if CUDA_VERSION >= 12040
   void getDevResource(CUdevResource& resource, CUdevResourceType type) const;
 #endif
 #endif
@@ -848,12 +848,12 @@ class Context : public Wrapper<CUcontext> {
 #if CUDA_VERSION >= 12000
   unsigned long long getId() const;
 #endif
-#if CUDA_VERSION >= 12400
+#if CUDA_VERSION >= 12050
   void recordEvent(Event& event) const;
   void waitEvent(Event& event) const;
 #endif
   void resetPersistingL2Cache() const;
-#if CUDA_VERSION >= 12400
+#if CUDA_VERSION >= 12040
   void getDevResource(CUdevResource& resource, CUdevResourceType type) const;
 #endif
 #endif
@@ -866,13 +866,15 @@ class Context : public Wrapper<CUcontext> {
 
 class GraphExec;
 
-#if !defined(__HIP__) && CUDA_VERSION >= 12400
+#if !defined(__HIP__) && CUDA_VERSION >= 12040
 class GreenContext : public Wrapper<CUgreenCtx> {
  public:
   GreenContext(CUdevResourceDesc desc, Device& device,
                unsigned int flags = CU_GREEN_CTX_DEFAULT_STREAM);
   void getDevResource(CUdevResource& resource, CUdevResourceType type) const;
+#if CUDA_VERSION >= 12050
   Stream createStream(unsigned int flags = 0, int priority = 0) const;
+#endif
   void recordEvent(Event& event) const;
   void waitEvent(Event& event) const;
   // Converts this green context to an (unmanaged) cu::Context.
@@ -975,17 +977,19 @@ class Stream : public Wrapper<CUstream> {
   void batchMemOp(unsigned int count, void* paramArray, unsigned int flags);
   void attachMemAsync(CUdeviceptr address, size_t length = 0,
                       unsigned int flags = 0);
+#if defined(__HIP__) || CUDA_VERSION >= 12030
   void beginCaptureToGraph(Graph& graph, unsigned int flags = 0);
+#endif
   void updateCaptureDependencies(CUgraphNode* dependencies,
                                  size_t numDependencies,
                                  unsigned int flags = 0);
-#if CUDA_VERSION >= 12800
+#if defined(__HIP__) || CUDA_VERSION >= 12080
   Device getDevice() const;
 #endif
-#if CUDA_VERSION >= 12000
+#if defined(__HIP__) || CUDA_VERSION >= 12000
   unsigned long long getStreamId() const;
 #endif
-#if !defined(__HIP__) && CUDA_VERSION >= 12400
+#if !defined(__HIP__) && CUDA_VERSION >= 13010
   void getDevResource(CUdevResource& resource, CUdevResourceType type) const;
 #endif
 
@@ -994,7 +998,7 @@ class Stream : public Wrapper<CUstream> {
 #endif
 };
 
-#if !defined(__HIP__) && CUDA_VERSION >= 12400
+#if !defined(__HIP__) && CUDA_VERSION >= 12040
 inline void devResourceGenerateDesc(CUdevResourceDesc* phDesc,
                                     CUdevResource* resources,
                                     unsigned int nbResources) {
@@ -2318,10 +2322,12 @@ inline void Stream::attachMemAsync(CUdeviceptr address, size_t length,
                     .streamAttachMemAsync(_obj, address, length, flags));
 }
 
+#if defined(__HIP__) || CUDA_VERSION >= 12030
 inline void Stream::beginCaptureToGraph(Graph& graph, unsigned int flags) {
   checkCudaCall(getBackend(_backendIdx)
                     .streamBeginCaptureToGraph(_obj, graph, nullptr, 0, flags));
 }
+#endif
 
 inline void Stream::updateCaptureDependencies(CUgraphNode* dependencies,
                                               size_t numDependencies,
@@ -2332,7 +2338,7 @@ inline void Stream::updateCaptureDependencies(CUgraphNode* dependencies,
                         numDependencies, flags));
 }
 
-#if CUDA_VERSION >= 12800
+#if defined(__HIP__) || CUDA_VERSION >= 12080
 inline Device Stream::getDevice() const {
   CUdevice device{};
   checkCudaCall(getBackend(_backendIdx).streamGetDevice(&device, _obj));
@@ -2340,7 +2346,7 @@ inline Device Stream::getDevice() const {
 }
 #endif
 
-#if CUDA_VERSION >= 12000
+#if defined(__HIP__) || CUDA_VERSION >= 12000
 inline unsigned long long Stream::getStreamId() const {
   unsigned long long streamId{};
   checkCudaCall(getBackend(_backendIdx).streamGetId(&streamId, _obj));
@@ -2490,7 +2496,7 @@ inline unsigned long long Context::getId() const {
 }
 #endif
 
-#if CUDA_VERSION >= 12400
+#if CUDA_VERSION >= 12050
 inline void Context::recordEvent(Event& event) const {
   checkCudaCall(getBackend(_backendIdx).ctxRecordEvent(_obj, event));
 }
@@ -2547,7 +2553,7 @@ inline void Device::getProperties(CUdevprop& prop) const {
   prop.textureAlign = getAttribute<CU_DEVICE_ATTRIBUTE_TEXTURE_ALIGNMENT>();
 }
 
-#if CUDA_VERSION >= 12400
+#if CUDA_VERSION >= 12040
 inline void Device::getDevResource(CUdevResource& resource,
                                    CUdevResourceType type) const {
   Backend& b = getBackend(_backendIdx);
@@ -2585,6 +2591,7 @@ inline void GreenContext::getDevResource(CUdevResource& resource,
       b.greenCtxGetDevResource(_obj, &resource, static_cast<int>(type)));
 }
 
+#if CUDA_VERSION >= 12050
 inline Stream GreenContext::createStream(unsigned int flags,
                                          int priority) const {
   CUstream stream;
@@ -2593,6 +2600,7 @@ inline Stream GreenContext::createStream(unsigned int flags,
                                        flags, priority));
   return Stream(stream, true);
 }
+#endif
 
 inline void GreenContext::recordEvent(Event& event) const {
   Backend& b = getBackend(_backendIdx);
@@ -2611,13 +2619,15 @@ inline GreenContext::operator Context() {
   return Context(context, _backendIdx);
 }
 
+#if CUDA_VERSION >= 13010
 inline void Stream::getDevResource(CUdevResource& resource,
                                    CUdevResourceType type) const {
   Backend& b = getBackend(_backendIdx);
   checkCudaCall(
       b.streamGetDevResource(_obj, &resource, static_cast<int>(type)));
 }
-#endif  // CUDA_VERSION >= 12400
+#endif
+#endif  // CUDA_VERSION >= 12040
 #endif  // !defined(__HIP__)
 
 }  // namespace cu
