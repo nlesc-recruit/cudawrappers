@@ -597,18 +597,6 @@ static unsigned int getTestDevice() {
   return static_cast<unsigned int>(g_testDevice);
 }
 
-// ============================================================================
-// Helper: find the first device
-// ============================================================================
-static int findDevice(cu::Device& dev) {
-  int count = cu::Device::getCount();
-  if (count > 0) {
-    dev = cu::Device(0);
-    return 0;
-  }
-  return -1;
-}
-
 // Simple kernel that adds 1 to each element via host function
 static void addOneKernel(void* data) {
   int* ptr = static_cast<int*>(data);
@@ -671,9 +659,9 @@ TEST_CASE("Device: debug enumeration", "[device]") {
   }
   cu::Device dev2(0);
   // Also try the selected test device
-  WARN("Trying getTestDevice()=" << findDevice(dev2));
+  WARN("Trying getTestDevice()=" << getTestDevice());
   try {
-    cu::Device dev3(findDevice(dev2));
+    cu::Device dev3(getTestDevice());
     WARN("  getTestDevice device: " << dev3.getName());
   } catch (const std::exception& e) {
     WARN("  getTestDevice FAILED: " << e.what());
@@ -682,14 +670,14 @@ TEST_CASE("Device: debug enumeration", "[device]") {
 
 TEST_CASE("Device: getName", "[device]") {
   cu::init();
-  cu::Device dev(findDevice(dev));
+  cu::Device dev(0);
   std::string name = dev.getName();
   CHECK_FALSE(name.empty());
 }
 
 TEST_CASE("Device: getComputeCapability", "[device]") {
   cu::init();
-  cu::Device dev(findDevice(dev));
+  cu::Device dev(0);
   int major = 0, minor = 0;
   CHECK_NOTHROW(dev.getComputeCapability(major, minor));
   CHECK(major >= 0);
@@ -698,20 +686,20 @@ TEST_CASE("Device: getComputeCapability", "[device]") {
 
 TEST_CASE("Device: totalMem", "[device]") {
   cu::init();
-  cu::Device dev(findDevice(dev));
+  cu::Device dev(0);
   size_t mem = dev.totalMem();
   CHECK(mem > 0);
 }
 
 TEST_CASE("Device: getOrdinal", "[device]") {
   cu::init();
-  cu::Device dev(findDevice(dev));
+  cu::Device dev(0);
   CHECK(dev.getOrdinal() >= 0);
 }
 
 TEST_CASE("Device: getAttribute", "[device]") {
   cu::init();
-  cu::Device dev(findDevice(dev));
+  cu::Device dev(0);
 
   SECTION("MAX_THREADS_PER_BLOCK") {
     int val = dev.getAttribute<CU_DEVICE_ATTRIBUTE_MAX_THREADS_PER_BLOCK>();
@@ -813,7 +801,7 @@ TEST_CASE("Device: getAttribute", "[device]") {
 
 TEST_CASE("Device: getUUID", "[device]") {
   cu::init();
-  cu::Device dev(findDevice(dev));
+  cu::Device dev(0);
   std::string uuid = dev.getUuid();
   CHECK_FALSE(uuid.empty());
   // UUID format: GPU-XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
@@ -822,14 +810,14 @@ TEST_CASE("Device: getUUID", "[device]") {
 
 TEST_CASE("Device: getPCIBusId", "[device]") {
   cu::init();
-  cu::Device dev(findDevice(dev));
+  cu::Device dev(0);
   std::string pciId = dev.getPCIBusId();
   CHECK_FALSE(pciId.empty());
 }
 
 TEST_CASE("Device: getByPCIBusId round-trip", "[device]") {
   cu::init();
-  cu::Device dev(findDevice(dev));
+  cu::Device dev(0);
   std::string pciId = dev.getPCIBusId();
   cu::Device dev2 = cu::Device::getByPCIBusId(pciId);
   CHECK(dev2.getPCIBusId() == pciId);
@@ -837,7 +825,7 @@ TEST_CASE("Device: getByPCIBusId round-trip", "[device]") {
 
 TEST_CASE("Device: Memory pools", "[device]") {
   cu::init();
-  cu::Device dev(findDevice(dev));
+  cu::Device dev(0);
   cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, dev);
   context.setCurrent();
 
@@ -856,7 +844,7 @@ TEST_CASE("Device: Memory pools", "[device]") {
 #ifndef __HIP__
 TEST_CASE("Device: getProperties (CUDA-only)", "[device][cuda]") {
   cu::init();
-  cu::Device dev(findDevice(dev));
+  cu::Device dev(0);
   CUdevprop prop{};
   CHECK_NOTHROW(dev.getProperties(prop));
   CHECK(prop.maxThreadsPerBlock > 0);
@@ -872,14 +860,14 @@ TEST_CASE("Device: getProperties (CUDA-only)", "[device][cuda]") {
 // ============================================================================
 TEST_CASE("Context: create and setCurrent", "[context]") {
   cu::init();
-  cu::Device dev(findDevice(dev));
+  cu::Device dev(0);
   cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, dev);
   CHECK_NOTHROW(context.setCurrent());
 }
 
 TEST_CASE("Context: getCurrent", "[context]") {
   cu::init();
-  cu::Device dev(findDevice(dev));
+  cu::Device dev(0);
   cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, dev);
   context.setCurrent();
   cu::Context current = context.getCurrent();
@@ -888,7 +876,7 @@ TEST_CASE("Context: getCurrent", "[context]") {
 
 TEST_CASE("Context: getDevice", "[context]") {
   cu::init();
-  cu::Device dev(findDevice(dev));
+  cu::Device dev(0);
   cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, dev);
   context.setCurrent();
   cu::Device ctxDev = context.getDevice();
@@ -897,7 +885,7 @@ TEST_CASE("Context: getDevice", "[context]") {
 
 TEST_CASE("Context: getApiVersion", "[context]") {
   cu::init();
-  cu::Device dev(findDevice(dev));
+  cu::Device dev(0);
   cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, dev);
   context.setCurrent();
   unsigned version = context.getApiVersion();
@@ -906,7 +894,7 @@ TEST_CASE("Context: getApiVersion", "[context]") {
 
 TEST_CASE("Context: Cache config", "[context]") {
   cu::init();
-  cu::Device dev(findDevice(dev));
+  cu::Device dev(0);
   cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, dev);
   context.setCurrent();
 
@@ -925,7 +913,7 @@ TEST_CASE("Context: Cache config", "[context]") {
 
 TEST_CASE("Context: getLimit / setLimit", "[context]") {
   cu::init();
-  cu::Device dev(findDevice(dev));
+  cu::Device dev(0);
   cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, dev);
   context.setCurrent();
 
@@ -944,7 +932,7 @@ TEST_CASE("Context: getLimit / setLimit", "[context]") {
 
 TEST_CASE("Context: getFreeMemory / getTotalMemory", "[context]") {
   cu::init();
-  cu::Device dev(findDevice(dev));
+  cu::Device dev(0);
   cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, dev);
   context.setCurrent();
 
@@ -957,7 +945,7 @@ TEST_CASE("Context: getFreeMemory / getTotalMemory", "[context]") {
 
 TEST_CASE("Context: synchronize", "[context]") {
   cu::init();
-  cu::Device dev(findDevice(dev));
+  cu::Device dev(0);
   cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, dev);
   context.setCurrent();
   CHECK_NOTHROW(cu::Context::synchronize());
@@ -965,7 +953,7 @@ TEST_CASE("Context: synchronize", "[context]") {
 
 TEST_CASE("Context: pushCurrent / popCurrent", "[context]") {
   cu::init();
-  cu::Device dev(findDevice(dev));
+  cu::Device dev(0);
   cu::Context ctx1(CU_CTX_SCHED_BLOCKING_SYNC, dev);
   ctx1.setCurrent();
 
@@ -979,7 +967,7 @@ TEST_CASE("Context: pushCurrent / popCurrent", "[context]") {
 // ============================================================================
 TEST_CASE("HostMemory: alloc", "[hostmemory]") {
   cu::init();
-  cu::Device dev(findDevice(dev));
+  cu::Device dev(0);
   cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, dev);
   context.setCurrent();
 
@@ -996,7 +984,7 @@ TEST_CASE("HostMemory: alloc", "[hostmemory]") {
 
 TEST_CASE("HostMemory: register", "[hostmemory]") {
   cu::init();
-  cu::Device dev(findDevice(dev));
+  cu::Device dev(0);
   cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, dev);
   context.setCurrent();
 
@@ -1008,7 +996,7 @@ TEST_CASE("HostMemory: register", "[hostmemory]") {
 
 TEST_CASE("HostMemory: UnmanagedMemory", "[hostmemory]") {
   cu::init();
-  cu::Device dev(findDevice(dev));
+  cu::Device dev(0);
   cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, dev);
   context.setCurrent();
 
@@ -1023,7 +1011,7 @@ TEST_CASE("HostMemory: UnmanagedMemory", "[hostmemory]") {
 // ============================================================================
 TEST_CASE("DeviceMemory: alloc and free", "[devicememory]") {
   cu::init();
-  cu::Device dev(findDevice(dev));
+  cu::Device dev(0);
   cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, dev);
   context.setCurrent();
 
@@ -1035,7 +1023,7 @@ TEST_CASE("DeviceMemory: alloc and free", "[devicememory]") {
 
 TEST_CASE("DeviceMemory: unified memory", "[devicememory]") {
   cu::init();
-  cu::Device dev(findDevice(dev));
+  cu::Device dev(0);
   cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, dev);
   context.setCurrent();
 
@@ -1051,7 +1039,7 @@ TEST_CASE("DeviceMemory: unified memory", "[devicememory]") {
 
 TEST_CASE("DeviceMemory: invalid type throws", "[devicememory]") {
   cu::init();
-  cu::Device dev(findDevice(dev));
+  cu::Device dev(0);
   cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, dev);
   context.setCurrent();
 
@@ -1061,7 +1049,7 @@ TEST_CASE("DeviceMemory: invalid type throws", "[devicememory]") {
 
 TEST_CASE("DeviceMemory: flags with device type throws", "[devicememory]") {
   cu::init();
-  cu::Device dev(findDevice(dev));
+  cu::Device dev(0);
   cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, dev);
   context.setCurrent();
 
@@ -1071,7 +1059,7 @@ TEST_CASE("DeviceMemory: flags with device type throws", "[devicememory]") {
 
 TEST_CASE("DeviceMemory: copy from host", "[devicememory]") {
   cu::init();
-  cu::Device dev(findDevice(dev));
+  cu::Device dev(0);
   cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, dev);
   context.setCurrent();
 
@@ -1087,7 +1075,7 @@ TEST_CASE("DeviceMemory: copy from host", "[devicememory]") {
 
 TEST_CASE("DeviceMemory: offset slicing", "[devicememory]") {
   cu::init();
-  cu::Device dev(findDevice(dev));
+  cu::Device dev(0);
   cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, dev);
   context.setCurrent();
 
@@ -1111,7 +1099,7 @@ TEST_CASE("DeviceMemory: offset slicing", "[devicememory]") {
 
 TEST_CASE("DeviceMemory: memset 1D", "[devicememory][memset]") {
   cu::init();
-  cu::Device dev(findDevice(dev));
+  cu::Device dev(0);
   cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, dev);
   context.setCurrent();
 
@@ -1136,7 +1124,7 @@ TEST_CASE("DeviceMemory: memset 1D", "[devicememory][memset]") {
 
 TEST_CASE("DeviceMemory: memset 2D", "[devicememory][memset]") {
   cu::init();
-  cu::Device dev(findDevice(dev));
+  cu::Device dev(0);
   cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, dev);
   context.setCurrent();
 
@@ -1168,7 +1156,7 @@ TEST_CASE("DeviceMemory: memset 2D", "[devicememory][memset]") {
 // ============================================================================
 TEST_CASE("Sync memcpy: HtoD and DtoH", "[memcpy]") {
   cu::init();
-  cu::Device dev(findDevice(dev));
+  cu::Device dev(0);
   cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, dev);
   context.setCurrent();
 
@@ -1192,7 +1180,7 @@ TEST_CASE("Sync memcpy: HtoD and DtoH", "[memcpy]") {
 // ============================================================================
 TEST_CASE("Stream: create default", "[stream]") {
   cu::init();
-  cu::Device dev(findDevice(dev));
+  cu::Device dev(0);
   cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, dev);
   context.setCurrent();
   cu::Stream stream;
@@ -1201,7 +1189,7 @@ TEST_CASE("Stream: create default", "[stream]") {
 
 TEST_CASE("Stream: create with flags", "[stream]") {
   cu::init();
-  cu::Device dev(findDevice(dev));
+  cu::Device dev(0);
   cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, dev);
   context.setCurrent();
 
@@ -1218,7 +1206,7 @@ TEST_CASE("Stream: create with flags", "[stream]") {
 
 TEST_CASE("Stream: memAllocAsync / memFreeAsync", "[stream][async]") {
   cu::init();
-  cu::Device dev(findDevice(dev));
+  cu::Device dev(0);
   cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, dev);
   context.setCurrent();
 
@@ -1232,7 +1220,7 @@ TEST_CASE("Stream: memAllocAsync / memFreeAsync", "[stream][async]") {
 
 TEST_CASE("Stream: memcpyHtoDAsync", "[stream][memcpy]") {
   cu::init();
-  cu::Device dev(findDevice(dev));
+  cu::Device dev(0);
   cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, dev);
   context.setCurrent();
 
@@ -1258,7 +1246,7 @@ TEST_CASE("Stream: memcpyHtoDAsync", "[stream][memcpy]") {
 
 TEST_CASE("Stream: memcpyDtoHAsync", "[stream][memcpy]") {
   cu::init();
-  cu::Device dev(findDevice(dev));
+  cu::Device dev(0);
   cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, dev);
   context.setCurrent();
 
@@ -1293,7 +1281,7 @@ TEST_CASE("Stream: memcpyDtoHAsync", "[stream][memcpy]") {
 
 TEST_CASE("Stream: memcpyDtoDAsync", "[stream][memcpy]") {
   cu::init();
-  cu::Device dev(findDevice(dev));
+  cu::Device dev(0);
   cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, dev);
   context.setCurrent();
 
@@ -1319,7 +1307,7 @@ TEST_CASE("Stream: memcpyDtoDAsync", "[stream][memcpy]") {
 
 TEST_CASE("Stream: memcpyHtoHAsync", "[stream][memcpy]") {
   cu::init();
-  cu::Device dev(findDevice(dev));
+  cu::Device dev(0);
   cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, dev);
   context.setCurrent();
 
@@ -1335,7 +1323,7 @@ TEST_CASE("Stream: memcpyHtoHAsync", "[stream][memcpy]") {
 
 TEST_CASE("Stream: 2D pitched copies", "[stream][memcpy]") {
   cu::init();
-  cu::Device dev(findDevice(dev));
+  cu::Device dev(0);
   cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, dev);
   context.setCurrent();
 
@@ -1385,7 +1373,7 @@ TEST_CASE("Stream: 2D pitched copies", "[stream][memcpy]") {
 
 TEST_CASE("Stream: memsetAsync", "[stream][memset]") {
   cu::init();
-  cu::Device dev(findDevice(dev));
+  cu::Device dev(0);
   cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, dev);
   context.setCurrent();
 
@@ -1416,7 +1404,7 @@ TEST_CASE("Stream: memsetAsync", "[stream][memset]") {
 
 TEST_CASE("Stream: memset2DAsync", "[stream][memset]") {
   cu::init();
-  cu::Device dev(findDevice(dev));
+  cu::Device dev(0);
   cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, dev);
   context.setCurrent();
 
@@ -1453,7 +1441,7 @@ TEST_CASE("Stream: memset2DAsync", "[stream][memset]") {
 
 TEST_CASE("Stream: query", "[stream]") {
   cu::init();
-  cu::Device dev(findDevice(dev));
+  cu::Device dev(0);
   cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, dev);
   context.setCurrent();
 
@@ -1465,7 +1453,7 @@ TEST_CASE("Stream: query", "[stream]") {
 
 TEST_CASE("Stream: launchHostFunc", "[stream]") {
   cu::init();
-  cu::Device dev(findDevice(dev));
+  cu::Device dev(0);
   cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, dev);
   context.setCurrent();
 
@@ -1501,7 +1489,7 @@ TEST_CASE("Stream: launchHostFunc", "[stream]") {
 // ============================================================================
 TEST_CASE("Event: create with flags", "[event]") {
   cu::init();
-  cu::Device dev(findDevice(dev));
+  cu::Device dev(0);
   cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, dev);
   context.setCurrent();
 
@@ -1532,7 +1520,7 @@ TEST_CASE("Event: create with flags", "[event]") {
 
 TEST_CASE("Event: record and elapsedTime", "[event]") {
   cu::init();
-  cu::Device dev(findDevice(dev));
+  cu::Device dev(0);
   cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, dev);
   context.setCurrent();
 
@@ -1575,7 +1563,7 @@ TEST_CASE("Event: record and elapsedTime", "[event]") {
 
 TEST_CASE("Event: query", "[event]") {
   cu::init();
-  cu::Device dev(findDevice(dev));
+  cu::Device dev(0);
   cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, dev);
   context.setCurrent();
 
@@ -1589,7 +1577,7 @@ TEST_CASE("Event: query", "[event]") {
 
 TEST_CASE("Event: synchronize", "[event]") {
   cu::init();
-  cu::Device dev(findDevice(dev));
+  cu::Device dev(0);
   cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, dev);
   context.setCurrent();
 
@@ -1601,7 +1589,7 @@ TEST_CASE("Event: synchronize", "[event]") {
 
 TEST_CASE("Event: timing accuracy", "[event]") {
   cu::init();
-  cu::Device dev(findDevice(dev));
+  cu::Device dev(0);
   cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, dev);
   context.setCurrent();
 
@@ -1634,7 +1622,7 @@ extern "C" __global__ void multiplyTwo(int* data) {
 
 TEST_CASE("Module: load from data", "[module]") {
   cu::init();
-  cu::Device dev(findDevice(dev));
+  cu::Device dev(0);
   cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, dev);
   context.setCurrent();
 
@@ -1659,7 +1647,7 @@ TEST_CASE("Module: load from data", "[module]") {
 // ============================================================================
 TEST_CASE("Graph: create and destroy", "[graph]") {
   cu::init();
-  cu::Device dev(findDevice(dev));
+  cu::Device dev(0);
   cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, dev);
   context.setCurrent();
 
@@ -1670,7 +1658,7 @@ TEST_CASE("Graph: create and destroy", "[graph]") {
 
 TEST_CASE("Graph: host node", "[graph]") {
   cu::init();
-  cu::Device dev(findDevice(dev));
+  cu::Device dev(0);
   cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, dev);
   context.setCurrent();
 
@@ -1696,7 +1684,7 @@ TEST_CASE("Graph: host node", "[graph]") {
 
 TEST_CASE("Graph: memcpy node (H2D then D2H)", "[graph]") {
   cu::init();
-  cu::Device dev(findDevice(dev));
+  cu::Device dev(0);
   cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, dev);
   context.setCurrent();
 
@@ -1735,7 +1723,7 @@ TEST_CASE("Graph: memcpy node (H2D then D2H)", "[graph]") {
 
 TEST_CASE("Graph: debugDotPrint with flags", "[graph]") {
   cu::init();
-  cu::Device dev(findDevice(dev));
+  cu::Device dev(0);
   cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, dev);
   context.setCurrent();
 
@@ -1757,7 +1745,7 @@ TEST_CASE("Graph: debugDotPrint with flags", "[graph]") {
 // ============================================================================
 TEST_CASE("Array: 1D creation", "[array]") {
   cu::init();
-  cu::Device dev(findDevice(dev));
+  cu::Device dev(0);
   cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, dev);
   context.setCurrent();
 
@@ -1768,7 +1756,7 @@ TEST_CASE("Array: 1D creation", "[array]") {
 
 TEST_CASE("Array: 2D creation", "[array]") {
   cu::init();
-  cu::Device dev(findDevice(dev));
+  cu::Device dev(0);
   cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, dev);
   context.setCurrent();
 
@@ -1778,7 +1766,7 @@ TEST_CASE("Array: 2D creation", "[array]") {
 
 TEST_CASE("Array: 3D creation", "[array]") {
   cu::init();
-  cu::Device dev(findDevice(dev));
+  cu::Device dev(0);
   cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, dev);
   context.setCurrent();
 
@@ -1791,7 +1779,7 @@ TEST_CASE("Array: 3D creation", "[array]") {
 // ============================================================================
 TEST_CASE("Pointer: setAttribute", "[pointer]") {
   cu::init();
-  cu::Device dev(findDevice(dev));
+  cu::Device dev(0);
   cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, dev);
   context.setCurrent();
 
@@ -1809,7 +1797,7 @@ TEST_CASE("Pointer: setAttribute", "[pointer]") {
 TEST_CASE("Pipeline: host -> device -> kernel -> device -> host",
           "[pipeline]") {
   cu::init();
-  cu::Device dev(findDevice(dev));
+  cu::Device dev(0);
   cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, dev);
   context.setCurrent();
 
@@ -1850,7 +1838,7 @@ TEST_CASE("Pipeline: host -> device -> kernel -> device -> host",
 
 TEST_CASE("Pipeline: async alloc copy free", "[pipeline]") {
   cu::init();
-  cu::Device dev(findDevice(dev));
+  cu::Device dev(0);
   cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, dev);
   context.setCurrent();
 
@@ -1879,7 +1867,7 @@ TEST_CASE("Pipeline: async alloc copy free", "[pipeline]") {
 
 TEST_CASE("Pipeline: event timing around kernel", "[pipeline]") {
   cu::init();
-  cu::Device dev(findDevice(dev));
+  cu::Device dev(0);
   cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, dev);
   context.setCurrent();
 
@@ -1915,7 +1903,7 @@ TEST_CASE("Pipeline: event timing around kernel", "[pipeline]") {
 
 TEST_CASE("Pipeline: 2D copy round trip", "[pipeline]") {
   cu::init();
-  cu::Device dev(findDevice(dev));
+  cu::Device dev(0);
   cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, dev);
   context.setCurrent();
 
@@ -1962,7 +1950,7 @@ TEST_CASE("Pipeline: 2D copy round trip", "[pipeline]") {
 
 TEST_CASE("Pipeline: multiple streams concurrency", "[pipeline]") {
   cu::init();
-  cu::Device dev(findDevice(dev));
+  cu::Device dev(0);
   cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, dev);
   context.setCurrent();
 
@@ -2066,7 +2054,7 @@ TEST_CASE("Multi-backend: each device has unique PCI bus ID", "[device]") {
 // ============================================================================
 TEST_CASE("Edge case: zero-size allocation", "[edge]") {
   cu::init();
-  cu::Device dev(findDevice(dev));
+  cu::Device dev(0);
   cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, dev);
   context.setCurrent();
 
@@ -2081,7 +2069,7 @@ TEST_CASE("Edge case: zero-size allocation", "[edge]") {
 
 TEST_CASE("Edge case: single byte operations", "[edge]") {
   cu::init();
-  cu::Device dev(findDevice(dev));
+  cu::Device dev(0);
   cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, dev);
   context.setCurrent();
 
@@ -2102,7 +2090,7 @@ TEST_CASE("Edge case: single byte operations", "[edge]") {
 
 TEST_CASE("Edge case: large memset", "[edge]") {
   cu::init();
-  cu::Device dev(findDevice(dev));
+  cu::Device dev(0);
   cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, dev);
   context.setCurrent();
 
@@ -2123,7 +2111,7 @@ TEST_CASE("Edge case: large memset", "[edge]") {
 
 TEST_CASE("Edge case: many small allocations", "[edge]") {
   cu::init();
-  cu::Device dev(findDevice(dev));
+  cu::Device dev(0);
   cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, dev);
   context.setCurrent();
 
@@ -2137,7 +2125,7 @@ TEST_CASE("Edge case: many small allocations", "[edge]") {
 
 TEST_CASE("Edge case: stream flags", "[edge]") {
   cu::init();
-  cu::Device dev(findDevice(dev));
+  cu::Device dev(0);
   cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, dev);
   context.setCurrent();
 
@@ -2174,18 +2162,23 @@ TEST_CASE("Error: implicit conversion to CUresult", "[error]") {
 // ============================================================================
 TEST_CASE("Device: canAccessPeer", "[device]") {
   cu::init();
-  cu::Device dev(findDevice(dev));
+  cu::Device dev(0);
   cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, dev);
   context.setCurrent();
 
-  cu::Device dev1(findDevice(dev));
-  bool canAccess = dev.canAccessPeer(dev1);
-  CHECK((canAccess == true || canAccess == false));
+  int count = cu::Device::getCount();
+  if (count > 1) {
+    cu::Device dev1(1);
+    bool canAccess = dev.canAccessPeer(dev1);
+    CHECK((canAccess == true || canAccess == false));
+  } else {
+    WARN("Skipping P2P test with only 1 device");
+  }
 }
 
 TEST_CASE("Device: getP2PAttribute", "[device]") {
   cu::init();
-  cu::Device dev(findDevice(dev));
+  cu::Device dev(0);
   cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, dev);
   context.setCurrent();
 
@@ -2202,7 +2195,7 @@ TEST_CASE("Device: getP2PAttribute", "[device]") {
 
 TEST_CASE("Pointer: pointerGetAttribute", "[pointer]") {
   cu::init();
-  cu::Device dev(findDevice(dev));
+  cu::Device dev(0);
   cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, dev);
   context.setCurrent();
 
@@ -2220,7 +2213,7 @@ TEST_CASE("Pointer: pointerGetAttribute", "[pointer]") {
 TEST_CASE("Pointer: pointerGetAttributes", "[pointer]") {
 #ifndef __HIP__
   cu::init();
-  cu::Device dev(findDevice(dev));
+  cu::Device dev(0);
   cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, dev);
   context.setCurrent();
 
@@ -2240,7 +2233,7 @@ TEST_CASE("Pointer: pointerGetAttributes", "[pointer]") {
 // ============================================================================
 TEST_CASE("Stream: createWithPriority", "[stream]") {
   cu::init();
-  cu::Device dev(findDevice(dev));
+  cu::Device dev(0);
   cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, dev);
   context.setCurrent();
 
@@ -2252,7 +2245,7 @@ TEST_CASE("Stream: createWithPriority", "[stream]") {
 
 TEST_CASE("Stream: getFlags and getPriority", "[stream]") {
   cu::init();
-  cu::Device dev(findDevice(dev));
+  cu::Device dev(0);
   cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, dev);
   context.setCurrent();
 
@@ -2270,7 +2263,7 @@ TEST_CASE("Stream: getFlags and getPriority", "[stream]") {
 // ============================================================================
 TEST_CASE("Stream: isCapturing", "[stream]") {
   cu::init();
-  cu::Device dev(findDevice(dev));
+  cu::Device dev(0);
   cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, dev);
   context.setCurrent();
 
@@ -2281,7 +2274,7 @@ TEST_CASE("Stream: isCapturing", "[stream]") {
 
 TEST_CASE("Stream: beginCapture and endCapture", "[stream]") {
   cu::init();
-  cu::Device dev(findDevice(dev));
+  cu::Device dev(0);
   cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, dev);
   context.setCurrent();
 
@@ -2308,7 +2301,7 @@ TEST_CASE("Stream: beginCapture and endCapture", "[stream]") {
 // ============================================================================
 TEST_CASE("memAdvise", "[memory]") {
   cu::init();
-  cu::Device dev(findDevice(dev));
+  cu::Device dev(0);
   cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, dev);
   context.setCurrent();
 
@@ -2327,7 +2320,7 @@ TEST_CASE("memAdvise", "[memory]") {
 // ============================================================================
 TEST_CASE("MemPool: create and destroy", "[mempool]") {
   cu::init();
-  cu::Device dev(findDevice(dev));
+  cu::Device dev(0);
   cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, dev);
   context.setCurrent();
 
@@ -2338,7 +2331,7 @@ TEST_CASE("MemPool: create and destroy", "[mempool]") {
 
 TEST_CASE("MemPool: setAttribute and getAttribute", "[mempool]") {
   cu::init();
-  cu::Device dev(findDevice(dev));
+  cu::Device dev(0);
   cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, dev);
   context.setCurrent();
 
