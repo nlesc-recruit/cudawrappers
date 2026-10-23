@@ -1114,7 +1114,13 @@ inline void pointerGetAttributes(unsigned int numAttributes,
 
 inline int Device::getCount(int backendIdx) {
   int nrDevices{};
-  checkCudaCall(getBackend(backendIdx).deviceGetCount(&nrDevices));
+  int result = getBackend(backendIdx).deviceGetCount(&nrDevices);
+  // CUDA_ERROR_NO_DEVICE (100): the backend's runtime is present but the
+  // machine has no devices for it (e.g. a ROCm installation on a machine with
+  // only NVIDIA GPUs). Treat that as zero devices rather than aborting the
+  // multi-backend enumeration.
+  if (result == 100) return 0;
+  checkCudaCall(result);
   return nrDevices;
 }
 
