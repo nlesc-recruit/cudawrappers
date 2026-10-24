@@ -1325,8 +1325,8 @@ inline void Context::setCacheConfig(CUfunc_cache config) {
 inline Context Context::getCurrent() {
   int activeIdx = activeBackendIdx();
   CUcontext context{};
-  int result = getBackend(activeIdx)
-                   .ctxGetCurrent(cu_backend_cast::toVoidPP(context));
+  int result =
+      getBackend(activeIdx).ctxGetCurrent(cu_backend_cast::toVoidPP(context));
   if (result == CUDA_SUCCESS && context) return Context(context);
   return Context(CUcontext{});
 }
@@ -1339,8 +1339,8 @@ inline void Context::setCurrent() const {
 inline Context Context::popCurrent() {
   int activeIdx = activeBackendIdx();
   CUcontext context{};
-  int result = getBackend(activeIdx)
-                   .ctxPopCurrent(cu_backend_cast::toVoidPP(context));
+  int result =
+      getBackend(activeIdx).ctxPopCurrent(cu_backend_cast::toVoidPP(context));
   if (result == CUDA_SUCCESS && context) return Context(context);
   return Context(CUcontext{});
 }
