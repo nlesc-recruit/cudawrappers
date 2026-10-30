@@ -70,6 +70,29 @@ if(CUDAWRAPPERS_BACKEND_HIP)
   else()
     set(CUDAWRAPPERS_LINK_HIPRTC False)
   endif()
+  # hipRTC needs the clang builtin-header directory via -resource-dir= because
+  # it cannot locate it at run time.  The ROCm installation is known here
+  # through HIP_ROOT_DIR, so CMake finds it at configure time instead of having
+  # to guess the ROCm location in the compiled code.
+  set(CUDAWRAPPERS_CLANG_RESOURCE_DIR "")
+  set(_clang_resource_version "0")
+  foreach(_clang_root "${HIP_ROOT_DIR}/lib/llvm/lib/clang"
+                      "${HIP_ROOT_DIR}/lib/clang"
+  )
+    file(
+      GLOB _clang_version_dirs
+      RELATIVE "${_clang_root}"
+      "${_clang_root}/*"
+    )
+    foreach(_clang_version IN LISTS _clang_version_dirs)
+      if(EXISTS "${_clang_root}/${_clang_version}/include/stddef.h"
+         AND _clang_version VERSION_GREATER _clang_resource_version
+      )
+        set(_clang_resource_version "${_clang_version}")
+        set(CUDAWRAPPERS_CLANG_RESOURCE_DIR "${_clang_root}/${_clang_version}")
+      endif()
+    endforeach()
+  endforeach()
   if(CUDAWRAPPERS_BUILD_CUFFT)
     # The cufft component no longer needs the hipfft development package: it
     # loads the cuFFT or hipFFT library at run time (see cufft_backend.hpp).

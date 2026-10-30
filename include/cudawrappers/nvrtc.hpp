@@ -1,8 +1,6 @@
 #if !defined NVRTC_H
 #define NVRTC_H
 #include <dlfcn.h>
-#include <link.h>
-#include <sys/stat.h>
 
 #include <algorithm>
 #include <array>
@@ -70,24 +68,6 @@ inline void loadNvrtcBuiltins() {
     throw std::runtime_error("Failed to load libnvrtc-builtins.so");
   }
 }
-
-// Eagerly load the NVRTC library so that dl_iterate_phdr() can find it.
-// With -Wl,--as-needed (the default on modern toolchains), libnvrtc.so is
-// not added to DT_NEEDED when no symbols are referenced directly (all NVRTC
-// calls go through dlopen).  Downstream code that uses dl_iterate_phdr to
-// derive the NVRTC include path from the library location depends on it
-// being loaded.
-#if !defined(__HIP__)
-namespace detail {
-inline const int nvrtcEagerLoadResult = [] {
-  for (const char *name :
-       {"libnvrtc.so", "libnvrtc.so.13", "libnvrtc.so.12", "libnvrtc.so.11"}) {
-    if (dlopen(name, RTLD_LAZY | RTLD_GLOBAL)) break;
-  }
-  return 0;
-}();
-}  // namespace detail
-#endif
 
 // Runtime-selected compiler API: either NVIDIA NVRTC or AMD HIPRTC. Both
 // libraries expose identical entry-point shapes, so one set of function
@@ -483,7 +463,8 @@ inline std::optional<std::filesystem::path> findClangResourceDir(
 // The -I (and -resource-dir) options needed to compile for the backend of
 // the given device: the NVRTC include directories (plus the cccl subdir on
 // CUDA 13, which provides <cuda/std/...>) or the ROCm include directories
-// (plus the clang builtin headers for hipRTC).
+// (plus the clang builtin headers for hipRTC).  All directories are found by
+// CMake at configure time and baked into cudawrappers/config.h.
 inline std::vector<std::string> includeOptions(const cu::Device &device) {
   std::vector<std::string> options;
 
@@ -505,9 +486,20 @@ inline std::vector<std::string> includeOptions(const cu::Device &device) {
   for (const std::string &dir : hipIncludePaths())
     if (!dir.empty()) dirs.push_back(dir);
 
-  // The ROCm root (and with it the clang resource dir) is located even when
-  // hipIncludePaths() already yields the include dir, so that the builtin
-  // headers are found regardless of how cudawrappers was configured.
+#if defined(CUDAWRAPPERS_CLANG_RESOURCE_DIR)
+  // The clang builtin-header directory found by CMake at configure time; use
+  // it when it is present on the system running the compilation.
+  if (std::filesystem::exists(CUDAWRAPPERS_CLANG_RESOURCE_DIR)) {
+    for (const std::string &dir : dirs) options.push_back("-I" + dir);
+    options.push_back("-resource-dir=" CUDAWRAPPERS_CLANG_RESOURCE_DIR);
+    return options;
+  }
+#endif
+
+  // Fallback for when CMake did not provide the clang resource dir (or it is
+  // absent at run time, e.g. when the executable runs on a machine with a
+  // different ROCm installation): locate the ROCm root, and with it the
+  // builtin headers, by searching the usual locations.
   std::filesystem::path rocmRoot;
   std::vector<std::string> rocmRoots;
   if (const char *env = std::getenv("ROCM_PATH")) rocmRoots.push_back(env);
