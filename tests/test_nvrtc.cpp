@@ -166,8 +166,9 @@ TEST_CASE("Test nvrtc::util compiler options", "[util]") {
               "-D__HIP_ARCH__=" + std::to_string(cap));
 
         // The emitted option set must compile a trivial kernel on this device.
-        nvrtc::Program program(kernel, "util_test.cu", {}, {},
-                               device.getBackendIdx());
+        // The backend is inferred from the options: util::compileOptions emits
+        // "--offload-arch=..." for HIP and "-arch=sm_..." for CUDA.
+        nvrtc::Program program(kernel, "util_test.cu");
         CHECK_NOTHROW(program.compile(nvrtc::util::compileOptions(device)));
         ++devicesTested;
       } catch (const std::exception &e) {

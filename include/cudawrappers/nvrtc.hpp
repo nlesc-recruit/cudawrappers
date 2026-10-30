@@ -268,119 +268,144 @@ inline std::string findIncludePath() {
 
 class Program {
  public:
-  // backendIdx: global cudawrappers device/backend index selecting between
-  // NVRTC (CUDA) and HIPRTC (HIP) at runtime. A negative value selects the
-  // compile-time default backend.
+  // The parameters mirror nvrtcCreateProgram's arguments exactly. The
+  // backend (NVRTC vs. HIPRTC) is not a constructor argument; it is
+  // inferred at compile() time: a "--offload-arch" option marks a HIP
+  // compilation (NVRTC has no such option), otherwise the compile-time
+  // default backend is used.
   Program(
       const std::string &src, const std::string &name,
       const std::vector<std::string> &headers = std::vector<std::string>(),
-      const std::vector<std::string> &includeNames = std::vector<std::string>(),
-      int backendIdx = -1)
-      : api(detail::RtcApi::get(resolveIsHip(backendIdx))) {
-    std::vector<const char *> c_headers;
-    std::transform(headers.begin(), headers.end(),
-                   std::back_inserter(c_headers),
-                   [](const std::string &header) { return header.c_str(); });
+      const std::vector<std::string> &includeNames = std::vector<std::string>())
+      : _src(src),
+        _name(name),
+        _headers(headers),
+        _includeNames(includeNames) {}
 
-    std::vector<const char *> c_includeNames;
-    std::transform(
-        includeNames.begin(), includeNames.end(),
-        std::back_inserter(c_includeNames),
-        [](const std::string &includeName) { return includeName.c_str(); });
-
-    checkNvrtcCall(api.createProgram(&program, src.c_str(), name.c_str(),
-                                     static_cast<int>(c_headers.size()),
-                                     c_headers.data(), c_includeNames.data()),
-                   api.isHip);
-  }
-
-  explicit Program(const std::string &filename, int backendIdx = -1)
-      : api(detail::RtcApi::get(resolveIsHip(backendIdx))) {
+  explicit Program(const std::string &filename) : _name(filename) {
     std::ifstream ifs(filename);
     if (!ifs.is_open()) {
       throw std::runtime_error("Error opening file '" + filename +
                                "' in cudawrappers::nvrtc");
     }
-    std::string source(std::istreambuf_iterator<char>{ifs}, {});
-    checkNvrtcCall(api.createProgram(&program, source.c_str(), filename.c_str(),
-                                     0, nullptr, nullptr),
-                   api.isHip);
+    _src.assign(std::istreambuf_iterator<char>{ifs}, {});
   }
 
   ~Program() {
-    if (api.destroyProgram) api.destroyProgram(&program);
+    if (_api && _api->destroyProgram) _api->destroyProgram(&program);
   }
 
   Program(const Program &) = delete;
   Program &operator=(const Program &) = delete;
 
   void compile(const std::vector<std::string> &options) {
+    // hipRTC selects its target with "--offload-arch" (e.g.
+    // "--offload-arch=gfx1201"); NVRTC has no such option (it uses
+    // "-arch=sm_..."), so its presence marks a HIP compilation. When no
+    // option gives an indication, fall back to the compile-time default.
+    ensureCreated(defaultIsHip() || hasOffloadArch(options));
     std::vector<const char *> c_options;
     std::transform(options.begin(), options.end(),
                    std::back_inserter(c_options),
                    [](const std::string &option) { return option.c_str(); });
     checkNvrtcCall(
-        api.compileProgram(program, static_cast<int>(c_options.size()),
-                           c_options.data()),
-        api.isHip);
+        _api->compileProgram(program, static_cast<int>(c_options.size()),
+                             c_options.data()),
+        _api->isHip);
   }
 
   // PTX (CUDA) or code object (HIP), depending on the selected backend.
   std::string getPTX() {
+    ensureCreated();
     size_t size{};
     std::string ptx;
 
-    checkNvrtcCall(api.getCodeSize(program, &size), api.isHip);
+    checkNvrtcCall(_api->getCodeSize(program, &size), _api->isHip);
     ptx.resize(size);
-    checkNvrtcCall(api.getCode(program, ptx.data()), api.isHip);
+    checkNvrtcCall(_api->getCode(program, ptx.data()), _api->isHip);
     return ptx;
   }
 
   std::vector<char> getCUBIN() {
+    ensureCreated();
     size_t size{};
     std::vector<char> cubin;
 
-    checkNvrtcCall(api.getBinarySize(program, &size), api.isHip);
+    checkNvrtcCall(_api->getBinarySize(program, &size), _api->isHip);
     cubin.resize(size);
-    checkNvrtcCall(api.getBinary(program, cubin.data()), api.isHip);
+    checkNvrtcCall(_api->getBinary(program, cubin.data()), _api->isHip);
     return cubin;
   }
 
   std::string getLog() {
+    ensureCreated();
     size_t size{};
     std::string log;
 
-    checkNvrtcCall(api.getLogSize(program, &size), api.isHip);
+    checkNvrtcCall(_api->getLogSize(program, &size), _api->isHip);
     log.resize(size);
-    checkNvrtcCall(api.getLog(program, log.data()), api.isHip);
+    checkNvrtcCall(_api->getLog(program, log.data()), _api->isHip);
     return log;
   }
 
   void addNameExpression(const std::string &name) {
-    checkNvrtcCall(api.addNameExpression(program, name.c_str()), api.isHip);
+    ensureCreated();
+    checkNvrtcCall(_api->addNameExpression(program, name.c_str()), _api->isHip);
   }
 
   const char *getLoweredName(const std::string &name) {
+    ensureCreated();
     const char *lowered_name;
-    checkNvrtcCall(api.getLoweredName(program, name.c_str(), &lowered_name),
-                   api.isHip);
+    checkNvrtcCall(_api->getLoweredName(program, name.c_str(), &lowered_name),
+                   _api->isHip);
     return lowered_name;
   }
 
  private:
-  static bool resolveIsHip(int backendIdx) {
-    if (backendIdx < 0) {
-#if defined(__HIP__)
-      return true;
-#else
-      return false;
-#endif
-    }
-    return !cu::Device::backendIsCuda(backendIdx);
+  static bool hasOffloadArch(const std::vector<std::string> &options) {
+    for (const std::string &option : options)
+      if (option.rfind("--offload-arch", 0) == 0) return true;
+    return false;
   }
 
-  const detail::RtcApi &api;
+  static bool defaultIsHip() {
+#if defined(__HIP__)
+    return true;
+#else
+    return false;
+#endif
+  }
+
+  // Lazily create the program handle on first use: the opaque handle must be
+  // created by the same library that later compiles and queries it, and the
+  // library is only known once the compile options (or the compile-time
+  // default) have been seen.
+  void ensureCreated(bool isHip = defaultIsHip()) {
+    if (_api) return;
+    _api = &detail::RtcApi::get(isHip);
+    std::vector<const char *> c_headers;
+    std::transform(_headers.begin(), _headers.end(),
+                   std::back_inserter(c_headers),
+                   [](const std::string &header) { return header.c_str(); });
+
+    std::vector<const char *> c_includeNames;
+    std::transform(
+        _includeNames.begin(), _includeNames.end(),
+        std::back_inserter(c_includeNames),
+        [](const std::string &includeName) { return includeName.c_str(); });
+
+    checkNvrtcCall(_api->createProgram(&program, _src.c_str(), _name.c_str(),
+                                       static_cast<int>(c_headers.size()),
+                                       c_headers.data(), c_includeNames.data()),
+                   _api->isHip);
+  }
+
+  const detail::RtcApi *_api{nullptr};
   void *program{nullptr};
+  std::string _src;
+  std::string _name;
+  std::vector<std::string> _headers;
+  std::vector<std::string> _includeNames;
 };
 
 inline std::pair<int, int> version() {
