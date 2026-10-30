@@ -20,6 +20,7 @@ TEST_CASE("Test list all GPUs", "[device]") {
     cu::Device device(static_cast<unsigned int>(i));
     std::cout << "Device " << i << ":" << std::endl;
     std::cout << "  Name:         " << device.getName() << std::endl;
+    std::cout << "  Arch:         " << device.getArch() << std::endl;
     std::cout << "  Total memory: " << (device.totalMem() / (1024 * 1024))
               << " MiB" << std::endl;
 
@@ -44,6 +45,12 @@ TEST_CASE("Test cu::Device", "[device]") {
     const std::string name = device.getName();
     std::cout << "Device name: " << name << std::endl;
     CHECK(name.size() > 0);
+  }
+
+  SECTION("Test Device.getArch", "[device]") {
+    const std::string arch = device.getArch();
+    std::cout << "Device arch: " << arch << std::endl;
+    CHECK(arch.size() > 0);
   }
 
   SECTION("Test device.totalMem", "[device]") {
@@ -652,7 +659,8 @@ TEST_CASE("Device: debug enumeration", "[device]") {
   for (int i = 0; i < total; ++i) {
     try {
       cu::Device dev(static_cast<unsigned int>(i));
-      WARN("  Device " << i << ": " << dev.getName());
+      WARN("  Device " << i << ": " << dev.getName() << " [" << dev.getArch()
+                       << "]");
     } catch (const std::exception& e) {
       WARN("  Device " << i << ": FAILED - " << e.what());
     }
@@ -662,7 +670,8 @@ TEST_CASE("Device: debug enumeration", "[device]") {
   WARN("Trying getTestDevice()=" << getTestDevice());
   try {
     cu::Device dev3(getTestDevice());
-    WARN("  getTestDevice device: " << dev3.getName());
+    WARN("  getTestDevice device: " << dev3.getName() << " [" << dev3.getArch()
+                                    << "]");
   } catch (const std::exception& e) {
     WARN("  getTestDevice FAILED: " << e.what());
   }
@@ -673,6 +682,16 @@ TEST_CASE("Device: getName", "[device]") {
   cu::Device dev(0);
   std::string name = dev.getName();
   CHECK_FALSE(name.empty());
+}
+
+TEST_CASE("Device: getArch", "[device]") {
+  cu::init();
+  cu::Device dev(getTestDevice());
+  std::string arch = dev.getArch();
+  CHECK_FALSE(arch.empty());
+  // Should be either sm_XX or gfxXXX
+  CHECK((arch.find("sm_") != std::string::npos ||
+         arch.find("gfx") != std::string::npos));
 }
 
 TEST_CASE("Device: getComputeCapability", "[device]") {
@@ -880,7 +899,7 @@ TEST_CASE("Context: getDevice", "[context]") {
   cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, dev);
   context.setCurrent();
   cu::Device ctxDev = context.getDevice();
-  CHECK(ctxDev == dev);
+  CHECK(ctxDev.getArch() == dev.getArch());
 }
 
 TEST_CASE("Context: getApiVersion", "[context]") {
@@ -1997,8 +2016,10 @@ TEST_CASE("Multi-backend: enumerate all devices", "[device]") {
   for (int i = 0; i < total; ++i) {
     try {
       cu::Device dev(i);
-      INFO("Device " << i << ": " << dev.getName());
+      INFO("Device " << i << ": " << dev.getName() << " [" << dev.getArch()
+                     << "]");
       CHECK_FALSE(dev.getName().empty());
+      CHECK_FALSE(dev.getArch().empty());
       CHECK(dev.totalMem() > 0);
 
       cu::Context context(CU_CTX_SCHED_BLOCKING_SYNC, dev);

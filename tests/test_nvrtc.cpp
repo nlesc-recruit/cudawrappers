@@ -158,8 +158,7 @@ TEST_CASE("Test nvrtc::util compiler options", "[util]") {
           CHECK(arch.rfind("-arch=sm_", 0) == 0);
           if (cap >= 900) CHECK(arch.back() == 'a');
         } else {
-          CHECK(arch.rfind("--offload-arch=", 0) == 0);
-          CHECK(arch.size() > std::string("--offload-arch=").size());
+          CHECK(arch == "--offload-arch=" + device.getArch());
         }
 
         CHECK(nvrtc::util::archDefine(device) ==
