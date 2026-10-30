@@ -76,20 +76,20 @@ if(CUDAWRAPPERS_BACKEND_HIP)
   # to guess the ROCm location in the compiled code.
   set(CUDAWRAPPERS_CLANG_RESOURCE_DIR "")
   set(_clang_resource_version "0")
-  foreach(_clang_root "${HIP_ROOT_DIR}/lib/llvm/lib/clang"
-                      "${HIP_ROOT_DIR}/lib/clang"
+  foreach(clang_root "${HIP_ROOT_DIR}/lib/llvm/lib/clang"
+                     "${HIP_ROOT_DIR}/lib/clang"
   )
     file(
       GLOB _clang_version_dirs
-      RELATIVE "${_clang_root}"
-      "${_clang_root}/*"
+      RELATIVE "${clang_root}"
+      "${clang_root}/*"
     )
-    foreach(_clang_version IN LISTS _clang_version_dirs)
-      if(EXISTS "${_clang_root}/${_clang_version}/include/stddef.h"
-         AND _clang_version VERSION_GREATER _clang_resource_version
+    foreach(clang_version IN LISTS _clang_version_dirs)
+      if(EXISTS "${clang_root}/${clang_version}/include/stddef.h"
+         AND ${clang_version} VERSION_GREATER ${_clang_resource_version}
       )
-        set(_clang_resource_version "${_clang_version}")
-        set(CUDAWRAPPERS_CLANG_RESOURCE_DIR "${_clang_root}/${_clang_version}")
+        set(_clang_resource_version "${clang_version}")
+        set(CUDAWRAPPERS_CLANG_RESOURCE_DIR "${clang_root}/${clang_version}")
       endif()
     endforeach()
   endforeach()
