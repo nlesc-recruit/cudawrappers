@@ -1121,9 +1121,11 @@ inline int Device::getCount(int backendIdx) {
   int result = getBackend(backendIdx).deviceGetCount(&nrDevices);
   // CUDA_ERROR_NO_DEVICE (100): the backend's runtime is present but the
   // machine has no devices for it (e.g. a ROCm installation on a machine with
-  // only NVIDIA GPUs). Treat that as zero devices rather than aborting the
-  // multi-backend enumeration.
-  if (result == 100) return 0;
+  // only NVIDIA GPUs). Some driver versions report CUDA_ERROR_NOT_INITIALIZED
+  // (3) from deviceGetCount after cuInit reported CUDA_ERROR_NO_DEVICE.
+  // Treat both as zero devices rather than aborting the multi-backend
+  // enumeration.
+  if (result == 100 || result == 3) return 0;
   checkCudaCall(result);
   return nrDevices;
 }
