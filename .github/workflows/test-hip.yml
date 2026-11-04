@@ -1,0 +1,22 @@
+name: test-hip
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test-r9700:
+    name: AMD R9700 (ROCm 7.14.0)
+    runs-on: [slurm]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astron-rd/slurm-action@v1.3
+        with:
+          partition: rbq
+          gres: gpu:R9700
+          commands: |
+            export PATH=/var/software/opt/rocm-7.14.0/bin:$PATH
+            export HIPCXX=/var/software/opt/rocm-7.14.0/bin/hipcc
+            cmake -S . -B build -DCUDAWRAPPERS_BUILD_TESTING=True -DCUDAWRAPPERS_BACKEND=HIP -DCUDAWRAPPERS_COMPONENTS='cu;cufft;nvrtc' -DGPU_TARGETS=gfx1201
+            cmake --build build -j
+            ctest --test-dir build --output-on-failure

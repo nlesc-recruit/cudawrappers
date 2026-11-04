@@ -1,0 +1,51 @@
+name: test-cuda
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test-ad4000:
+    name: NVIDIA AD4000 (CUDA 13)
+    runs-on: [slurm]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astron-rd/slurm-action@v1.3
+        with:
+          partition: rbq
+          gres: gpu:AD4000
+          commands: |
+            module load spack cuda
+            cmake -S . -B build -DCUDAWRAPPERS_BUILD_TESTING=True -DCUDAWRAPPERS_COMPONENTS='cu;cufft;nvml;nvrtc'
+            cmake --build build -j
+            ctest --test-dir build --output-on-failure
+
+  test-b4000:
+    name: NVIDIA B4000 (CUDA 13)
+    runs-on: [slurm]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astron-rd/slurm-action@v1.3
+        with:
+          partition: rbq
+          gres: gpu:B4000
+          commands: |
+            module load spack cuda/13
+            cmake -S . -B build -DCUDAWRAPPERS_BUILD_TESTING=True -DCUDAWRAPPERS_COMPONENTS='cu;cufft;nvml;nvrtc'
+            cmake --build build -j
+            ctest --test-dir build --output-on-failure
+
+  test-v100:
+    name: NVIDIA V100 (CUDA 12.9)
+    runs-on: [slurm]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astron-rd/slurm-action@v1.3
+        with:
+          partition: defq
+          gres: gpu:V100
+          commands: |
+            module load spack cuda/12.9
+            cmake -S . -B build -DCUDAWRAPPERS_BUILD_TESTING=True -DCUDAWRAPPERS_COMPONENTS='cu;cufft;nvml;nvrtc'
+            cmake --build build -j
+            ctest --test-dir build --output-on-failure
