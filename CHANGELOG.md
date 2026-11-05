@@ -7,6 +7,8 @@ project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 
+- Added an optional CI workflow that runs the tests on a simulated NVIDIA GPU
+  (PantheonSim)
 - Added `cu::getErrorName`, `cu::pointerSetAttribute`,
   `cu::devResourceGenerateDesc`, `cu::devSmResourceSplit`, and
   `cu::devSmResourceSplitByCount`
