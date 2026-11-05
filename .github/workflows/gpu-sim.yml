@@ -44,7 +44,3 @@ jobs:
       # returns NaN on the simulated cuFFT.
       - name: Test
         run: vgpu run ctest --test-dir build --output-on-failure -E 'GreenContext|2D FFT'
-
-      - name: Free disk space
-        if: always()
-        run: rm -rf build
