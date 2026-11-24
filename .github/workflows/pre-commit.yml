@@ -7,7 +7,7 @@ on:
 jobs:
   linting:
     name: run
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     env:
         # set tools versions to latest supported by the CI runner,
         # ubuntu 22.04 at the time of writing
@@ -54,7 +54,7 @@ jobs:
           git checkout ${{ env.precommit_to_ref }}
 
       - name: Install cuda
-        uses: Jimver/cuda-toolkit@v0.2.19
+        uses: Jimver/cuda-toolkit@v0.2.36
         with:
           cuda: ${{ env.cuda-version }}
           method: "network"
