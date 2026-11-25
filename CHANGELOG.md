@@ -3,7 +3,7 @@
 All notable changes to this project will be documented in this file. This
 project adheres to [Semantic Versioning](http://semver.org/).
 
-## Unreleasd
+## [1.1.0] - 2026-11-20
 
 ### Added
 
@@ -16,8 +16,8 @@ project adheres to [Semantic Versioning](http://semver.org/).
   `cu::Device::{getComputeCapability, getByPCIBusId, getPCIBusId, getTexture1DLinearMaxWidth, getLuid, getExecAffinitySupport, getProperties, getDevResource, getNvSciSyncAttributes, getHostAtomicCapabilities, getP2PAttribute, getP2PAtomicCapabilities, canAccessPeer, registerAsyncNotification, unregisterAsyncNotification}`
   and
   `cu::Device::{getDefaultMemPool, getMemPool, setMemPool, graphMemTrim, getGraphMemAttribute, setGraphMemAttribute}`
-- Added
-  `cu::Context::{enablePeerAccess, disablePeerAccess, getDevResource, fromGreenCtx}`
+- Added `cu::Context::{enablePeerAccess, disablePeerAccess, getDevResource}`
+- Added `cu::Context(CUcontext)` constructor for unmanaged wrapping
 - Added `cu::Event::record(Stream&, unsigned int)` and
   `cu::Stream::record(Event&, unsigned int)` overloads with flags
 - Added `cu::Stream` constructor with ownership flag,
@@ -29,6 +29,15 @@ project adheres to [Semantic Versioning](http://semver.org/).
 
 - `nvrtc::findIncludePaths` now returns `std::vector<std::filesystem::path>`
   instead of `std::vector<std::string>`
+- Peer-access functions of `cu::Device` are now non-static members, with `*this`
+  as source device
+- `cu::Context::getCurrent` and `cu::Context::popCurrent` are now `static`
+- `cu::Context::{enablePeerAccess, disablePeerAccess}` no longer take a peer
+  `Context&` argument
+- `cu::GreenContext` converts implicitly to an unmanaged `cu::Context`,
+  replacing `cu::Context::fromGreenCtx`
+- Removed `cu::Context(CUcontext, cu::Device&)` constructor and the private
+  `cu::Device&` member, avoiding a dangling reference
 
 ## [1.0.0] - 2026-04-29
 
