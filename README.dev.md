@@ -288,7 +288,7 @@ To view the generated documentation, open `_build/html/index.html` in your web-b
 
 1. Make sure the `CHANGELOG.md` describes what was added, changed, or removed since the previous version. Limit the scope of the description to include only those things that affect semantic versioning (so things like changes to a github action do not need to be included in the CHANGELOG). See [semver.org](https://semver.org) for more details
 1. Verify that the information in `CITATION.cff` is correct (authors, dates, etc.)
-1. Use [bump2version](https://pypi.org/project/bump2version/) to update the version strings in the software
+1. Use [bump-my-version](https://pypi.org/project/bump-my-version/) to update the version strings in the software, for example `bump-my-version bump minor` (this also stamps `date-released` in `CITATION.cff` with the current date)
 1. Make sure all the tests are passing
 1. Make sure all the workflows are successful (see <https://github.com/nlesc-recruit/cudawrappers/actions?query=branch%3Amain>)
 
